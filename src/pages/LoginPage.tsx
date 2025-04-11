@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { 
   Card, 
@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 const LoginPage: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,9 +35,15 @@ const LoginPage: React.FC = () => {
         toast({
           title: "Вход выполнен успешно",
           description: "Добро пожаловать в личный кабинет",
-          variant: "success",
+          variant: "default",
         });
-        // Redirect would happen here in a real app
+        
+        // Redirect based on email domain (simple simulation)
+        if (email.includes('school') || email.includes('edu')) {
+          navigate('/school-dashboard');
+        } else {
+          navigate('/teacher-dashboard');
+        }
       } else {
         toast({
           title: "Ошибка входа",

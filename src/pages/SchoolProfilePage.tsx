@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -26,13 +25,13 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import JobCard from '@/components/JobCard';
+import LocationMap from '@/components/LocationMap';
 
 const SchoolProfilePage: React.FC = () => {
   const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   
-  // Find school by ID
   const schoolId = Number(id);
   const school = schoolsData.find(s => s.id === schoolId);
   
@@ -52,7 +51,7 @@ const SchoolProfilePage: React.FC = () => {
     toast({
       title: "Заявка отправлена!",
       description: "Ваш отклик на вакансию успешно отправлен",
-      variant: "success",
+      variant: "default",
     });
   };
   
@@ -71,7 +70,6 @@ const SchoolProfilePage: React.FC = () => {
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Main Profile */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="relative h-48 w-full">
@@ -153,19 +151,13 @@ const SchoolProfilePage: React.FC = () => {
                   
                   <div>
                     <h3 className="text-lg font-medium mb-3">Местоположение</h3>
-                    <div className="flex items-center gap-2 mb-4">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      <span>{school.address}</span>
-                    </div>
-                    <div className="bg-muted h-48 rounded-md flex items-center justify-center">
-                      <span className="text-muted-foreground">Карта местоположения</span>
-                    </div>
+                    <LocationMap address={school.address} />
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="vacancies" className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Открытые вакансии</h3>
+                    <h3 className="text-lg font-medium mb-4">Отк��ытые вакансии</h3>
                     <div className="space-y-4">
                       {school.openPositions.map((job) => (
                         <JobCard
@@ -222,7 +214,6 @@ const SchoolProfilePage: React.FC = () => {
           </Card>
         </div>
         
-        {/* Right Column - Stats & Info */}
         <div className="space-y-6">
           <Card>
             <CardHeader>

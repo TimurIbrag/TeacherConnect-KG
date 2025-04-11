@@ -19,7 +19,16 @@ import SchoolProfilePage from "./pages/SchoolProfilePage";
 import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import FAQPage from "./pages/FAQPage";
+import SupportPage from "./pages/SupportPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 import NotFoundPage from "./pages/NotFoundPage";
+
+// Dashboard prototypes (placeholder pages)
+import TeacherDashboardPage from "./pages/dashboards/TeacherDashboardPage";
+import SchoolDashboardPage from "./pages/dashboards/SchoolDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +51,16 @@ const App = () => (
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                
+                {/* Dashboard routes */}
+                <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
+                <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>

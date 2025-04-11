@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, HelpCircle, Info, Book, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
@@ -36,9 +36,46 @@ const Navbar: React.FC = () => {
           <Link to="/schools" className="text-sm font-medium hover:text-primary">
             {t('nav.schools')}
           </Link>
-          <Link to="/about" className="text-sm font-medium hover:text-primary">
-            {t('nav.about')}
-          </Link>
+          <div className="relative group">
+            <button className="text-sm font-medium hover:text-primary flex items-center gap-1">
+              <Info className="h-4 w-4" />
+              Информация
+            </button>
+            <div className="absolute z-50 top-full left-0 mt-1 w-48 rounded-md shadow-lg bg-popover opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border">
+              <div className="py-1 rounded-md">
+                <Link 
+                  to="/about" 
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  {t('nav.about')}
+                </Link>
+                <Link 
+                  to="/faq" 
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  FAQ
+                </Link>
+                <Link 
+                  to="/support" 
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  Поддержка
+                </Link>
+                <Link 
+                  to="/privacy" 
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  Политика конфиденциальности
+                </Link>
+                <Link 
+                  to="/terms" 
+                  className="block px-4 py-2 text-sm hover:bg-muted"
+                >
+                  Условия использования
+                </Link>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -96,6 +133,20 @@ const Navbar: React.FC = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             {t('nav.about')}
+          </Link>
+          <Link 
+            to="/faq" 
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            FAQ
+          </Link>
+          <Link 
+            to="/support" 
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Поддержка
           </Link>
           <div className="flex flex-col gap-2 px-4 pt-2 border-t">
             <Link to="/login" onClick={() => setMobileMenuOpen(false)}>

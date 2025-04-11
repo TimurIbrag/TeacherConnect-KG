@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { 
   Card, 
@@ -24,6 +24,7 @@ const RegisterPage: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Get user type from URL query parameter
   const queryParams = new URLSearchParams(location.search);
@@ -70,9 +71,11 @@ const RegisterPage: React.FC = () => {
       toast({
         title: "Регистрация успешна",
         description: "Аккаунт создан. Теперь вы можете войти в систему.",
-        variant: "success",
+        variant: "default",
       });
-      // Redirect would happen here in a real app
+      
+      // Redirect to login page after successful registration
+      navigate('/login');
     }, 1500);
   };
   
