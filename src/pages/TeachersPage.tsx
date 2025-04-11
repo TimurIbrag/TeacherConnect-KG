@@ -86,7 +86,7 @@ const TeachersPage: React.FC = () => {
                   <SelectValue placeholder="Выберите предмет" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все предметы</SelectItem>
+                  <SelectItem value="all">Все предметы</SelectItem>
                   {subjects.map((subject) => (
                     <SelectItem key={subject} value={subject}>
                       {subject}
@@ -103,7 +103,7 @@ const TeachersPage: React.FC = () => {
                   <SelectValue placeholder="Выберите опыт" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Любой опыт</SelectItem>
+                  <SelectItem value="all">Любой опыт</SelectItem>
                   {experienceOptions.map((exp) => (
                     <SelectItem key={exp} value={exp}>
                       {exp}
@@ -120,7 +120,7 @@ const TeachersPage: React.FC = () => {
                   <SelectValue placeholder="Выберите город" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все города</SelectItem>
+                  <SelectItem value="all">Все города</SelectItem>
                   {locations.map((location) => (
                     <SelectItem key={location} value={location}>
                       {location}

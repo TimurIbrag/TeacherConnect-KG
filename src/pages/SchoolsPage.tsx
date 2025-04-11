@@ -36,7 +36,10 @@ const SchoolsPage: React.FC = () => {
     const matchesSearch = school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           school.specialization.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = !typeFilter || school.type === typeFilter;
-    const matchesLocation = !locationFilter || school.location === locationFilter;
+    
+    // Check if the school's address includes the locationFilter instead of looking for a location property
+    const matchesLocation = !locationFilter || school.address.includes(locationFilter);
+    
     const matchesHousing = !housingFilter || school.housing === true;
     
     return matchesSearch && matchesType && matchesLocation && matchesHousing;
@@ -88,7 +91,7 @@ const SchoolsPage: React.FC = () => {
                   <SelectValue placeholder="Выберите тип" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все типы</SelectItem>
+                  <SelectItem value="all">Все типы</SelectItem>
                   {schoolTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -105,7 +108,7 @@ const SchoolsPage: React.FC = () => {
                   <SelectValue placeholder="Выберите город" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все города</SelectItem>
+                  <SelectItem value="all">Все города</SelectItem>
                   {locations.map((location) => (
                     <SelectItem key={location} value={location}>
                       {location}
