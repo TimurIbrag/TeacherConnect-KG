@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, MessageSquare, Send, Telegram } from 'lucide-react';
+import { Mail, MessageSquare, Send, ExternalLink } from 'lucide-react';
 
 const SupportPage: React.FC = () => {
   const { t } = useLanguage();
@@ -61,14 +61,14 @@ const SupportPage: React.FC = () => {
                 <span>support@teacherconnect.kg</span>
               </div>
               <div className="flex items-center gap-3">
-                <Telegram className="h-5 w-5 text-primary" />
+                <ExternalLink className="h-5 w-5 text-primary" />
                 <a 
                   href="https://t.me/teacherconnect_bot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="hover:underline"
                 >
-                  @teacherconnect_bot
+                  Telegram: @teacherconnect_bot
                 </a>
               </div>
               <div className="flex items-center gap-3">
