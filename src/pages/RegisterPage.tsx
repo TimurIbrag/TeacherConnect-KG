@@ -71,11 +71,16 @@ const RegisterPage: React.FC = () => {
       toast({
         title: "Регистрация успешна",
         description: "Аккаунт создан. Теперь вы можете войти в систему.",
-        variant: "default",
       });
       
-      // Redirect to login page after successful registration
-      navigate('/login');
+      // Redirect based on user type
+      if (userType === 'school') {
+        // Redirect schools to catalog page
+        navigate('/school-catalog');
+      } else {
+        // Redirect teachers to login page
+        navigate('/login');
+      }
     }, 1500);
   };
   

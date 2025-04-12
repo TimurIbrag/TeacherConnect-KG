@@ -1,18 +1,97 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Button } from '@/components/ui/button';
-import { Menu, X, HelpCircle, Info, Book, User } from 'lucide-react';
+import { 
+  Menu, 
+  X, 
+  HelpCircle, 
+  Info, 
+  Book, 
+  User, 
+  LogOut,
+  Bell,
+  MessageSquare
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar: React.FC = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState<'teacher' | 'school' | null>(null);
+  
+  // Check if user is logged in (this would use a real auth system in production)
+  useEffect(() => {
+    // This is a simulation - in a real app, we would check session/token
+    const checkLoginStatus = () => {
+      // Check if we have a user in localStorage (this is just for demo)
+      const user = localStorage.getItem('user');
+      
+      if (user) {
+        setIsLoggedIn(true);
+        // Parse user type
+        try {
+          const userData = JSON.parse(user);
+          setUserType(userData.type);
+        } catch (e) {
+          console.error('Error parsing user data', e);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserType(null);
+      }
+    };
+    
+    checkLoginStatus();
+    
+    // Listen for login/logout events
+    window.addEventListener('login', checkLoginStatus);
+    window.addEventListener('logout', checkLoginStatus);
+    
+    return () => {
+      window.removeEventListener('login', checkLoginStatus);
+      window.removeEventListener('logout', checkLoginStatus);
+    };
+  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+  
+  const handleLogout = () => {
+    // Clear user from localStorage (in a real app, this would clear tokens and call an API)
+    localStorage.removeItem('user');
+    
+    // Dispatch logout event
+    window.dispatchEvent(new Event('logout'));
+    
+    // Show toast
+    toast({
+      title: "Выход выполнен",
+      description: "Вы успешно вышли из системы",
+    });
+    
+    // Navigate to homepage
+    navigate('/');
+  };
+  
+  const getDashboardLink = () => {
+    return userType === 'school' ? '/school-dashboard' : '/teacher-dashboard';
   };
 
   return (
@@ -79,14 +158,66 @@ const Navbar: React.FC = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost">{t('nav.login')}</Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="default">{t('nav.register')}</Button>
-            </Link>
-          </div>
+          {isLoggedIn ? (
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/messages">
+                  <MessageSquare className="h-5 w-5" />
+                </Link>
+              </Button>
+              
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
+                </Link>
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="" alt="@user" />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {userType === 'school' ? 'SC' : 'TC'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {userType === 'school' ? 'Школа-гимназия №5' : 'Иванов Иван'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        user@example.com
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={getDashboardLink()}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>{userType === 'school' ? 'Панель школы' : 'Мой профиль'}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Выйти</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-3">
+              <Link to="/login">
+                <Button variant="ghost">{t('nav.login')}</Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="default">{t('nav.register')}</Button>
+              </Link>
+            </div>
+          )}
           <LanguageSwitcher />
           <Button 
             variant="ghost" 
@@ -148,14 +279,38 @@ const Navbar: React.FC = () => {
           >
             Поддержка
           </Link>
-          <div className="flex flex-col gap-2 px-4 pt-2 border-t">
-            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full">{t('nav.login')}</Button>
-            </Link>
-            <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="default" className="w-full">{t('nav.register')}</Button>
-            </Link>
-          </div>
+          
+          {isLoggedIn ? (
+            <>
+              <Link 
+                to={getDashboardLink()} 
+                className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {userType === 'school' ? 'Панель школы' : 'Мой профиль'}
+              </Link>
+              <Button 
+                variant="outline" 
+                className="mx-4"
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Выйти
+              </Button>
+            </>
+          ) : (
+            <div className="flex flex-col gap-2 px-4 pt-2 border-t">
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full">{t('nav.login')}</Button>
+              </Link>
+              <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="default" className="w-full">{t('nav.register')}</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

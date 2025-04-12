@@ -26,6 +26,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+// School Catalog Page
+import SchoolCatalogPage from "./pages/SchoolCatalogPage";
+
 // Dashboard prototypes (placeholder pages)
 import TeacherDashboardPage from "./pages/dashboards/TeacherDashboardPage";
 import SchoolDashboardPage from "./pages/dashboards/SchoolDashboardPage";
@@ -57,9 +60,16 @@ const App = () => (
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 
+                {/* School catalog route */}
+                <Route path="/school-catalog" element={<SchoolCatalogPage />} />
+                
                 {/* Dashboard routes */}
                 <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
                 <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
+                
+                {/* Temporary placeholders */}
+                <Route path="/messages" element={<div className="container py-20 text-center">Страница сообщений в разработке</div>} />
+                <Route path="/notifications" element={<div className="container py-20 text-center">Страница уведомлений в разработке</div>} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFoundPage />} />

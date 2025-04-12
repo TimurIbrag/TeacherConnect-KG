@@ -14,6 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  AlertCircle 
+} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const LoginPage: React.FC = () => {
   const { t } = useLanguage();
@@ -23,33 +27,47 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
     
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      if (email && password) {
-        toast({
-          title: "Вход выполнен успешно",
-          description: "Добро пожаловать в личный кабинет",
-          variant: "default",
-        });
-        
-        // Redirect based on email domain (simple simulation)
-        if (email.includes('school') || email.includes('edu')) {
-          navigate('/school-dashboard');
-        } else {
-          navigate('/teacher-dashboard');
-        }
+      
+      // Simple validation
+      if (!email || !password) {
+        setError('Пожалуйста, введите email и пароль');
+        return;
+      }
+      
+      // For demonstration purposes: 
+      // - emails with "school" or "edu" go to school dashboard
+      // - all others go to teacher dashboard
+      const isSchool = email.includes('school') || email.includes('edu');
+      
+      // Set user in localStorage (this would be a token in a real app)
+      localStorage.setItem('user', JSON.stringify({
+        email,
+        type: isSchool ? 'school' : 'teacher'
+      }));
+      
+      // Dispatch login event
+      window.dispatchEvent(new Event('login'));
+      
+      toast({
+        title: "Вход выполнен успешно",
+        description: "Добро пожаловать в личный кабинет",
+      });
+      
+      // Redirect based on email domain
+      if (isSchool) {
+        navigate('/school-dashboard');
       } else {
-        toast({
-          title: "Ошибка входа",
-          description: "Пожалуйста, проверьте введенные данные",
-          variant: "destructive",
-        });
+        navigate('/teacher-dashboard');
       }
     }, 1500);
   };
@@ -64,6 +82,13 @@ const LoginPage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t('auth.email')}</Label>
@@ -95,6 +120,18 @@ const LoginPage: React.FC = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Вход...' : t('auth.submit')}
             </Button>
+            
+            <div className="space-y-2 text-sm">
+              <p className="text-center text-muted-foreground">
+                Для демонстрации:
+              </p>
+              <p className="text-center text-muted-foreground">
+                - email с "school" или "edu" ведет в кабинет школы
+              </p>
+              <p className="text-center text-muted-foreground">
+                - остальные email ведут в кабинет учителя
+              </p>
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
