@@ -45,6 +45,7 @@ import {
   BookOpen,
   Building,
   Calendar,
+  Camera,
   Edit,
   Eye, 
   FileText, 
@@ -58,8 +59,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   Upload,
-  Trash2
+  Trash2,
+  UserRound
 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 // Типы для дней недели и временных слотов
 type WeekDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
@@ -99,6 +102,7 @@ type ProfileFormData = {
   districts: string;
   about: string;
   schedule: ScheduleItem[];
+  profilePhoto?: File | null;
 };
 
 type CertificateType = {
@@ -115,16 +119,21 @@ const TeacherDashboardPage: React.FC = () => {
   // В реальном приложении проверяем авторизацию
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [profileData, setProfileData] = useState<ProfileFormData>({
-    fullName: '',
-    specialization: '',
-    education: '',
-    experience: '',
-    workScheduleType: '',
-    districts: '',
-    about: '',
+    fullName: 'Нурланова Айнура',
+    specialization: 'Учитель английского языка',
+    education: 'Кыргызский Национальный Университет',
+    experience: '7 лет',
+    workScheduleType: 'Полный рабочий день',
+    districts: 'Бишкек, центр',
+    about: 'Опытный преподаватель английского языка с сильными навыками коммуникации и индивидуальным подходом к каждому ученику. Специализируюсь на подготовке к международным экзаменам.',
     schedule: []
   });
+  
+  // Стейт для фото профиля
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
   // Стейт для сертификатов
   const [certificates, setCertificates] = useState<CertificateType[]>([]);
@@ -132,13 +141,16 @@ const TeacherDashboardPage: React.FC = () => {
   
   // Стейт для статистики
   const [stats, setStats] = useState({
-    profileViews: 0,
-    responses: 0,
-    messages: 0
+    profileViews: 56,
+    responses: 4,
+    messages: 7
   });
   
   const form = useForm<ProfileFormData>({
-    defaultValues: profileData
+    defaultValues: {
+      ...profileData,
+      profilePhoto: null
+    }
   });
 
   useEffect(() => {
@@ -147,18 +159,62 @@ const TeacherDashboardPage: React.FC = () => {
       navigate('/login');
     }
     
-    // Обновляем форму при изменении profileData
-    form.reset(profileData);
-  }, [isLoggedIn, navigate, profileData, form]);
+    // Обновляем форму при изменении profileData (только когда не в режиме редактирования)
+    if (!editMode) {
+      form.reset({
+        ...profileData,
+        profilePhoto: null
+      });
+    }
+  }, [isLoggedIn, navigate, profileData, form, editMode]);
   
   // Функция для сохранения профиля
   const saveProfile = (data: ProfileFormData) => {
-    setProfileData(data);
-    setEditMode(false);
-    toast({
-      title: "Профиль сохранен",
-      description: "Ваши данные успешно обновлены",
-    });
+    setIsUpdating(true);
+    
+    // Имитация обращения к API
+    setTimeout(() => {
+      // Обрабатываем фото профиля, если оно было загружено
+      if (data.profilePhoto && data.profilePhoto instanceof File) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target && typeof e.target.result === 'string') {
+            setProfilePhoto(e.target.result);
+          }
+        };
+        reader.readAsDataURL(data.profilePhoto);
+      }
+      
+      const updatedData = { ...data };
+      delete updatedData.profilePhoto; // Удаляем объект File перед сохранением в стейт
+      
+      setProfileData(updatedData);
+      setEditMode(false);
+      setIsUpdating(false);
+      
+      toast({
+        title: "Профиль сохранен",
+        description: "Ваши данные успешно обновлены",
+      });
+    }, 1000);
+  };
+  
+  // Функция для обработки загрузки фото профиля
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Устанавливаем файл в форму
+    form.setValue('profilePhoto', file);
+    
+    // Создаем превью
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && typeof e.target.result === 'string') {
+        setPhotoPreview(e.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
   
   // Обработчик добавления сертификата
@@ -197,9 +253,28 @@ const TeacherDashboardPage: React.FC = () => {
     });
   };
   
+  // Функция для получения инициалов из имени
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  };
+  
   // Компонент диалога для редактирования профиля
   const EditProfileDialog = () => (
-    <Dialog open={editMode} onOpenChange={setEditMode}>
+    <Dialog open={editMode} onOpenChange={(open) => {
+      // Если закрываем диалог, сбрасываем форму и превью
+      if (!open) {
+        form.reset({
+          ...profileData,
+          profilePhoto: null
+        });
+        setPhotoPreview(null);
+      }
+      setEditMode(open);
+    }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Редактирование профиля</DialogTitle>
@@ -210,6 +285,34 @@ const TeacherDashboardPage: React.FC = () => {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(saveProfile)} className="space-y-4">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  {photoPreview ? (
+                    <AvatarImage src={photoPreview} alt="Предпросмотр" />
+                  ) : profilePhoto ? (
+                    <AvatarImage src={profilePhoto} alt={profileData.fullName} />
+                  ) : (
+                    <AvatarFallback className="text-lg">
+                      {profileData.fullName ? getInitials(profileData.fullName) : <UserRound />}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="absolute bottom-0 right-0">
+                  <Label htmlFor="profilePhoto" className="cursor-pointer bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors">
+                    <Camera className="h-4 w-4" />
+                  </Label>
+                  <Input 
+                    id="profilePhoto"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                </div>
+              </div>
+            </div>
+            
             <FormField
               control={form.control}
               name="fullName"
@@ -357,10 +460,24 @@ const TeacherDashboardPage: React.FC = () => {
             />
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditMode(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setEditMode(false);
+                  setPhotoPreview(null);
+                  form.reset({
+                    ...profileData,
+                    profilePhoto: null
+                  });
+                }}
+                disabled={isUpdating}
+              >
                 Отмена
               </Button>
-              <Button type="submit">Сохранить</Button>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating ? "Сохранение..." : "Сохранить"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -459,13 +576,17 @@ const TeacherDashboardPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xl font-bold">
-                        {profileData.fullName 
-                          ? profileData.fullName.split(' ').map(n => n[0]).join('').toUpperCase() 
-                          : ''}
-                      </span>
-                    </div>
+                    <Avatar className="h-20 w-20">
+                      {profilePhoto ? (
+                        <AvatarImage src={profilePhoto} alt={profileData.fullName} />
+                      ) : (
+                        <AvatarFallback className="text-xl">
+                          {profileData.fullName 
+                            ? getInitials(profileData.fullName) 
+                            : <UserRound className="h-10 w-10" />}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
                     <div>
                       <h3 className="text-lg font-medium">{profileData.fullName || "Заполните ваше имя"}</h3>
                       <p className="text-muted-foreground flex items-center gap-1">
