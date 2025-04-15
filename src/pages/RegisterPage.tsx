@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -26,7 +25,6 @@ const RegisterPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get user type from URL query parameter
   const queryParams = new URLSearchParams(location.search);
   const typeFromQuery = queryParams.get('type');
   
@@ -42,7 +40,6 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   
-  // Validate passwords match
   useEffect(() => {
     if (confirmPassword && password !== confirmPassword) {
       setPasswordError('Пароли не совпадают');
@@ -51,7 +48,7 @@ const RegisterPage: React.FC = () => {
     }
   }, [password, confirmPassword]);
   
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
@@ -65,23 +62,37 @@ const RegisterPage: React.FC = () => {
     
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      localStorage.setItem('user', JSON.stringify({
+        email,
+        type: userType,
+        name
+      }));
+      
+      window.dispatchEvent(new Event('login'));
+      
       toast({
         title: "Регистрация успешна",
-        description: "Аккаунт создан. Теперь вы можете войти в систему.",
+        description: "Добро пожаловать в личный кабинет",
       });
       
-      // Redirect based on user type
       if (userType === 'school') {
-        // Redirect schools to catalog page
-        navigate('/school-catalog');
+        navigate('/school-dashboard');
       } else {
-        // Redirect teachers to login page
-        navigate('/login');
+        navigate('/teacher-dashboard');
       }
-    }, 1500);
+      
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать аккаунт. Попробуйте позже.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
