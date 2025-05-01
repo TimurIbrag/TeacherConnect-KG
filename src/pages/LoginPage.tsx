@@ -79,14 +79,37 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setError('');
+    
     try {
       // Simulate Google login
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // For demonstration purposes:
+      // Create a random type (school or teacher)
+      const isSchool = Math.random() > 0.5;
+      
+      localStorage.setItem('user', JSON.stringify({
+        email: `google-user-${Date.now()}@gmail.com`,
+        type: isSchool ? 'school' : 'teacher',
+        name: isSchool ? 'Google School' : 'Google Teacher',
+        authProvider: 'google'
+      }));
+      
+      // Dispatch login event
+      window.dispatchEvent(new Event('login'));
+      
       toast({
-        title: "Google авторизация",
-        description: "Для интеграции с Google требуется настройка Firebase или другого auth провайдера",
+        title: "Вход через Google выполнен успешно",
+        description: "Добро пожаловать в личный кабинет",
       });
+      
+      // Redirect based on user type
+      if (isSchool) {
+        navigate('/school-dashboard');
+      } else {
+        navigate('/teacher-dashboard');
+      }
     } catch (err) {
       setError('Ошибка при входе через Google');
     } finally {
@@ -124,7 +147,7 @@ const LoginPage: React.FC = () => {
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
