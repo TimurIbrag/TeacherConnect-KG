@@ -1,0 +1,173 @@
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/context/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { 
+  RadioGroup, 
+  RadioGroupItem 
+} from '@/components/ui/radio-group';
+import { User, Building2 } from 'lucide-react';
+
+interface RegisterFormProps {
+  userType: 'teacher' | 'school';
+  setUserType: (value: 'teacher' | 'school') => void;
+  isLoading: boolean;
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLoading }) => {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  
+  useEffect(() => {
+    if (confirmPassword && password !== confirmPassword) {
+      setPasswordError('Пароли не совпадают');
+    } else {
+      setPasswordError('');
+    }
+  }, [password, confirmPassword]);
+  
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Ошибка",
+        description: "Пароли не совпадают",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      localStorage.setItem('user', JSON.stringify({
+        email,
+        type: userType,
+        name
+      }));
+      
+      window.dispatchEvent(new Event('login'));
+      
+      toast({
+        title: "Регистрация успешна",
+        description: "Добро пожаловать в личный кабинет",
+      });
+      
+      if (userType === 'school') {
+        navigate('/school-dashboard');
+      } else {
+        navigate('/teacher-dashboard');
+      }
+      
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать аккаунт. Попробуйте позже.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  return (
+    <form onSubmit={handleRegister} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="userType">{t('auth.userType')}</Label>
+        <RadioGroup
+          id="userType"
+          value={userType}
+          onValueChange={(value) => setUserType(value as 'teacher' | 'school')}
+          className="flex gap-4"
+        >
+          <div className="flex items-center space-x-2 flex-1">
+            <RadioGroupItem value="teacher" id="teacher" />
+            <Label htmlFor="teacher" className="flex items-center cursor-pointer">
+              <User className="h-4 w-4 mr-2" />
+              {t('auth.userType.teacher')}
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2 flex-1">
+            <RadioGroupItem value="school" id="school" />
+            <Label htmlFor="school" className="flex items-center cursor-pointer">
+              <Building2 className="h-4 w-4 mr-2" />
+              {t('auth.userType.school')}
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="name">
+          {userType === 'teacher' ? t('auth.name') : 'Название школы'}
+        </Label>
+        <Input 
+          id="name" 
+          placeholder={userType === 'teacher' ? "Иван Иванов" : "Школа №1"} 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="email">{t('auth.email')}</Label>
+        <Input 
+          id="email" 
+          type="email" 
+          placeholder="mail@example.com" 
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">{t('auth.password')}</Label>
+        <Input 
+          id="password" 
+          type="password" 
+          placeholder="********" 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+        <Input 
+          id="confirmPassword" 
+          type="password" 
+          placeholder="********" 
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        {passwordError && (
+          <p className="text-sm text-destructive">{passwordError}</p>
+        )}
+      </div>
+      
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isLoading || !!passwordError}
+      >
+        {isLoading ? 'Регистрация...' : t('auth.register.submit')}
+      </Button>
+    </form>
+  );
+};
+
+export default RegisterForm;
