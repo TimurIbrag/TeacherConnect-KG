@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { teachersData, subjects, experienceOptions, locations } from '@/data/mockData';
 import TeacherCard from '@/components/TeacherCard';
+import TeacherSkeletonLoader from '@/components/TeacherSkeletonLoader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,27 +19,54 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, MapPin, CheckSquare } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const TeachersPage: React.FC = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [experienceFilter, setExperienceFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [filteredTeachers, setFilteredTeachers] = useState([]);
+  
+  // Simulate API loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      applyFilters();
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Handle filters
-  const filteredTeachers = teachersData.filter((teacher) => {
-    const matchesSearch = teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          teacher.specialization.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject = !subjectFilter || teacher.specialization === subjectFilter;
-    const matchesExperience = !experienceFilter || teacher.experience === experienceFilter;
-    const matchesLocation = !locationFilter || teacher.location === locationFilter;
+  const applyFilters = () => {
+    const filtered = teachersData.filter((teacher) => {
+      const matchesSearch = !searchTerm || 
+        teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.specialization.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSubject = !subjectFilter || teacher.specialization === subjectFilter;
+      const matchesExperience = !experienceFilter || teacher.experience === experienceFilter;
+      const matchesLocation = !locationFilter || teacher.location === locationFilter;
+      
+      return matchesSearch && matchesSubject && matchesExperience && matchesLocation;
+    });
     
-    return matchesSearch && matchesSubject && matchesExperience && matchesLocation;
-  });
+    setFilteredTeachers(filtered);
+  };
+  
+  // Apply filters when any filter changes
+  useEffect(() => {
+    if (!isLoading) {
+      applyFilters();
+    }
+  }, [searchTerm, subjectFilter, experienceFilter, locationFilter]);
   
   // Clear all filters
   const clearFilters = () => {
@@ -46,6 +74,19 @@ const TeachersPage: React.FC = () => {
     setSubjectFilter('');
     setExperienceFilter('');
     setLocationFilter('');
+    
+    toast({
+      title: "Фильтры сброшены",
+      description: "Показаны все учителя",
+    });
+  };
+  
+  // Show map selection for location
+  const showLocationMap = () => {
+    toast({
+      title: "Выбор на карте",
+      description: "Функция выбора локации на карте будет добавлена в ближайшее время",
+    });
   };
   
   // Check if any filter is active
@@ -86,7 +127,7 @@ const TeachersPage: React.FC = () => {
                   <SelectValue placeholder="Выберите предмет" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все предметы</SelectItem>
+                  <SelectItem value="">Все предметы</SelectItem>
                   {subjects.map((subject) => (
                     <SelectItem key={subject} value={subject}>
                       {subject}
@@ -103,7 +144,7 @@ const TeachersPage: React.FC = () => {
                   <SelectValue placeholder="Выберите опыт" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Любой опыт</SelectItem>
+                  <SelectItem value="">Любой опыт</SelectItem>
                   {experienceOptions.map((exp) => (
                     <SelectItem key={exp} value={exp}>
                       {exp}
@@ -115,19 +156,24 @@ const TeachersPage: React.FC = () => {
             
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('teachers.filter.location')}</label>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите город" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все города</SelectItem>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={locationFilter} onValueChange={setLocationFilter} className="flex-1">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите город" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Все города</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="icon" onClick={showLocationMap}>
+                  <MapPin className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           
@@ -150,11 +196,18 @@ const TeachersPage: React.FC = () => {
       {/* Results */}
       <div className="mb-4">
         <p className="text-muted-foreground">
-          Найдено учителей: {filteredTeachers.length}
+          {isLoading ? 'Загрузка...' : `Найдено учителей: ${filteredTeachers.length}`}
         </p>
       </div>
       
-      {filteredTeachers.length > 0 ? (
+      {isLoading ? (
+        // Skeleton loading state
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <TeacherSkeletonLoader key={index} />
+          ))}
+        </div>
+      ) : filteredTeachers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTeachers.map((teacher) => (
             <TeacherCard
@@ -172,10 +225,20 @@ const TeachersPage: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-12">
+          <div className="flex justify-center mb-4">
+            <X className="h-12 w-12 text-muted-foreground" />
+          </div>
           <h3 className="text-lg font-medium mb-2">Учителя не найдены</h3>
           <p className="text-muted-foreground">
             Попробуйте изменить параметры поиска или сбросить фильтры
           </p>
+          <Button 
+            variant="outline"
+            onClick={clearFilters}
+            className="mt-4"
+          >
+            Сбросить все фильтры
+          </Button>
         </div>
       )}
     </div>

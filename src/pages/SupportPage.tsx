@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, MessageSquare, Send, ExternalLink } from 'lucide-react';
+import { Mail, MessageSquare, Send, ExternalLink, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SupportPage: React.FC = () => {
   const { t } = useLanguage();
@@ -24,12 +25,22 @@ const SupportPage: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Имитация загрузки данных с использованием skeleton loader
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Симуляция отправки API запроса
     setTimeout(() => {
       setIsSubmitting(false);
       toast({
@@ -46,8 +57,21 @@ const SupportPage: React.FC = () => {
     }, 1500);
   };
   
+  if (isLoading) {
+    return (
+      <div className="container px-4 py-8 max-w-5xl mx-auto">
+        <Skeleton className="h-10 w-64 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-96 w-full md:col-span-2" />
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="container px-4 py-8 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8">Поддержка</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-4">
           <Card>
@@ -95,6 +119,7 @@ const SupportPage: React.FC = () => {
                       value={name} 
                       onChange={(e) => setName(e.target.value)} 
                       required 
+                      disabled={isSubmitting}
                     />
                   </div>
                   <div className="space-y-2">
@@ -105,6 +130,7 @@ const SupportPage: React.FC = () => {
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 
                       required 
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -115,6 +141,7 @@ const SupportPage: React.FC = () => {
                     value={subject} 
                     onChange={(e) => setSubject(e.target.value)} 
                     required 
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -125,6 +152,7 @@ const SupportPage: React.FC = () => {
                     value={message} 
                     onChange={(e) => setMessage(e.target.value)} 
                     required 
+                    disabled={isSubmitting}
                   />
                 </div>
                 <Button 
@@ -132,8 +160,17 @@ const SupportPage: React.FC = () => {
                   className="w-full" 
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Отправка...' : 'Отправить сообщение'}
-                  {!isSubmitting && <Send className="h-4 w-4 ml-2" />}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Отправка...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Отправить сообщение
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
