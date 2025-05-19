@@ -155,13 +155,15 @@ const MessagesPage: React.FC = () => {
         {/* Conversations List */}
         <Card className="md:col-span-1 overflow-hidden flex flex-col">
           <div className="p-4 border-b">
-            <Input
-              placeholder="Поиск контактов..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-              icon={<Search className="h-4 w-4" />}
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Поиск контактов..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10"
+              />
+            </div>
           </div>
           <div className="overflow-y-auto flex-1">
             {filteredConversations.length > 0 ? (
