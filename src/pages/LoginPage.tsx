@@ -1,25 +1,15 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
-import { 
-  Card, 
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  AlertCircle, 
-  Chrome 
-} from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+
+// Auth Components
+import AuthContainer from '@/components/auth/AuthContainer';
+import AuthError from '@/components/auth/AuthError';
+import LoginForm from '@/components/auth/LoginForm';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton';
 
 const LoginPage: React.FC = () => {
   const { t } = useLanguage();
@@ -118,94 +108,42 @@ const LoginPage: React.FC = () => {
   };
   
   return (
-    <div className="container px-4 py-12 max-w-7xl mx-auto flex justify-center">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{t('auth.login')}</CardTitle>
-          <CardDescription>
-            Войдите в аккаунт для доступа к платформе
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="grid gap-4">
-            <Button 
-              variant="outline" 
-              onClick={handleGoogleLogin} 
-              disabled={isLoading}
-              className="w-full"
-            >
-              <Chrome className="mr-2 h-4 w-4" />
-              Войти через Google
-            </Button>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Или войдите через email
-                </span>
-              </div>
-            </div>
-            
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('auth.email')}</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="mail@example.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">{t('auth.password')}</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Забыли пароль?
-                  </Link>
-                </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="********" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? 'Вход...' : t('auth.submit')}
-              </Button>
-            </form>
+    <AuthContainer
+      title={t('auth.login')}
+      description="Войдите в аккаунт для доступа к платформе"
+      footerText="Еще нет аккаунта?"
+      footerLinkText={t('nav.register')}
+      footerLinkPath="/register"
+    >
+      <div className="grid gap-4">
+        <AuthError message={error} />
+        
+        <GoogleLoginButton 
+          onClick={handleGoogleLogin} 
+          isLoading={isLoading} 
+        />
+        
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <div className="text-center text-sm">
-            Еще нет аккаунта?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              {t('nav.register')}
-            </Link>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Или войдите через email
+            </span>
           </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+        
+        <LoginForm
+          onSubmit={handleLogin}
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoading={isLoading}
+        />
+      </div>
+    </AuthContainer>
   );
 };
 
