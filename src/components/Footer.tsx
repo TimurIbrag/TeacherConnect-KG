@@ -2,6 +2,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import { 
+  Mail, 
+  Phone, 
+  Instagram, 
+  Facebook, 
+  Linkedin, 
+  Twitter 
+} from 'lucide-react';
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
@@ -15,12 +23,26 @@ const Footer: React.FC = () => {
           <div className="space-y-3">
             <h3 className="text-lg font-bold">TeacherConnect KG</h3>
             <p className="text-sm text-muted-foreground">
-              Connecting teachers and schools across Kyrgyzstan.
+              Соединяем учителей и школы по всему Кыргызстану.
             </p>
+            <div className="flex space-x-4 pt-2">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Twitter className="h-5 w-5" />
+              </a>
+            </div>
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Navigation</h3>
+            <h3 className="text-lg font-bold">Навигация</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
@@ -42,11 +64,16 @@ const Footer: React.FC = () => {
                   {t('nav.about')}
                 </Link>
               </li>
+              <li>
+                <Link to="/school-catalog" className="text-sm text-muted-foreground hover:text-primary">
+                  Каталог школ
+                </Link>
+              </li>
             </ul>
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Resources</h3>
+            <h3 className="text-lg font-bold">Информация</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary">
@@ -55,36 +82,43 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/support" className="text-sm text-muted-foreground hover:text-primary">
-                  Support
+                  Поддержка
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary">
-                  Privacy Policy
+                  Политика конфиденциальности
                 </Link>
               </li>
               <li>
                 <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary">
-                  Terms of Use
+                  Условия использования
                 </Link>
               </li>
             </ul>
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Contact</h3>
-            <p className="text-sm text-muted-foreground">
-              Email: info@teacherconnect.kg
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Phone: +996 XXX XXX XXX
-            </p>
+            <h3 className="text-lg font-bold">Контакты</h3>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                info@teacherconnect.kg
+              </p>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                +996 XXX XXX XXX
+              </p>
+              <p className="text-sm text-muted-foreground">
+                г. Бишкек, Кыргызская Республика
+              </p>
+            </div>
           </div>
         </div>
         
         <div className="border-t mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            &copy; {currentYear} TeacherConnect Kyrgyzstan. All rights reserved.
+            &copy; {currentYear} TeacherConnect Kyrgyzstan. Все права защищены.
           </p>
         </div>
       </div>

@@ -13,7 +13,11 @@ import {
   User, 
   LogOut,
   Bell,
-  MessageSquare
+  MessageSquare,
+  Home,
+  Search,
+  School,
+  Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,6 +30,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar: React.FC = () => {
   const { t } = useLanguage();
@@ -34,19 +47,18 @@ const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState<'teacher' | 'school' | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   
-  // Check if user is logged in (this would use a real auth system in production)
+  // Check if user is logged in
   useEffect(() => {
-    // This is a simulation - in a real app, we would check session/token
     const checkLoginStatus = () => {
-      // Check if we have a user in localStorage (this is just for demo)
       const user = localStorage.getItem('user');
       
       if (user) {
         setIsLoggedIn(true);
-        // Parse user type
         try {
           const userData = JSON.parse(user);
+          setUserData(userData);
           setUserType(userData.type);
         } catch (e) {
           console.error('Error parsing user data', e);
@@ -54,12 +66,11 @@ const Navbar: React.FC = () => {
       } else {
         setIsLoggedIn(false);
         setUserType(null);
+        setUserData(null);
       }
     };
     
     checkLoginStatus();
-    
-    // Listen for login/logout events
     window.addEventListener('login', checkLoginStatus);
     window.addEventListener('logout', checkLoginStatus);
     
@@ -74,24 +85,27 @@ const Navbar: React.FC = () => {
   };
   
   const handleLogout = () => {
-    // Clear user from localStorage (in a real app, this would clear tokens and call an API)
     localStorage.removeItem('user');
-    
-    // Dispatch logout event
     window.dispatchEvent(new Event('logout'));
     
-    // Show toast
     toast({
       title: "Выход выполнен",
       description: "Вы успешно вышли из системы",
     });
     
-    // Navigate to homepage
     navigate('/');
   };
   
   const getDashboardLink = () => {
     return userType === 'school' ? '/school-dashboard' : '/teacher-dashboard';
+  };
+
+  // Get initial for avatar
+  const getUserInitial = () => {
+    if (!userData || !userData.name) {
+      return userType === 'school' ? 'SC' : 'TC';
+    }
+    return userData.name.charAt(0).toUpperCase();
   };
 
   return (
@@ -105,57 +119,84 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium hover:text-primary">
-            {t('nav.home')}
-          </Link>
-          <Link to="/teachers" className="text-sm font-medium hover:text-primary">
-            {t('nav.teachers')}
-          </Link>
-          <Link to="/schools" className="text-sm font-medium hover:text-primary">
-            {t('nav.schools')}
-          </Link>
-          <div className="relative group">
-            <button className="text-sm font-medium hover:text-primary flex items-center gap-1">
-              <Info className="h-4 w-4" />
-              Информация
-            </button>
-            <div className="absolute z-50 top-full left-0 mt-1 w-48 rounded-md shadow-lg bg-popover opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border">
-              <div className="py-1 rounded-md">
-                <Link 
-                  to="/about" 
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                >
-                  {t('nav.about')}
-                </Link>
-                <Link 
-                  to="/faq" 
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                >
-                  FAQ
-                </Link>
-                <Link 
-                  to="/support" 
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                >
-                  Поддержка
-                </Link>
-                <Link 
-                  to="/privacy" 
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                >
-                  Политика конфиденциальности
-                </Link>
-                <Link 
-                  to="/terms" 
-                  className="block px-4 py-2 text-sm hover:bg-muted"
-                >
-                  Условия использования
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <div className="hidden md:flex items-center gap-6">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link to="/" className="flex items-center gap-1">
+                    <Home className="h-4 w-4" />
+                    {t('nav.home')}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link to="/teachers" className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    {t('nav.teachers')}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link to="/schools" className="flex items-center gap-1">
+                    <School className="h-4 w-4" />
+                    {t('nav.schools')}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="flex items-center gap-1">
+                  <Info className="h-4 w-4" />
+                  Информация
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[200px] gap-2 p-4 md:w-[250px]">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link to="/about" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                          {t('nav.about')}
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link to="/faq" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                          FAQ
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link to="/support" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                          Поддержка
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link to="/privacy" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                          Политика конфиденциальности
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link to="/terms" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                          Условия использования
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
 
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
@@ -171,14 +212,20 @@ const Navbar: React.FC = () => {
                   <Bell className="h-5 w-5" />
                 </Link>
               </Button>
+
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/saved">
+                  <Heart className="h-5 w-5" />
+                </Link>
+              </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="" alt="@user" />
+                      <AvatarImage src={userData?.photo || ""} alt="@user" />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {userType === 'school' ? 'SC' : 'TC'}
+                        {getUserInitial()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -187,10 +234,10 @@ const Navbar: React.FC = () => {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {userType === 'school' ? 'Школа-гимназия №5' : 'Иванов Иван'}
+                        {userData?.name || (userType === 'school' ? 'Школа' : 'Учитель')}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        user@example.com
+                        {userData?.email || 'user@example.com'}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -201,6 +248,25 @@ const Navbar: React.FC = () => {
                       <span>{userType === 'school' ? 'Панель школы' : 'Мой профиль'}</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/saved">
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Избранное</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/messages">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <span>Сообщения</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/notifications">
+                      <Bell className="mr-2 h-4 w-4" />
+                      <span>Уведомления</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Выйти</span>
@@ -239,59 +305,92 @@ const Navbar: React.FC = () => {
         <div className="container py-4 flex flex-col space-y-4">
           <Link 
             to="/" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <Home className="h-4 w-4" />
             {t('nav.home')}
           </Link>
           <Link 
             to="/teachers" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <User className="h-4 w-4" />
             {t('nav.teachers')}
           </Link>
           <Link 
             to="/schools" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <School className="h-4 w-4" />
             {t('nav.schools')}
           </Link>
           <Link 
             to="/about" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <Info className="h-4 w-4" />
             {t('nav.about')}
           </Link>
           <Link 
             to="/faq" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <HelpCircle className="h-4 w-4" />
             FAQ
           </Link>
           <Link 
             to="/support" 
-            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
+            className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
             onClick={() => setMobileMenuOpen(false)}
           >
+            <MessageSquare className="h-4 w-4" />
             Поддержка
           </Link>
           
           {isLoggedIn ? (
             <>
-              <Link 
-                to={getDashboardLink()} 
-                className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {userType === 'school' ? 'Панель школы' : 'Мой профиль'}
-              </Link>
+              <div className="border-t pt-2">
+                <Link 
+                  to={getDashboardLink()} 
+                  className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <User className="h-4 w-4" />
+                  {userType === 'school' ? 'Панель школы' : 'Мой профиль'}
+                </Link>
+                <Link 
+                  to="/messages" 
+                  className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Сообщения
+                </Link>
+                <Link 
+                  to="/notifications" 
+                  className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Bell className="h-4 w-4" />
+                  Уведомления
+                </Link>
+                <Link 
+                  to="/saved" 
+                  className="px-4 py-2 hover:bg-muted rounded-md text-sm font-medium flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Heart className="h-4 w-4" />
+                  Избранное
+                </Link>
+              </div>
               <Button 
                 variant="outline" 
-                className="mx-4"
+                className="mx-4 mt-2"
                 onClick={() => {
                   handleLogout();
                   setMobileMenuOpen(false);

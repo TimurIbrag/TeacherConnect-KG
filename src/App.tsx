@@ -25,6 +25,9 @@ import SupportPage from "./pages/SupportPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import MessagesPage from "./pages/MessagesPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import SavedItemsPage from "./pages/SavedItemsPage";
 
 // School Catalog Page
 import SchoolCatalogPage from "./pages/SchoolCatalogPage";
@@ -60,16 +63,15 @@ const App = () => (
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 
-                {/* School catalog route */}
+                {/* New or updated routes */}
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/saved" element={<SavedItemsPage />} />
                 <Route path="/school-catalog" element={<SchoolCatalogPage />} />
                 
                 {/* Dashboard routes */}
                 <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
                 <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
-                
-                {/* Temporary placeholders */}
-                <Route path="/messages" element={<div className="container py-20 text-center">Страница сообщений в разработке</div>} />
-                <Route path="/notifications" element={<div className="container py-20 text-center">Страница уведомлений в разработке</div>} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFoundPage />} />
