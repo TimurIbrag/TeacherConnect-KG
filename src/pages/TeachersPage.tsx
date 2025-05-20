@@ -157,8 +157,8 @@ const TeachersPage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('teachers.filter.location')}</label>
               <div className="flex gap-2">
-                <Select value={locationFilter} onValueChange={setLocationFilter} className="flex-1">
-                  <SelectTrigger>
+                <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Выберите город" />
                   </SelectTrigger>
                   <SelectContent>
