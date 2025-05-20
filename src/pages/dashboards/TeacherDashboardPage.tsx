@@ -22,16 +22,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -57,7 +54,6 @@ import {
   Search,
   ThumbsUp,
   ThumbsDown,
-  Upload,
   Trash2,
   UserRound
 } from 'lucide-react';
@@ -145,27 +141,17 @@ const TeacherDashboardPage: React.FC = () => {
     messages: 7
   });
   
+  // Using useForm with defaultValues
   const form = useForm<ProfileFormData>({
-    defaultValues: {
-      ...profileData,
-      profilePhoto: null
-    }
+    defaultValues: profileData
   });
-
+  
+  // Initialize form when profileData changes, but only when not in edit mode
   useEffect(() => {
-    // Проверяем авторизацию
-    if (!isLoggedIn) {
-      navigate('/login');
-    }
-    
-    // Обновляем форму при изменении profileData (только когда не в режиме редактирования)
     if (!editMode) {
-      form.reset({
-        ...profileData,
-        profilePhoto: null
-      });
+      form.reset(profileData);
     }
-  }, [isLoggedIn, navigate, profileData, form, editMode]);
+  }, [profileData, form, editMode]);
   
   // Функция для сохранения профиля
   const saveProfile = (data: ProfileFormData) => {
@@ -262,38 +248,80 @@ const TeacherDashboardPage: React.FC = () => {
   };
   
   // Компонент диалога для редактирования профиля
-  const EditProfileDialog = () => (
-    <Dialog open={editMode} onOpenChange={(open) => {
-      // Если закрываем диалог, сбрасываем форму и превью
-      if (!open) {
-        form.reset({
-          ...profileData,
-          profilePhoto: null
-        });
-        setPhotoPreview(null);
+  const EditProfileDialog = () => {
+    // Keep a local copy of the form state for editing
+    const [localFormState, setLocalFormState] = useState<ProfileFormData>({...profileData});
+
+    // Reset the local form state when the dialog opens
+    useEffect(() => {
+      if (editMode) {
+        setLocalFormState({...profileData});
+        setPhotoPreview(profilePhoto);
       }
-      setEditMode(open);
-    }}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Редактирование профиля</DialogTitle>
-          <DialogDescription>
-            Обновите информацию в вашем профиле. Нажмите Сохранить, когда закончите.
-          </DialogDescription>
-        </DialogHeader>
+    }, [editMode]);
+
+    const handleFieldChange = (field: keyof ProfileFormData, value: any) => {
+      setLocalFormState(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    };
+
+    const handleLocalFormSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      saveProfile(localFormState);
+    };
+
+    // Handle schedule selection
+    const handleScheduleChange = (day: WeekDay, slot: TimeSlot, checked: boolean) => {
+      setLocalFormState(prev => {
+        const newSchedule = [...(prev.schedule || [])];
+        const dayIndex = newSchedule.findIndex(s => s.day === day);
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(saveProfile)} className="space-y-4">
+        if (checked) {
+          if (dayIndex >= 0) {
+            newSchedule[dayIndex].slots.push(slot);
+          } else {
+            newSchedule.push({ day, slots: [slot] });
+          }
+        } else if (dayIndex >= 0) {
+          newSchedule[dayIndex].slots = newSchedule[dayIndex].slots.filter(s => s !== slot);
+          if (newSchedule[dayIndex].slots.length === 0) {
+            newSchedule.splice(dayIndex, 1);
+          }
+        }
+        
+        return { ...prev, schedule: newSchedule };
+      });
+    };
+    
+    return (
+      <Dialog open={editMode} onOpenChange={(open) => {
+        // Если закрываем диалог, сбрасываем форму и превью
+        if (!open && !isUpdating) {
+          setEditMode(false);
+          setPhotoPreview(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Редактирование профиля</DialogTitle>
+            <DialogDescription>
+              Обновите информацию в вашем профиле. Нажмите Сохранить, когда закончите.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleLocalFormSubmit} className="space-y-4">
             <div className="flex justify-center mb-4">
               <div className="relative">
                 <Avatar className="h-24 w-24">
                   {photoPreview ? (
                     <AvatarImage src={photoPreview} alt="Предпросмотр" />
                   ) : profilePhoto ? (
-                    <AvatarImage src={profilePhoto} alt={profileData.fullName} />
+                    <AvatarImage src={profilePhoto} alt={localFormState.fullName} />
                   ) : (
                     <AvatarFallback className="text-lg">
-                      {profileData.fullName ? getInitials(profileData.fullName) : <UserRound />}
+                      {localFormState.fullName ? getInitials(localFormState.fullName) : <UserRound />}
                     </AvatarFallback>
                   )}
                 </Avatar>
@@ -312,70 +340,55 @@ const TeacherDashboardPage: React.FC = () => {
               </div>
             </div>
             
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ФИО</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Иванов Иван Иванович" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="fullName">ФИО</Label>
+              <Input 
+                id="fullName" 
+                value={localFormState.fullName} 
+                onChange={(e) => handleFieldChange('fullName', e.target.value)} 
+                placeholder="Иванов Иван Иванович" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="specialization"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Специализация</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Учитель математики" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="specialization">Специализация</Label>
+              <Input 
+                id="specialization" 
+                value={localFormState.specialization} 
+                onChange={(e) => handleFieldChange('specialization', e.target.value)} 
+                placeholder="Учитель математики" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="education"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Образование</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Кыргызский Национальный Университет" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="education">Образование</Label>
+              <Input 
+                id="education" 
+                value={localFormState.education} 
+                onChange={(e) => handleFieldChange('education', e.target.value)} 
+                placeholder="Кыргызский Национальный Университет" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="experience"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Опыт работы</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="5 лет" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="experience">Опыт работы</Label>
+              <Input 
+                id="experience" 
+                value={localFormState.experience} 
+                onChange={(e) => handleFieldChange('experience', e.target.value)} 
+                placeholder="5 лет" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="workScheduleType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>График работы</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Полный рабочий день" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="workScheduleType">График работы</Label>
+              <Input 
+                id="workScheduleType" 
+                value={localFormState.workScheduleType} 
+                onChange={(e) => handleFieldChange('workScheduleType', e.target.value)} 
+                placeholder="Полный рабочий день" 
+              />
+            </div>
             
             <div className="space-y-2">
               <FormLabel>Гибкий график</FormLabel>
@@ -389,8 +402,7 @@ const TeacherDashboardPage: React.FC = () => {
                     <div className="font-medium">{day.label}</div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {timeSlots.map((slot) => {
-                        const schedule = form.getValues("schedule") || [];
-                        const daySchedule = schedule.find(s => s.day === day.id);
+                        const daySchedule = localFormState.schedule?.find(s => s.day === day.id);
                         const isChecked = daySchedule?.slots.includes(slot) || false;
                         
                         return (
@@ -399,23 +411,7 @@ const TeacherDashboardPage: React.FC = () => {
                               id={`${day.id}-${slot}`} 
                               checked={isChecked}
                               onCheckedChange={(checked) => {
-                                const newSchedule = [...schedule];
-                                const dayIndex = newSchedule.findIndex(s => s.day === day.id);
-                                
-                                if (checked) {
-                                  if (dayIndex >= 0) {
-                                    newSchedule[dayIndex].slots.push(slot);
-                                  } else {
-                                    newSchedule.push({ day: day.id, slots: [slot] });
-                                  }
-                                } else if (dayIndex >= 0) {
-                                  newSchedule[dayIndex].slots = newSchedule[dayIndex].slots.filter(s => s !== slot);
-                                  if (newSchedule[dayIndex].slots.length === 0) {
-                                    newSchedule.splice(dayIndex, 1);
-                                  }
-                                }
-                                
-                                form.setValue("schedule", newSchedule);
+                                handleScheduleChange(day.id, slot, checked === true);
                               }}
                             />
                             <Label htmlFor={`${day.id}-${slot}`}>{slot}</Label>
@@ -428,35 +424,26 @@ const TeacherDashboardPage: React.FC = () => {
               </div>
             </div>
             
-            <FormField
-              control={form.control}
-              name="districts"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Предпочтительные районы</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Бишкек, центр" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="districts">Предпочтительные районы</Label>
+              <Input 
+                id="districts" 
+                value={localFormState.districts} 
+                onChange={(e) => handleFieldChange('districts', e.target.value)} 
+                placeholder="Бишкек, центр" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="about"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>О себе</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      placeholder="Расскажите о себе, своем опыте и методах преподавания..." 
-                      rows={5}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="about">О себе</Label>
+              <Textarea 
+                id="about" 
+                value={localFormState.about} 
+                onChange={(e) => handleFieldChange('about', e.target.value)} 
+                placeholder="Расскажите о себе, своем опыте и методах преподавания..." 
+                rows={5}
+              />
+            </div>
             
             <DialogFooter>
               <Button 
@@ -465,10 +452,6 @@ const TeacherDashboardPage: React.FC = () => {
                 onClick={() => {
                   setEditMode(false);
                   setPhotoPreview(null);
-                  form.reset({
-                    ...profileData,
-                    profilePhoto: null
-                  });
                 }}
                 disabled={isUpdating}
               >
@@ -479,10 +462,10 @@ const TeacherDashboardPage: React.FC = () => {
               </Button>
             </DialogFooter>
           </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
+        </DialogContent>
+      </Dialog>
+    );
+  };
   
   // Компонент диалога для сертификатов
   const CertificatesDialog = () => (
