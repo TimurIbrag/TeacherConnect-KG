@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -299,9 +298,9 @@ const TeacherDashboardPage: React.FC = () => {
                   )}
                 </Avatar>
                 <div className="absolute bottom-0 right-0">
-                  <Label htmlFor="profilePhoto" className="cursor-pointer bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors">
+                  <div className="bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors cursor-pointer flex items-center justify-center" onClick={() => document.getElementById('profilePhoto')?.click()}>
                     <Camera className="h-4 w-4" />
-                  </Label>
+                  </div>
                   <Input 
                     id="profilePhoto"
                     type="file"
