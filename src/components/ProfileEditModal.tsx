@@ -66,17 +66,20 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     photoUrl: '',
   });
   
-  // Инициализируем форму при открытии модального окна
+  // Инициализируем форму при открытии модального окна, только когда модальное окно открывается
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
+    if (isOpen && initialData) {
+      setFormData({...initialData});
+      setFormChanged(false);
     }
-    setFormChanged(false);
   }, [initialData, isOpen]);
   
-  // Отслеживаем изменения формы
+  // Отслеживаем изменения формы с помощью отдельной функции
   const handleChange = (field: keyof ProfileData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      return newData;
+    });
     setFormChanged(true);
   };
   
@@ -92,8 +95,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   };
   
-  // Обработка сохранения формы
+  // Обработка сохранения формы - предотвращаем множественные отправки
   const handleSave = async () => {
+    if (isLoading) return;
+    
     setIsLoading(true);
     
     try {
@@ -122,8 +127,15 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   };
   
+  // Предотвращаем закрытие диалога во время загрузки
+  const handleDialogClose = () => {
+    if (!isLoading) {
+      onClose();
+    }
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={() => !isLoading && onClose()}>
+    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Редактировать профиль</DialogTitle>
