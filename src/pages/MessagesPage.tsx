@@ -1,20 +1,17 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Paperclip, Clock, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
+import ConversationList from '@/components/messages/ConversationList';
+import ChatWindow from '@/components/messages/ChatWindow';
+import { Conversation, Message } from '@/types/messages';
 
 // Mock data for chat conversations
-const mockConversations = [
+const mockConversations: Conversation[] = [
   {
     id: 1,
     name: 'Анна Иванова',
@@ -45,7 +42,7 @@ const mockConversations = [
 ];
 
 // Mock messages for a selected conversation
-const mockMessages = [
+const mockMessages: Message[] = [
   {
     id: 1,
     senderId: 1,
@@ -83,9 +80,7 @@ const MessagesPage: React.FC = () => {
   const [conversations, setConversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<number | null>(1);
   const [messages, setMessages] = useState(mockMessages);
-  const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check if user is logged in
   useEffect(() => {
@@ -103,11 +98,6 @@ const MessagesPage: React.FC = () => {
     }
   }, [navigate, toast]);
 
-  // Scroll to bottom of messages when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   // Handle conversation selection
   const handleSelectConversation = (id: number) => {
     setSelectedConversation(id);
@@ -124,9 +114,7 @@ const MessagesPage: React.FC = () => {
   };
 
   // Handle sending a new message
-  const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
-    
+  const handleSendMessage = (newMessage: string) => {
     const newMsg = {
       id: Date.now(),
       senderId: 'currentUser',
@@ -136,13 +124,7 @@ const MessagesPage: React.FC = () => {
     };
     
     setMessages([...messages, newMsg]);
-    setNewMessage('');
   };
-
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter(
-    conv => conv.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   // Get the selected conversation details
   const currentConversation = conversations.find(conv => conv.id === selectedConversation);
@@ -154,135 +136,23 @@ const MessagesPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(80vh-120px)]">
         {/* Conversations List */}
         <Card className="md:col-span-1 overflow-hidden flex flex-col">
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Поиск контактов..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10"
-              />
-            </div>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map(conv => (
-                <div 
-                  key={conv.id}
-                  onClick={() => handleSelectConversation(conv.id)}
-                  className={cn(
-                    "p-4 border-b cursor-pointer hover:bg-muted/50 flex items-center gap-3",
-                    selectedConversation === conv.id && "bg-muted"
-                  )}
-                >
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={conv.avatar} alt={conv.name} />
-                    <AvatarFallback>{conv.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium truncate">{conv.name}</h3>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{conv.timestamp}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">{conv.role}</p>
-                    <p className="text-sm truncate">
-                      {conv.lastMessage}
-                    </p>
-                  </div>
-                  {conv.unread > 0 && (
-                    <div className="bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
-                      {conv.unread}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                Нет результатов поиска
-              </div>
-            )}
-          </div>
+          <ConversationList 
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onSelectConversation={handleSelectConversation}
+          />
         </Card>
         
         {/* Chat Window */}
         <Card className="md:col-span-2 flex flex-col">
-          {selectedConversation ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={currentConversation?.avatar} alt={currentConversation?.name} />
-                    <AvatarFallback>{currentConversation?.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-medium">{currentConversation?.name}</h3>
-                    <p className="text-xs text-muted-foreground">{currentConversation?.role}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Messages Area */}
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map(msg => (
-                  <div 
-                    key={msg.id}
-                    className={cn(
-                      "flex",
-                      msg.senderId === 'currentUser' ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    <div 
-                      className={cn(
-                        "max-w-[80%] p-3 rounded-lg",
-                        msg.senderId === 'currentUser' 
-                          ? "bg-primary text-primary-foreground rounded-tr-none" 
-                          : "bg-muted rounded-tl-none"
-                      )}
-                    >
-                      <p>{msg.content}</p>
-                      <div className={cn(
-                        "flex items-center gap-1 text-xs mt-1",
-                        msg.senderId === 'currentUser' ? "justify-end" : ""
-                      )}>
-                        <span>{msg.timestamp}</span>
-                        {msg.senderId === 'currentUser' && (
-                          <span>
-                            {msg.read ? "✓✓" : "✓"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </CardContent>
-              
-              {/* Input Area */}
-              <div className="p-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    placeholder="Напишите сообщение..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Выберите чат, чтобы начать общение
-            </div>
-          )}
+          <ChatWindow 
+            selectedConversation={selectedConversation}
+            currentConversation={currentConversation}
+            messages={messages}
+            onSendMessage={handleSendMessage}
+          />
         </Card>
       </div>
     </div>
