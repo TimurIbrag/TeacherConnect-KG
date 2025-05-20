@@ -54,7 +54,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [formChanged, setFormChanged] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   
-  // Локальные состояния для всех полей формы
+  // Use a ref for initial data to prevent unnecessary re-renders
+  const initialDataRef = React.useRef<ProfileData | undefined>(initialData);
+  
+  // Local state for form data
   const [formData, setFormData] = useState<ProfileData>({
     name: '',
     specialization: '',
@@ -66,47 +69,48 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     photoUrl: '',
   });
   
-  // Инициализируем форму при открытии модального окна, только когда модальное окно открывается
+  // Update local state when modal opens with new initial data
   useEffect(() => {
     if (isOpen && initialData) {
+      initialDataRef.current = initialData;
       setFormData({...initialData});
       setFormChanged(false);
     }
   }, [initialData, isOpen]);
   
-  // Отслеживаем изменения формы с помощью отдельной функции
-  const handleChange = (field: keyof ProfileData, value: string) => {
+  // Track form changes with memoized handler
+  const handleChange = React.useCallback((field: keyof ProfileData, value: string) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       return newData;
     });
     setFormChanged(true);
-  };
+  }, []);
   
-  // Обработка загрузки аватара
-  const handleImageChange = (file: File | null) => {
+  // Handle image upload
+  const handleImageChange = React.useCallback((file: File | null) => {
     setPhoto(file);
     if (file) {
-      // Создаем временный URL для предпросмотра
+      // Create a temporary URL for preview
       const tempUrl = URL.createObjectURL(file);
       handleChange('photoUrl', tempUrl);
     } else {
       handleChange('photoUrl', '');
     }
-  };
+  }, [handleChange]);
   
-  // Обработка сохранения формы - предотвращаем множественные отправки
+  // Handle form submission
   const handleSave = async () => {
     if (isLoading) return;
     
     setIsLoading(true);
     
     try {
-      // Симулируем задержку API
+      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Здесь будет логика загрузки фото, если оно изменилось
-      // и сохранения данных через API
+      // Here would be logic to upload photo if it changed
+      // and save data through API
       
       onSave(formData);
       
@@ -127,7 +131,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   };
   
-  // Предотвращаем закрытие диалога во время загрузки
+  // Prevent dialog close during loading
   const handleDialogClose = () => {
     if (!isLoading) {
       onClose();
