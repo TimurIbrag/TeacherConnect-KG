@@ -45,12 +45,9 @@ const useFormField = () => {
   const itemContext = React.useContext(FormItemContext)
   const formContext = useFormContext()
   
-  // Check for missing contexts and provide fallbacks
-  const hasFormContext = !!formContext
-  const hasFieldContext = !!fieldContext
-  const hasItemContext = !!itemContext
+  const { name } = fieldContext || { name: "" };
   
-  if (!hasFormContext || !hasFieldContext || !hasItemContext) {
+  if (!formContext || !fieldContext || !itemContext) {
     return {
       id: "",
       name: "" as any,
@@ -63,16 +60,16 @@ const useFormField = () => {
   
   const { getFieldState, formState } = formContext
   
-  // Ensure name exists before getting field state
-  const fieldState = fieldContext.name ? 
-    getFieldState(fieldContext.name, formState) : 
-    { error: undefined, isDirty: false, isTouched: false };
+  // Make sure we have a name before getting field state
+  const fieldState = name ? 
+    getFieldState(name, formState) : 
+    { error: undefined, isDirty: false, isTouched: false }
   
   const { id } = itemContext
 
   return {
     id,
-    name: fieldContext.name,
+    name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,

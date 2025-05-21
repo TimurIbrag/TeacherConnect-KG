@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import AvatarUploader from './AvatarUploader';
 
-interface ProfileData {
+export interface ProfileData {
   name: string;
   specialization: string;
   education: string;
@@ -72,7 +72,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   // Update local state when modal opens with new initial data
   useEffect(() => {
     if (isOpen) {
-      // Always use completely empty data for new profiles
+      // If initialData is provided, use it; otherwise use empty data
       const dataToUse = initialData || {...emptyProfileData};
       setFormData({...dataToUse});
       setFormChanged(false);
@@ -94,10 +94,16 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   // Handle image upload with proper storage
   const handleImageChange = React.useCallback((file: File | null) => {
     setPhoto(file);
+    
     if (file) {
       // Create a temporary URL for preview
-      const tempUrl = URL.createObjectURL(file);
-      handleChange('photoUrl', tempUrl);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result && typeof event.target.result === 'string') {
+          handleChange('photoUrl', event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
       setFormChanged(true);
     } else {
       handleChange('photoUrl', '');
@@ -118,7 +124,13 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       // For now, simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Save data including current photo URL (in a real app, this would be a permanent URL)
+      // Process the photo (would typically send to a server in a real app)
+      if (photo) {
+        console.log("Photo ready for upload:", photo.name, photo.size);
+        // The photoUrl is already set in formData from the handleImageChange function
+      }
+      
+      // Save data including current photo URL
       onSave(formData);
       
       toast({
@@ -126,19 +138,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         description: "Ваши изменения успешно сохранены",
       });
       
-      // Ensure photo is stored properly for next time by storing it in local/session storage
-      // (this is a simulation of persistent storage)
-      if (formData.photoUrl) {
-        try {
-          // In a real app, you'd upload to a server - this is just for demo
-          localStorage.setItem('userProfilePhoto', formData.photoUrl);
-        } catch (e) {
-          console.error('Error saving photo to local storage:', e);
-        }
-      }
-      
       onClose();
     } catch (error) {
+      console.error("Error saving profile:", error);
       toast({
         title: "Ошибка сохранения",
         description: "Произошла ошибка при сохранении профиля",

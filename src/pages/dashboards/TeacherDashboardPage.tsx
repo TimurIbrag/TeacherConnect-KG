@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -58,12 +59,13 @@ import {
   UserRound
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import ProfileEditModal, { emptyProfileData } from '@/components/ProfileEditModal';
 
-// Типы для дней недели и временных слотов
+// Types for weekdays and time slots
 type WeekDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 type TimeSlot = '8:00-10:00' | '10:00-12:00' | '12:00-14:00' | '14:00-16:00' | '16:00-18:00' | '18:00-20:00';
 
-// Данные для гибкого графика
+// Data for flexible schedule
 const weekDays: { id: WeekDay; label: string }[] = [
   { id: 'monday', label: 'Понедельник' },
   { id: 'tuesday', label: 'Вторник' },
@@ -107,38 +109,68 @@ type CertificateType = {
   file?: File;
 };
 
+// Helper function to get stored profile data or empty data
+const getStoredProfile = (): ProfileFormData => {
+  try {
+    const storedData = localStorage.getItem('teacherProfileData');
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+  } catch (error) {
+    console.error("Error loading profile data:", error);
+  }
+  
+  // Return completely empty data if nothing is stored
+  return {
+    fullName: '',
+    specialization: '',
+    education: '',
+    experience: '',
+    workScheduleType: '',
+    districts: '',
+    about: '',
+    schedule: []
+  };
+};
+
 const TeacherDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // В реальном приложении проверяем авторизацию
+  // In a real app, check authorization
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [profileData, setProfileData] = useState<ProfileFormData>({
-    fullName: 'Нурланова Айнура',
-    specialization: 'Учитель английского языка',
-    education: 'Кыргызский Национальный Университет',
-    experience: '7 лет',
-    workScheduleType: 'Полный рабочий день',
-    districts: 'Бишкек, центр',
-    about: 'Опытный преподаватель английского языка с сильными навыками коммуникации и индивидуальным подходом к каждому ученику. Специализируюсь на подготовке к международным экзаменам.',
-    schedule: []
-  });
+  // Initialize with empty data or data from localStorage
+  const [profileData, setProfileData] = useState<ProfileFormData>(getStoredProfile());
   
-  // Стейт для фото профиля
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  // State for profile photo
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(() => {
+    // Try to restore profile photo from localStorage
+    try {
+      return localStorage.getItem('userProfilePhoto') || null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
-  // Стейт для сертификатов
-  const [certificates, setCertificates] = useState<CertificateType[]>([]);
+  // State for certificates
+  const [certificates, setCertificates] = useState<CertificateType[]>(() => {
+    try {
+      const storedCertificates = localStorage.getItem('teacherCertificates');
+      return storedCertificates ? JSON.parse(storedCertificates) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [showCertificatesDialog, setShowCertificatesDialog] = useState(false);
   
-  // Стейт для статистики
+  // State for stats
   const [stats, setStats] = useState({
-    profileViews: 56,
-    responses: 4,
-    messages: 7
+    profileViews: 0,
+    responses: 0,
+    messages: 0
   });
   
   // Using useForm with defaultValues
@@ -153,27 +185,20 @@ const TeacherDashboardPage: React.FC = () => {
     }
   }, [profileData, form, editMode]);
   
-  // Функция для сохранения профиля
+  // Function to save profile
   const saveProfile = (data: ProfileFormData) => {
     setIsUpdating(true);
     
-    // Имитация обращения к API
+    // Save to localStorage
+    try {
+      localStorage.setItem('teacherProfileData', JSON.stringify(data));
+    } catch (error) {
+      console.error("Error saving profile data:", error);
+    }
+    
+    // Simulate API call
     setTimeout(() => {
-      // Обрабатываем фото профиля, если оно было загружено
-      if (data.profilePhoto && data.profilePhoto instanceof File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target && typeof e.target.result === 'string') {
-            setProfilePhoto(e.target.result);
-          }
-        };
-        reader.readAsDataURL(data.profilePhoto);
-      }
-      
-      const updatedData = { ...data };
-      delete updatedData.profilePhoto; // Удаляем объект File перед сохранением в стейт
-      
-      setProfileData(updatedData);
+      setProfileData(data);
       setEditMode(false);
       setIsUpdating(false);
       
@@ -184,15 +209,15 @@ const TeacherDashboardPage: React.FC = () => {
     }, 1000);
   };
   
-  // Функция для обработки загрузки фото профиля
+  // Function to handle profile photo upload
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Устанавливаем файл в форму
+    // Set file in the form
     form.setValue('profilePhoto', file);
     
-    // Создаем превью
+    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target && typeof e.target.result === 'string') {
@@ -202,7 +227,7 @@ const TeacherDashboardPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
   
-  // Обработчик добавления сертификата
+  // Handler for adding certificate
   const handleAddCertificate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -212,15 +237,23 @@ const TeacherDashboardPage: React.FC = () => {
       date: formData.get('certificateDate') as string,
     };
     
-    // Добавляем файл, если он был загружен
+    // Add file if uploaded
     const fileInput = e.currentTarget.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput.files && fileInput.files.length > 0) {
       newCertificate.file = fileInput.files[0];
     }
     
-    setCertificates([...certificates, newCertificate]);
+    const updatedCertificates = [...certificates, newCertificate];
+    setCertificates(updatedCertificates);
     
-    // Сбрасываем форму
+    // Save to localStorage
+    try {
+      localStorage.setItem('teacherCertificates', JSON.stringify(updatedCertificates));
+    } catch (error) {
+      console.error("Error saving certificates:", error);
+    }
+    
+    // Reset form
     e.currentTarget.reset();
     
     toast({
@@ -229,16 +262,25 @@ const TeacherDashboardPage: React.FC = () => {
     });
   };
   
-  // Обработчик удаления сертификата
+  // Handler for deleting certificate
   const handleDeleteCertificate = (id: string) => {
-    setCertificates(certificates.filter(cert => cert.id !== id));
+    const updatedCertificates = certificates.filter(cert => cert.id !== id);
+    setCertificates(updatedCertificates);
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('teacherCertificates', JSON.stringify(updatedCertificates));
+    } catch (error) {
+      console.error("Error saving certificates after delete:", error);
+    }
+    
     toast({
       title: "Сертификат удален",
       description: "Сертификат успешно удален из вашего профиля",
     });
   };
   
-  // Функция для получения инициалов из имени
+  // Function to get initials from name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -247,7 +289,30 @@ const TeacherDashboardPage: React.FC = () => {
       .toUpperCase();
   };
   
-  // Компонент диалога для редактирования профиля
+  // Handle profile update with photo
+  const handleProfileSave = (data: any) => {
+    // Save the profile data
+    setProfileData(data);
+    
+    // If there's a photo URL in the data, save it separately
+    if (data.photoUrl) {
+      setProfilePhoto(data.photoUrl);
+      try {
+        localStorage.setItem('userProfilePhoto', data.photoUrl);
+      } catch (error) {
+        console.error("Error saving profile photo:", error);
+      }
+    }
+    
+    // Save the updated profile data to localStorage
+    try {
+      localStorage.setItem('teacherProfileData', JSON.stringify(data));
+    } catch (error) {
+      console.error("Error saving profile data:", error);
+    }
+  };
+  
+  // Component dialog for editing profile
   const EditProfileDialog = () => {
     // Keep a local copy of the form state for editing
     const [localFormState, setLocalFormState] = useState<ProfileFormData>({...profileData});
@@ -297,7 +362,7 @@ const TeacherDashboardPage: React.FC = () => {
     
     return (
       <Dialog open={editMode} onOpenChange={(open) => {
-        // Если закрываем диалог, сбрасываем форму и превью
+        // If closing dialog, reset form and preview
         if (!open && !isUpdating) {
           setEditMode(false);
           setPhotoPreview(null);
@@ -467,7 +532,7 @@ const TeacherDashboardPage: React.FC = () => {
     );
   };
   
-  // Компонент диалога для сертификатов
+  // Component dialog for certificates
   const CertificatesDialog = () => (
     <Dialog open={showCertificatesDialog} onOpenChange={setShowCertificatesDialog}>
       <DialogContent className="sm:max-w-[500px]">
@@ -532,6 +597,11 @@ const TeacherDashboardPage: React.FC = () => {
       </DialogContent>
     </Dialog>
   );
+
+  // Use the ProfileEditModal component for editing main profile
+  const openProfileEditModal = () => {
+    setEditMode(true);
+  };
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -551,7 +621,7 @@ const TeacherDashboardPage: React.FC = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>Мой профиль</CardTitle>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditMode(true)}>
+                  <Button variant="outline" size="sm" className="gap-1" onClick={openProfileEditModal}>
                     <Edit className="h-4 w-4" />
                     Редактировать
                   </Button>
@@ -988,8 +1058,14 @@ const TeacherDashboardPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Диалоги */}
-      <EditProfileDialog />
+      {/* Use the imported ProfileEditModal */}
+      <ProfileEditModal 
+        isOpen={editMode}
+        onClose={() => setEditMode(false)}
+        initialData={profileData}
+        onSave={handleProfileSave}
+        userType="teacher"
+      />
       <CertificatesDialog />
     </div>
   );
