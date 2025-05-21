@@ -43,13 +43,14 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  
-  // Add a check to handle cases where useFormContext might return null
   const formContext = useFormContext()
   
-  // Early return with default values if context is missing
-  if (!fieldContext || !formContext || !itemContext) {
-    console.warn("useFormField must be used within <FormField> and proper form context")
+  // Check for missing contexts and provide fallbacks
+  const hasFormContext = !!formContext
+  const hasFieldContext = !!fieldContext
+  const hasItemContext = !!itemContext
+  
+  if (!hasFormContext || !hasFieldContext || !hasItemContext) {
     return {
       id: "",
       name: "" as any,
@@ -61,7 +62,12 @@ const useFormField = () => {
   }
   
   const { getFieldState, formState } = formContext
-  const fieldState = getFieldState(fieldContext.name, formState)
+  
+  // Ensure name exists before getting field state
+  const fieldState = fieldContext.name ? 
+    getFieldState(fieldContext.name, formState) : 
+    { error: undefined, isDirty: false, isTouched: false };
+  
   const { id } = itemContext
 
   return {

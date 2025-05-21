@@ -34,13 +34,13 @@ interface ProfileData {
   photoUrl: string;
 }
 
-// Default empty profile data
+// Default empty profile data - completely empty with no default values
 export const emptyProfileData: ProfileData = {
   name: '',
   specialization: '',
   education: '',
   experience: '',
-  schedule: 'full-time',
+  schedule: 'full-time', // Only keeping default for dropdown
   location: '',
   bio: '',
   photoUrl: '',
@@ -66,25 +66,21 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [formChanged, setFormChanged] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   
-  // Use a ref for initial data to prevent unnecessary re-renders
-  const initialDataRef = React.useRef<ProfileData | undefined>(initialData);
-  
-  // Local state for form data
-  const [formData, setFormData] = useState<ProfileData>({
-    ...emptyProfileData,
-    ...(initialData || {})
-  });
+  // Use local state for form data without any default values
+  const [formData, setFormData] = useState<ProfileData>(emptyProfileData);
   
   // Update local state when modal opens with new initial data
   useEffect(() => {
     if (isOpen) {
-      // Use empty profile data if no initial data is provided
-      const dataToUse = initialData || emptyProfileData;
-      initialDataRef.current = dataToUse;
+      // Always use completely empty data for new profiles
+      const dataToUse = initialData || {...emptyProfileData};
       setFormData({...dataToUse});
       setFormChanged(false);
+      
+      // Reset photo state when modal opens
+      setPhoto(null);
     }
-  }, [initialData, isOpen]);
+  }, [isOpen, initialData]);
   
   // Track form changes with memoized handler
   const handleChange = React.useCallback((field: keyof ProfileData, value: string) => {
@@ -95,37 +91,51 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setFormChanged(true);
   }, []);
   
-  // Handle image upload
+  // Handle image upload with proper storage
   const handleImageChange = React.useCallback((file: File | null) => {
     setPhoto(file);
     if (file) {
       // Create a temporary URL for preview
       const tempUrl = URL.createObjectURL(file);
       handleChange('photoUrl', tempUrl);
+      setFormChanged(true);
     } else {
       handleChange('photoUrl', '');
     }
   }, [handleChange]);
   
-  // Handle form submission
+  // Handle form submission with improved photo handling
   const handleSave = async () => {
     if (isLoading) return;
     
     setIsLoading(true);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // In a real application with a backend:
+      // 1. First upload the photo to storage service and get a permanent URL
+      // 2. Then save the form data with the permanent photo URL
       
-      // Here would be logic to upload photo if it changed
-      // and save data through API
+      // For now, simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Save data including current photo URL (in a real app, this would be a permanent URL)
       onSave(formData);
       
       toast({
         title: "Профиль обновлен",
         description: "Ваши изменения успешно сохранены",
       });
+      
+      // Ensure photo is stored properly for next time by storing it in local/session storage
+      // (this is a simulation of persistent storage)
+      if (formData.photoUrl) {
+        try {
+          // In a real app, you'd upload to a server - this is just for demo
+          localStorage.setItem('userProfilePhoto', formData.photoUrl);
+        } catch (e) {
+          console.error('Error saving photo to local storage:', e);
+        }
+      }
       
       onClose();
     } catch (error) {
@@ -177,6 +187,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 disabled={isLoading}
+                placeholder={userType === 'teacher' ? 'Введите ваше полное имя' : 'Введите название школы'}
               />
             </div>
             
@@ -189,6 +200,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 value={formData.specialization}
                 onChange={(e) => handleChange('specialization', e.target.value)}
                 disabled={isLoading}
+                placeholder={userType === 'teacher' ? 'Например: Учитель английского языка' : 'Например: Языковая школа'}
               />
             </div>
             
@@ -202,6 +214,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   value={formData.education}
                   onChange={(e) => handleChange('education', e.target.value)}
                   disabled={isLoading}
+                  placeholder={userType === 'teacher' ? 'Укажите ваше образование' : 'Укажите тип школы'}
                 />
               </div>
               
@@ -214,6 +227,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   value={formData.experience}
                   onChange={(e) => handleChange('experience', e.target.value)}
                   disabled={isLoading}
+                  placeholder={userType === 'teacher' ? 'Например: 5 лет' : 'Например: 2010'}
                 />
               </div>
             </div>
@@ -246,6 +260,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
                   disabled={isLoading}
+                  placeholder={userType === 'teacher' ? 'Например: Бишкек, центр' : 'Полный адрес школы'}
                 />
               </div>
             </div>
@@ -258,6 +273,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 value={formData.bio}
                 onChange={(e) => handleChange('bio', e.target.value)}
                 disabled={isLoading}
+                placeholder={userType === 'teacher' 
+                  ? 'Расскажите о своём опыте, методах преподавания и специализации' 
+                  : 'Расскажите о вашей школе, программах и преимуществах'}
               />
             </div>
           </div>
@@ -269,7 +287,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={!formChanged || isLoading}
+            disabled={isLoading}
           >
             {isLoading ? (
               <>
