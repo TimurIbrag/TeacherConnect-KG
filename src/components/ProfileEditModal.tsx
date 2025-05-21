@@ -34,6 +34,18 @@ interface ProfileData {
   photoUrl: string;
 }
 
+// Default empty profile data
+export const emptyProfileData: ProfileData = {
+  name: '',
+  specialization: '',
+  education: '',
+  experience: '',
+  schedule: 'full-time',
+  location: '',
+  bio: '',
+  photoUrl: '',
+};
+
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -59,21 +71,17 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   
   // Local state for form data
   const [formData, setFormData] = useState<ProfileData>({
-    name: '',
-    specialization: '',
-    education: '',
-    experience: '',
-    schedule: 'full-time',
-    location: '',
-    bio: '',
-    photoUrl: '',
+    ...emptyProfileData,
+    ...(initialData || {})
   });
   
   // Update local state when modal opens with new initial data
   useEffect(() => {
-    if (isOpen && initialData) {
-      initialDataRef.current = initialData;
-      setFormData({...initialData});
+    if (isOpen) {
+      // Use empty profile data if no initial data is provided
+      const dataToUse = initialData || emptyProfileData;
+      initialDataRef.current = dataToUse;
+      setFormData({...dataToUse});
       setFormChanged(false);
     }
   }, [initialData, isOpen]);
