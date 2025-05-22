@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -59,7 +58,7 @@ import {
   UserRound
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import ProfileEditModal, { emptyProfileData } from '@/components/ProfileEditModal';
+import ProfileEditModal, { emptyProfileData, ProfileData } from '@/components/ProfileEditModal';
 
 // Types for weekdays and time slots
 type WeekDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
@@ -130,6 +129,20 @@ const getStoredProfile = (): ProfileFormData => {
     districts: '',
     about: '',
     schedule: []
+  };
+};
+
+// Map ProfileFormData to ProfileData for the modal
+const mapProfileFormToProfileData = (formData: ProfileFormData): ProfileData => {
+  return {
+    name: formData.fullName || '',
+    specialization: formData.specialization || '',
+    education: formData.education || '',
+    experience: formData.experience || '',
+    schedule: formData.workScheduleType || '',
+    location: formData.districts || '',
+    bio: formData.about || '',
+    photoUrl: profilePhoto || '',
   };
 };
 
@@ -290,9 +303,21 @@ const TeacherDashboardPage: React.FC = () => {
   };
   
   // Handle profile update with photo
-  const handleProfileSave = (data: any) => {
+  const handleProfileSave = (data: ProfileData) => {
+    // Convert ProfileData back to ProfileFormData for saving
+    const updatedProfileData: ProfileFormData = {
+      ...profileData,
+      fullName: data.name,
+      specialization: data.specialization,
+      education: data.education,
+      experience: data.experience,
+      workScheduleType: data.schedule,
+      districts: data.location,
+      about: data.bio,
+    };
+    
     // Save the profile data
-    setProfileData(data);
+    setProfileData(updatedProfileData);
     
     // If there's a photo URL in the data, save it separately
     if (data.photoUrl) {
@@ -306,7 +331,7 @@ const TeacherDashboardPage: React.FC = () => {
     
     // Save the updated profile data to localStorage
     try {
-      localStorage.setItem('teacherProfileData', JSON.stringify(data));
+      localStorage.setItem('teacherProfileData', JSON.stringify(updatedProfileData));
     } catch (error) {
       console.error("Error saving profile data:", error);
     }
@@ -1058,11 +1083,11 @@ const TeacherDashboardPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Use the imported ProfileEditModal */}
+      {/* Use the imported ProfileEditModal with properly mapped data */}
       <ProfileEditModal 
         isOpen={editMode}
         onClose={() => setEditMode(false)}
-        initialData={profileData}
+        initialData={mapProfileFormToProfileData(profileData)}
         onSave={handleProfileSave}
         userType="teacher"
       />
