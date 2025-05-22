@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,14 +136,6 @@ const ProfileTab = () => {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-1 text-destructive hover:text-destructive" 
-                onClick={resetProfileData}
-              >
-                Сбросить данные
-              </Button>
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditMode(true)}>
                 <Edit className="h-4 w-4" />
                 Редактировать
