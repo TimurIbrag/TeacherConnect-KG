@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { schoolsData, schoolTypes, locations } from '@/data/mockData';
 import SchoolCard from '@/components/SchoolCard';
@@ -18,12 +18,21 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Search, Filter, X, CheckSquare } from 'lucide-react';
+import { Search, Filter, X, CheckSquare, Navigation } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { useToast } from '@/hooks/use-toast';
+
+// Interface for coordinates
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 const SchoolsPage: React.FC = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,18 +40,124 @@ const SchoolsPage: React.FC = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [housingFilter, setHousingFilter] = useState(false);
   
+  // Distance filter states
+  const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(null);
+  const [distanceFilter, setDistanceFilter] = useState<number | null>(null);
+  const [showDistanceInResults, setShowDistanceInResults] = useState(false);
+  const [isLocationPermissionGranted, setIsLocationPermissionGranted] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  // Distance radius options in km
+  const radiusOptions = [1, 3, 5, 7, 10, 13, 15, 20, 25, 30];
+  
+  // Get user's location
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Ошибка",
+        description: "Геолокация не поддерживается вашим браузером",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsGettingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserCoordinates({ latitude, longitude });
+        setIsLocationPermissionGranted(true);
+        setShowDistanceInResults(true);
+        
+        toast({
+          title: "Местоположение определено",
+          description: "Фильтр по расстоянию активирован"
+        });
+        setIsGettingLocation(false);
+        // Close drawer if open
+        if (isDrawerOpen) setIsDrawerOpen(false);
+      },
+      (error) => {
+        toast({
+          title: "Ошибка определения местоположения",
+          description: error.message,
+          variant: "destructive"
+        });
+        setIsGettingLocation(false);
+      }
+    );
+  };
+  
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  };
+  
+  // Get school coordinates (in a real app, this would come from the database)
+  const getSchoolCoordinates = (address: string): Coordinates => {
+    // Using random coordinates around typical Kyrgyzstan cities
+    // This is mock data for demonstration purposes
+    const baseCoordinates: {[key: string]: Coordinates} = {
+      'Бишкек': { latitude: 42.8746, longitude: 74.5698 },
+      'Ош': { latitude: 40.5283, longitude: 72.7985 },
+      'Каракол': { latitude: 42.4907, longitude: 78.3936 },
+      'Джалал-Абад': { latitude: 40.9333, longitude: 73.0000 },
+      'Нарын': { latitude: 41.4300, longitude: 75.9911 },
+    };
+    
+    // Find which city is in the address
+    const city = Object.keys(baseCoordinates).find(city => address.includes(city)) || 'Бишкек';
+    const base = baseCoordinates[city];
+    
+    // Add some randomness to create different locations within the city
+    const randomOffset = () => (Math.random() - 0.5) * 0.05; // Approx 5km offset
+    
+    return {
+      latitude: base.latitude + randomOffset(),
+      longitude: base.longitude + randomOffset()
+    };
+  };
+  
   // Handle filters
   const filteredSchools = schoolsData.filter((school) => {
+    // Basic filters
     const matchesSearch = school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           school.specialization.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = !typeFilter || school.type === typeFilter;
-    
-    // Check if the school's address includes the locationFilter instead of looking for a location property
     const matchesLocation = !locationFilter || school.address.includes(locationFilter);
-    
     const matchesHousing = !housingFilter || school.housing === true;
     
-    return matchesSearch && matchesType && matchesLocation && matchesHousing;
+    // Distance filter
+    let matchesDistance = true;
+    if (userCoordinates && distanceFilter) {
+      const schoolCoords = getSchoolCoordinates(school.address);
+      const distance = calculateDistance(
+        userCoordinates.latitude,
+        userCoordinates.longitude,
+        schoolCoords.latitude,
+        schoolCoords.longitude
+      );
+      
+      // Store the calculated distance on the school object for display
+      (school as any).distance = distance;
+      
+      // Check if the school is within the selected radius
+      matchesDistance = distance <= distanceFilter;
+    }
+    
+    return matchesSearch && matchesType && matchesLocation && matchesHousing && matchesDistance;
   });
   
   // Clear all filters
@@ -51,10 +166,26 @@ const SchoolsPage: React.FC = () => {
     setTypeFilter('');
     setLocationFilter('');
     setHousingFilter(false);
+    setDistanceFilter(null);
+    
+    toast({
+      title: "Фильтры сброшены",
+      description: "Показаны все школы",
+    });
+  };
+  
+  // Clear just the distance filter
+  const clearDistanceFilter = () => {
+    setDistanceFilter(null);
+    setShowDistanceInResults(false);
+    
+    toast({
+      description: "Фильтр по расстоянию отключен",
+    });
   };
   
   // Check if any filter is active
-  const hasActiveFilters = searchTerm || typeFilter || locationFilter || housingFilter;
+  const hasActiveFilters = searchTerm || typeFilter || locationFilter || housingFilter || distanceFilter;
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -91,7 +222,7 @@ const SchoolsPage: React.FC = () => {
                   <SelectValue placeholder="Выберите тип" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все типы</SelectItem>
+                  <SelectItem value="">Все типы</SelectItem>
                   {schoolTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -108,7 +239,7 @@ const SchoolsPage: React.FC = () => {
                   <SelectValue placeholder="Выберите город" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все города</SelectItem>
+                  <SelectItem value="">Все города</SelectItem>
                   {locations.map((location) => (
                     <SelectItem key={location} value={location}>
                       {location}
@@ -131,6 +262,118 @@ const SchoolsPage: React.FC = () => {
                 </Label>
               </div>
             </div>
+          </div>
+          
+          {/* Distance Filter - Desktop */}
+          <div className="mt-4 hidden md:block">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Navigation className="h-4 w-4" />
+                Расстояние
+              </label>
+              
+              {userCoordinates ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {radiusOptions.map((radius) => (
+                    <Button
+                      key={radius}
+                      variant={distanceFilter === radius ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDistanceFilter(radius)}
+                      className={distanceFilter === radius ? "bg-primary" : ""}
+                    >
+                      {radius} км
+                    </Button>
+                  ))}
+                  {distanceFilter && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearDistanceFilter}
+                      className="ml-2"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Сбросить
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={getUserLocation}
+                  disabled={isGettingLocation}
+                >
+                  {isGettingLocation ? "Определение..." : "Определить моё местоположение"}
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Distance Filter - Mobile */}
+          <div className="mt-4 md:hidden">
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full">
+                  <Navigation className="h-4 w-4 mr-2" />
+                  {distanceFilter ? `В радиусе ${distanceFilter} км` : "Фильтр по расстоянию"}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Фильтр по расстоянию</DrawerTitle>
+                </DrawerHeader>
+                <div className="px-4 py-2">
+                  {userCoordinates ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-center">Выберите радиус поиска:</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {radiusOptions.map((radius) => (
+                          <Button
+                            key={radius}
+                            variant={distanceFilter === radius ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setDistanceFilter(radius);
+                              setIsDrawerOpen(false);
+                            }}
+                          >
+                            {radius} км
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-4 py-8">
+                      <p className="text-sm text-center text-muted-foreground">
+                        Чтобы активировать фильтр по расстоянию, нужно определить ваше местоположение
+                      </p>
+                      <Button
+                        variant="default"
+                        onClick={getUserLocation}
+                        disabled={isGettingLocation}
+                        className="w-full"
+                      >
+                        {isGettingLocation ? "Определение..." : "Определить местоположение"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <DrawerFooter>
+                  {distanceFilter && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        clearDistanceFilter();
+                        setIsDrawerOpen(false);
+                      }}
+                    >
+                      Сбросить фильтр по расстоянию
+                    </Button>
+                  )}
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
           </div>
           
           {hasActiveFilters && (
@@ -171,6 +414,7 @@ const SchoolsPage: React.FC = () => {
               ratings={school.ratings}
               views={school.views}
               housing={school.housing}
+              distance={showDistanceInResults ? (school as any).distance : undefined}
             />
           ))}
         </div>
@@ -180,6 +424,13 @@ const SchoolsPage: React.FC = () => {
           <p className="text-muted-foreground">
             Попробуйте изменить параметры поиска или сбросить фильтры
           </p>
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            className="mt-4"
+          >
+            Сбросить все фильтры
+          </Button>
         </div>
       )}
     </div>

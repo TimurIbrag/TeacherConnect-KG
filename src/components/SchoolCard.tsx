@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Briefcase } from 'lucide-react';
+import { MapPin, Star, Eye, Briefcase, Navigation } from 'lucide-react';
 
 interface SchoolCardProps {
   id: number;
@@ -18,6 +18,7 @@ interface SchoolCardProps {
   ratings: number;
   views: number;
   housing?: boolean;
+  distance?: number;
 }
 
 const SchoolCard: React.FC<SchoolCardProps> = ({
@@ -31,6 +32,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   ratings,
   views,
   housing,
+  distance,
 }) => {
   const { t } = useLanguage();
 
@@ -57,6 +59,12 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
           <MapPin className="w-3 h-3" />
           <span>{address}</span>
+          {distance !== undefined && (
+            <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
+              <Navigation className="w-3 h-3" />
+              {distance} км
+            </Badge>
+          )}
         </div>
         <div className="mt-3">
           <div className="flex items-center gap-1 text-sm">
