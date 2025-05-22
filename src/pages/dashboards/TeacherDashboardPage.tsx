@@ -133,19 +133,6 @@ const getStoredProfile = (): ProfileFormData => {
 };
 
 // Map ProfileFormData to ProfileData for the modal
-const mapProfileFormToProfileData = (formData: ProfileFormData): ProfileData => {
-  return {
-    name: formData.fullName || '',
-    specialization: formData.specialization || '',
-    education: formData.education || '',
-    experience: formData.experience || '',
-    schedule: formData.workScheduleType || '',
-    location: formData.districts || '',
-    bio: formData.about || '',
-    photoUrl: profilePhoto || '',
-  };
-};
-
 const TeacherDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -337,6 +324,20 @@ const TeacherDashboardPage: React.FC = () => {
     }
   };
   
+  // Map ProfileFormData to ProfileData for the modal
+  const mapProfileFormToProfileData = (formData: ProfileFormData): ProfileData => {
+    return {
+      name: formData.fullName || '',
+      specialization: formData.specialization || '',
+      education: formData.education || '',
+      experience: formData.experience || '',
+      schedule: formData.workScheduleType || '',
+      location: formData.districts || '',
+      bio: formData.about || '',
+      photoUrl: profilePhoto || '',
+    };
+  };
+  
   // Component dialog for editing profile
   const EditProfileDialog = () => {
     // Keep a local copy of the form state for editing
@@ -416,7 +417,7 @@ const TeacherDashboardPage: React.FC = () => {
                   )}
                 </Avatar>
                 <div className="absolute bottom-0 right-0">
-                  <div className="bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors cursor-pointer flex items-center justify-center" onClick={() => document.getElementById('profilePhoto')?.click()}>
+                  <div className="bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors cursor-pointer" onClick={() => document.getElementById('profilePhoto')?.click()}>
                     <Camera className="h-4 w-4" />
                   </div>
                   <Input 
