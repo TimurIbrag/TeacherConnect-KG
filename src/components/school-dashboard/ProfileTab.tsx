@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Camera } from 'lucide-react';
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -17,31 +17,51 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import AvatarUploader from '@/components/AvatarUploader';
+
+// Initial empty school profile data
+const emptySchoolData = {
+  name: '',
+  address: '',
+  type: 'Государственная',
+  category: 'Общеобразовательная',
+  about: '',
+  website: '',
+  infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая']
+};
+
+// Initial empty stats
+const emptyStats = {
+  profileViews: 0,
+  activeVacancies: 0,
+  applications: 0
+};
 
 const ProfileTab = () => {
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [schoolData, setSchoolData] = useState({
-    name: 'Школа-гимназия №5',
-    address: 'г. Бишкек, ул. Московская, 145',
-    type: 'Государственная',
-    category: 'Общеобразовательная',
-    about: 'Школа-гимназия №5 - одна из старейших школ Бишкека с богатыми традициями. Наша миссия - дать качественное образование, помочь ученикам раскрыть свои таланты и подготовить их к успешной жизни в современном мире.',
-    website: '',
-    infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая']
-  });
-  
-  // Стейт для фото профиля
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
-  // Статистика
-  const [stats, setStats] = useState({
-    profileViews: 56,
-    activeVacancies: 3,
-    applications: 12
+  // Initialize with empty data from localStorage or use defaults
+  const [schoolData, setSchoolData] = useState(() => {
+    const savedData = localStorage.getItem('schoolProfileData');
+    return savedData ? JSON.parse(savedData) : emptySchoolData;
   });
+  
+  // Initialize stats with empty data or from localStorage
+  const [stats, setStats] = useState(() => {
+    const savedStats = localStorage.getItem('schoolProfileStats');
+    return savedStats ? JSON.parse(savedStats) : emptyStats;
+  });
+
+  // Load profile photo from localStorage on component mount
+  useEffect(() => {
+    const savedPhoto = localStorage.getItem('schoolProfilePhoto');
+    if (savedPhoto) {
+      setProfilePhoto(savedPhoto);
+    }
+  }, []);
   
   // Обработчик обновления данных
   const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
@@ -59,39 +79,55 @@ const ProfileTab = () => {
       infrastructure: schoolData.infrastructure // Пока оставляем без изменений
     };
     
-    // Имитация обращения к API
-    setTimeout(() => {
-      setSchoolData(updatedData);
-      setEditMode(false);
-      setIsUpdating(false);
-      
-      toast({
-        title: "Профиль обновлен",
-        description: "Данные школы успешно сохранены",
-      });
-    }, 1000);
-  };
-  
-  // Функция для обработки загрузки фото профиля
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    // Save to localStorage and update state
+    localStorage.setItem('schoolProfileData', JSON.stringify(updatedData));
+    setSchoolData(updatedData);
     
-    // Создаем превью
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target && typeof e.target.result === 'string') {
-        setPhotoPreview(e.target.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    // Save photo separately
+    if (profilePhoto) {
+      localStorage.setItem('schoolProfilePhoto', profilePhoto);
+    }
+    
+    setEditMode(false);
+    setIsUpdating(false);
+    
+    toast({
+      title: "Профиль обновлен",
+      description: "Данные школы успешно сохранены",
+    });
   };
   
-  // Сохранение фото после редактирования
-  const saveProfilePhoto = () => {
-    if (photoPreview) {
-      setProfilePhoto(photoPreview);
+  // Handle profile photo change using AvatarUploader
+  const handleProfilePhotoChange = (file: File | null) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result && typeof e.target.result === 'string') {
+          setProfilePhoto(e.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setProfilePhoto(null);
+      localStorage.removeItem('schoolProfilePhoto');
     }
+  };
+  
+  // Reset all profile data
+  const resetProfileData = () => {
+    setSchoolData({...emptySchoolData});
+    setStats({...emptyStats});
+    setProfilePhoto(null);
+    
+    // Clear from localStorage
+    localStorage.removeItem('schoolProfileData');
+    localStorage.removeItem('schoolProfileStats');
+    localStorage.removeItem('schoolProfilePhoto');
+    
+    toast({
+      title: "Профиль сброшен",
+      description: "Все данные профиля были сброшены до значений по умолчанию",
+    });
   };
   
   return (
@@ -100,10 +136,20 @@ const ProfileTab = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditMode(true)}>
-              <Edit className="h-4 w-4" />
-              Редактировать
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1 text-destructive hover:text-destructive" 
+                onClick={resetProfileData}
+              >
+                Сбросить данные
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditMode(true)}>
+                <Edit className="h-4 w-4" />
+                Редактировать
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
@@ -117,11 +163,13 @@ const ProfileTab = () => {
                 )}
               </Avatar>
               <div>
-                <h3 className="text-lg font-medium">{schoolData.name}</h3>
-                <p className="text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {schoolData.address}
-                </p>
+                <h3 className="text-lg font-medium">{schoolData.name || "Название школы не указано"}</h3>
+                {schoolData.address && (
+                  <p className="text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {schoolData.address}
+                  </p>
+                )}
                 {schoolData.website && (
                   <a 
                     href={schoolData.website} 
@@ -135,28 +183,42 @@ const ProfileTab = () => {
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{schoolData.type}</Badge>
-              <Badge variant="secondary">{schoolData.category}</Badge>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">О школе</h4>
-              <p className="text-sm">
-                {schoolData.about}
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Инфраструктура</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {schoolData.infrastructure.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 border p-2 rounded">
-                    <span className="text-sm">{item}</span>
-                  </div>
-                ))}
+            {(schoolData.type || schoolData.category) && (
+              <div className="flex flex-wrap gap-2">
+                {schoolData.type && <Badge variant="outline">{schoolData.type}</Badge>}
+                {schoolData.category && <Badge variant="secondary">{schoolData.category}</Badge>}
               </div>
-            </div>
+            )}
+            
+            {schoolData.about && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">О школе</h4>
+                <p className="text-sm">
+                  {schoolData.about}
+                </p>
+              </div>
+            )}
+            
+            {schoolData.infrastructure.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-1">Инфраструктура</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {schoolData.infrastructure.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 border p-2 rounded">
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!schoolData.name && !schoolData.about && !schoolData.address && (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground">
+                  Информация о школе не заполнена. Нажмите "Редактировать", чтобы добавить данные.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -210,9 +272,6 @@ const ProfileTab = () => {
       
       {/* Диалог редактирования профиля */}
       <Dialog open={editMode} onOpenChange={(open) => {
-        if (!open) {
-          setPhotoPreview(null);
-        }
         setEditMode(open);
       }}>
         <DialogContent className="sm:max-w-[600px]">
@@ -225,31 +284,11 @@ const ProfileTab = () => {
           
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div className="flex justify-center mb-4">
-              <div className="relative">
-                <Avatar className="h-24 w-24">
-                  {photoPreview ? (
-                    <AvatarImage src={photoPreview} alt="Предпросмотр" />
-                  ) : profilePhoto ? (
-                    <AvatarImage src={profilePhoto} alt={schoolData.name} />
-                  ) : (
-                    <AvatarFallback className="bg-muted">
-                      <Building className="h-10 w-10 text-muted-foreground" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <div className="absolute bottom-0 right-0">
-                  <Label htmlFor="profilePhoto" className="cursor-pointer bg-primary text-white rounded-full p-1.5 hover:bg-primary/90 transition-colors">
-                    <Camera className="h-4 w-4" />
-                  </Label>
-                  <Input 
-                    id="profilePhoto"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
-                  />
-                </div>
-              </div>
+              <AvatarUploader
+                initialImageUrl={profilePhoto || ''}
+                onImageChange={handleProfilePhotoChange}
+                size="lg"
+              />
             </div>
             
             <div className="space-y-2">
@@ -302,7 +341,6 @@ const ProfileTab = () => {
                 variant="outline" 
                 onClick={() => {
                   setEditMode(false);
-                  setPhotoPreview(null);
                 }}
                 disabled={isUpdating}
               >
@@ -311,9 +349,6 @@ const ProfileTab = () => {
               <Button 
                 type="submit" 
                 disabled={isUpdating}
-                onClick={() => {
-                  saveProfilePhoto();
-                }}
               >
                 {isUpdating ? "Сохранение..." : "Сохранить"}
               </Button>
