@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search } from 'lucide-react';
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -41,6 +42,7 @@ const ProfileTab = () => {
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [newInfrastructure, setNewInfrastructure] = useState('');
   
   // Initialize with empty data from localStorage or use defaults
   const [schoolData, setSchoolData] = useState(() => {
@@ -62,7 +64,7 @@ const ProfileTab = () => {
     }
   }, []);
   
-  // Обработчик обновления данных
+  // Handler for updating profile data
   const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -75,7 +77,7 @@ const ProfileTab = () => {
       category: formData.get('category') as string,
       about: formData.get('about') as string,
       website: formData.get('website') as string,
-      infrastructure: schoolData.infrastructure // Пока оставляем без изменений
+      infrastructure: schoolData.infrastructure // We'll handle this separately
     };
     
     // Save to localStorage and update state
@@ -110,6 +112,52 @@ const ProfileTab = () => {
       setProfilePhoto(null);
       localStorage.removeItem('schoolProfilePhoto');
     }
+  };
+  
+  // Add new infrastructure item
+  const handleAddInfrastructure = () => {
+    if (newInfrastructure.trim()) {
+      const updatedInfrastructure = [...schoolData.infrastructure, newInfrastructure.trim()];
+      setSchoolData({
+        ...schoolData,
+        infrastructure: updatedInfrastructure
+      });
+      
+      // Save to localStorage
+      localStorage.setItem('schoolProfileData', JSON.stringify({
+        ...schoolData, 
+        infrastructure: updatedInfrastructure
+      }));
+      
+      setNewInfrastructure('');
+      
+      toast({
+        title: "Элемент добавлен",
+        description: `"${newInfrastructure}" добавлен в инфраструктуру`,
+      });
+    }
+  };
+  
+  // Remove infrastructure item
+  const handleRemoveInfrastructure = (index: number) => {
+    const updatedInfrastructure = [...schoolData.infrastructure];
+    updatedInfrastructure.splice(index, 1);
+    
+    setSchoolData({
+      ...schoolData,
+      infrastructure: updatedInfrastructure
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('schoolProfileData', JSON.stringify({
+      ...schoolData,
+      infrastructure: updatedInfrastructure
+    }));
+    
+    toast({
+      title: "Элемент удален",
+      description: "Элемент инфраструктуры был удален",
+    });
   };
   
   // Reset all profile data
@@ -324,6 +372,45 @@ const ProfileTab = () => {
                 defaultValue={schoolData.about} 
                 required
               />
+            </div>
+            
+            {/* Infrastructure section */}
+            <div className="space-y-2">
+              <Label>Инфраструктура</Label>
+              <div className="border rounded-md p-3 space-y-2">
+                {/* Current infrastructure items */}
+                <div className="flex flex-wrap gap-2">
+                  {schoolData.infrastructure.map((item, index) => (
+                    <Badge key={index} variant="secondary" className="py-1">
+                      {item}
+                      <button 
+                        type="button"
+                        className="ml-1 hover:text-destructive" 
+                        onClick={() => handleRemoveInfrastructure(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                
+                {/* Add new infrastructure item */}
+                <div className="flex gap-2 items-center">
+                  <Input
+                    placeholder="Добавить элемент инфраструктуры"
+                    value={newInfrastructure}
+                    onChange={(e) => setNewInfrastructure(e.target.value)}
+                  />
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    onClick={handleAddInfrastructure} 
+                    disabled={!newInfrastructure.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
             
             <DialogFooter>

@@ -42,11 +42,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
+      // Increased file size limit to 10MB (from 2MB)
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "Ошибка загрузки",
-          description: "Размер файла не должен превышать 2MB",
+          description: "Размер файла не должен превышать 10MB",
           variant: "destructive",
         });
         return;
@@ -167,7 +167,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
           <AvatarFallback>{getInitials()}</AvatarFallback>
         </Avatar>
         
-        {/* Centered camera overlay on hover */}
+        {/* Camera overlay centered in the middle */}
         <div 
           className={`absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 transition-opacity ${
             isHovering ? 'opacity-100' : 'opacity-0'
