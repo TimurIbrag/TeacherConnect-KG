@@ -1,6 +1,6 @@
 
 import React, { useState, ChangeEvent, useRef } from 'react';
-import { Camera, X, CropIcon, RotateCcw, RotateCw } from 'lucide-react';
+import { Camera, X, CropIcon, RotateCcw, RotateCw, Move } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,16 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface AvatarUploaderProps {
   initialImageUrl?: string;
@@ -27,10 +37,15 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const [imageUrl, setImageUrl] = useState(initialImageUrl);
   const [isHovering, setIsHovering] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [croppingImageUrl, setCroppingImageUrl] = useState<string>('');
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const inputRef = React.useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cropContainerRef = useRef<HTMLDivElement>(null);
   
   // Size classes
   const sizeClasses = {
@@ -67,11 +82,45 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         if (event.target?.result) {
           const result = event.target.result.toString();
           setCroppingImageUrl(result);
+          setImagePosition({ x: 0, y: 0 }); // Reset position
           setShowCropDialog(true);
         }
       };
       reader.readAsDataURL(file);
     }
+  };
+  
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - imagePosition.x,
+      y: e.clientY - imagePosition.y
+    });
+  };
+  
+  // Handle mouse move for dragging
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !cropContainerRef.current) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Constrain movement within container bounds
+    const containerRect = cropContainerRef.current.getBoundingClientRect();
+    const maxX = containerRect.width - 100; // Account for image size
+    const maxY = containerRect.height - 100;
+    
+    setImagePosition({
+      x: Math.max(-50, Math.min(maxX, newX)),
+      y: Math.max(-50, Math.min(maxY, newY))
+    });
+  };
+  
+  // Handle mouse up to stop dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
   
   // Function to crop and save the image
@@ -82,14 +131,27 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       
       if (ctx) {
         const img = imageRef.current;
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
         
         // Set the canvas to a square size for proper cropping
         canvas.width = 300;
         canvas.height = 300;
         
-        // Draw the image centered in the canvas
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate the source crop area based on image position
+        const scale = img.naturalWidth / img.offsetWidth;
+        const sourceX = Math.abs(imagePosition.x) * scale;
+        const sourceY = Math.abs(imagePosition.y) * scale;
+        const sourceWidth = 300 * scale;
+        const sourceHeight = 300 * scale;
+        
+        // Draw the cropped portion of the image
+        ctx.drawImage(
+          img,
+          sourceX, sourceY, sourceWidth, sourceHeight,
+          0, 0, canvas.width, canvas.height
+        );
         
         // Convert canvas to data URL
         const croppedImageUrl = canvas.toDataURL('image/jpeg');
@@ -116,6 +178,12 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     if (inputRef.current) {
       inputRef.current.value = '';
     }
+    setShowRemoveConfirm(false);
+    
+    toast({
+      title: "Фото удалено",
+      description: "Фотография профиля была удалена",
+    });
   };
   
   const getInitials = () => {
@@ -151,6 +219,9 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       
       // Update the source image
       img.src = canvas.toDataURL('image/jpeg');
+      
+      // Reset position after rotation
+      setImagePosition({ x: 0, y: 0 });
     }
   };
   
@@ -193,7 +264,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
           className="mt-2"
           onClick={(e) => {
             e.stopPropagation();
-            handleRemoveImage();
+            setShowRemoveConfirm(true);
           }}
         >
           <X className="h-4 w-4 mr-1" />
@@ -208,13 +279,37 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
             <DialogTitle>Настройка фотографии профиля</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative w-full max-w-[300px] h-[300px] overflow-hidden rounded-md border">
+            <div 
+              ref={cropContainerRef}
+              className="relative w-full max-w-[300px] h-[300px] overflow-hidden rounded-md border cursor-move"
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
               <img 
                 ref={imageRef}
                 src={croppingImageUrl} 
                 alt="Crop preview" 
-                className="w-full h-full object-cover"
+                className="absolute select-none"
+                style={{
+                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px)`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  minWidth: '100%',
+                  minHeight: '100%'
+                }}
+                onMouseDown={handleMouseDown}
+                draggable={false}
               />
+              
+              {/* Crop overlay guide */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="w-full h-full border-2 border-dashed border-white/50 bg-black/20"></div>
+              </div>
+            </div>
+            
+            <div className="text-sm text-muted-foreground text-center">
+              <Move className="h-4 w-4 inline mr-1" />
+              Перетащите изображение для позиционирования
             </div>
             
             <div className="flex gap-2 justify-center">
@@ -260,6 +355,24 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Confirmation dialog for removing photo */}
+      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить фотографию?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить фотографию профиля? Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveImage}>
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
