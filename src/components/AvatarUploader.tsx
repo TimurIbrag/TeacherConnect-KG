@@ -1,6 +1,6 @@
 
 import React, { useState, ChangeEvent, useRef } from 'react';
-import { Camera, X, CropIcon, RotateCcw, RotateCw, Move } from 'lucide-react';
+import { Camera, X, CropIcon, RotateCcw, RotateCw, Move, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,8 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [croppingImageUrl, setCroppingImageUrl] = useState<string>('');
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [imageScale, setImageScale] = useState(1);
+  const [imageRotation, setImageRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -53,6 +55,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     md: 'h-24 w-24',
     lg: 'h-32 w-32'
   };
+  
+  // Update imageUrl when initialImageUrl changes
+  React.useEffect(() => {
+    setImageUrl(initialImageUrl);
+  }, [initialImageUrl]);
   
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,7 +89,9 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         if (event.target?.result) {
           const result = event.target.result.toString();
           setCroppingImageUrl(result);
-          setImagePosition({ x: 0, y: 0 }); // Reset position
+          setImagePosition({ x: 0, y: 0 });
+          setImageScale(1);
+          setImageRotation(0);
           setShowCropDialog(true);
         }
       };
@@ -107,20 +116,33 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     
-    // Constrain movement within container bounds
-    const containerRect = cropContainerRef.current.getBoundingClientRect();
-    const maxX = containerRect.width - 100; // Account for image size
-    const maxY = containerRect.height - 100;
-    
     setImagePosition({
-      x: Math.max(-50, Math.min(maxX, newX)),
-      y: Math.max(-50, Math.min(maxY, newY))
+      x: newX,
+      y: newY
     });
   };
   
   // Handle mouse up to stop dragging
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+  
+  // Handle zoom
+  const handleZoom = (direction: 'in' | 'out') => {
+    setImageScale(prev => {
+      const increment = 0.1;
+      const newScale = direction === 'in' ? prev + increment : prev - increment;
+      return Math.max(0.5, Math.min(3, newScale)); // Limit scale between 0.5x and 3x
+    });
+  };
+  
+  // Handle rotation
+  const handleRotation = (direction: 'cw' | 'ccw') => {
+    setImageRotation(prev => {
+      const increment = 90;
+      const newRotation = direction === 'cw' ? prev + increment : prev - increment;
+      return newRotation % 360;
+    });
   };
   
   // Function to crop and save the image
@@ -139,22 +161,30 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Calculate the source crop area based on image position
-        const scale = img.naturalWidth / img.offsetWidth;
-        const sourceX = Math.abs(imagePosition.x) * scale;
-        const sourceY = Math.abs(imagePosition.y) * scale;
-        const sourceWidth = 300 * scale;
-        const sourceHeight = 300 * scale;
+        // Save the context state
+        ctx.save();
         
-        // Draw the cropped portion of the image
-        ctx.drawImage(
-          img,
-          sourceX, sourceY, sourceWidth, sourceHeight,
-          0, 0, canvas.width, canvas.height
-        );
+        // Move to center of canvas
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        
+        // Apply rotation
+        ctx.rotate((imageRotation * Math.PI) / 180);
+        
+        // Apply scale
+        ctx.scale(imageScale, imageScale);
+        
+        // Calculate the position based on image position and container
+        const drawX = imagePosition.x - canvas.width / 2;
+        const drawY = imagePosition.y - canvas.height / 2;
+        
+        // Draw the image
+        ctx.drawImage(img, drawX, drawY, img.naturalWidth, img.naturalHeight);
+        
+        // Restore the context state
+        ctx.restore();
         
         // Convert canvas to data URL
-        const croppedImageUrl = canvas.toDataURL('image/jpeg');
+        const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
         setImageUrl(croppedImageUrl);
         
         // Convert data URL to File object
@@ -165,7 +195,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
             });
             onImageChange(croppedFile);
           }
-        }, 'image/jpeg');
+        }, 'image/jpeg', 0.9);
         
         setShowCropDialog(false);
       }
@@ -173,11 +203,20 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   };
   
   const handleRemoveImage = () => {
+    // Clear all states
     setImageUrl('');
-    onImageChange(null);
+    setCroppingImageUrl('');
+    setImagePosition({ x: 0, y: 0 });
+    setImageScale(1);
+    setImageRotation(0);
+    
+    // Clear the file input
     if (inputRef.current) {
       inputRef.current.value = '';
     }
+    
+    // Notify parent component
+    onImageChange(null);
     setShowRemoveConfirm(false);
     
     toast({
@@ -189,40 +228,6 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const getInitials = () => {
     // Show "TC" (TeacherConnect) as fallback initials
     return 'TC';
-  };
-  
-  const rotateImage = (direction: 'cw' | 'ccw') => {
-    if (!canvasRef.current || !imageRef.current) return;
-    
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const img = imageRef.current;
-    
-    if (ctx) {
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Save the context state
-      ctx.save();
-      
-      // Move to the center of the canvas
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      
-      // Rotate 90 degrees in the specified direction
-      ctx.rotate(direction === 'cw' ? Math.PI / 2 : -Math.PI / 2);
-      
-      // Draw the image centered
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      
-      // Restore the context state
-      ctx.restore();
-      
-      // Update the source image
-      img.src = canvas.toDataURL('image/jpeg');
-      
-      // Reset position after rotation
-      setImagePosition({ x: 0, y: 0 });
-    }
   };
   
   return (
@@ -290,12 +295,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
                 ref={imageRef}
                 src={croppingImageUrl} 
                 alt="Crop preview" 
-                className="absolute select-none"
+                className="absolute select-none pointer-events-none"
                 style={{
-                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px)`,
+                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale}) rotate(${imageRotation}deg)`,
                   cursor: isDragging ? 'grabbing' : 'grab',
-                  minWidth: '100%',
-                  minHeight: '100%'
+                  transformOrigin: 'center center'
                 }}
                 onMouseDown={handleMouseDown}
                 draggable={false}
@@ -312,22 +316,38 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
               Перетащите изображение для позиционирования
             </div>
             
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-2 justify-center flex-wrap">
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => rotateImage('ccw')}
+                onClick={() => handleZoom('out')}
               >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Повернуть влево
+                <ZoomOut className="h-4 w-4 mr-1" />
+                Уменьшить
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => rotateImage('cw')}
+                onClick={() => handleZoom('in')}
+              >
+                <ZoomIn className="h-4 w-4 mr-1" />
+                Увеличить
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRotation('ccw')}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Влево
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleRotation('cw')}
               >
                 <RotateCw className="h-4 w-4 mr-1" />
-                Повернуть вправо
+                Вправо
               </Button>
             </div>
             
