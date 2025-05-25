@@ -1,6 +1,6 @@
 
-import React, { useRef, useState } from 'react';
-import { Camera, X, CropIcon, RotateCcw, RotateCw, Move, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useRef, useState, useCallback } from 'react';
+import { Move, RotateCcw, RotateCw } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
-import PhotoControls from './PhotoControls';
 
 interface CropDialogProps {
   isOpen: boolean;
@@ -44,104 +43,124 @@ const CropDialog: React.FC<CropDialogProps> = ({
     }
   }, [isOpen]);
 
+  // Handle mouse wheel for zooming
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const zoomSpeed = 0.1;
+    const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+    
+    setImageScale(prev => {
+      const newScale = prev + delta;
+      return Math.max(0.5, Math.min(3, newScale));
+    });
+  }, []);
+
   // Handle mouse down for dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
     setDragStart({
       x: e.clientX - imagePosition.x,
       y: e.clientY - imagePosition.y
     });
-  };
+  }, [imagePosition]);
 
   // Handle mouse move for dragging
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !cropContainerRef.current) return;
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
     
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     
-    setImagePosition({
-      x: newX,
-      y: newY
-    });
-  };
+    setImagePosition({ x: newX, y: newY });
+  }, [isDragging, dragStart]);
 
   // Handle mouse up to stop dragging
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
-
-  // Handle zoom
-  const handleZoom = (direction: 'in' | 'out') => {
-    setImageScale(prev => {
-      const increment = 0.1;
-      const newScale = direction === 'in' ? prev + increment : prev - increment;
-      return Math.max(0.5, Math.min(3, newScale));
-    });
-  };
+  }, []);
 
   // Handle rotation
-  const handleRotation = (direction: 'cw' | 'ccw') => {
+  const handleRotation = useCallback((direction: 'cw' | 'ccw') => {
     setImageRotation(prev => {
       const increment = 90;
       const newRotation = direction === 'cw' ? prev + increment : prev - increment;
       return newRotation % 360;
     });
-  };
+  }, []);
 
   // Function to crop and save the image
-  const handleCropImage = () => {
-    if (imageRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      if (ctx) {
-        const img = imageRef.current;
-        
-        // Set the canvas to a square size for proper cropping
-        canvas.width = 300;
-        canvas.height = 300;
-        
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Save the context state
-        ctx.save();
-        
-        // Move to center of canvas
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        
-        // Apply rotation
-        ctx.rotate((imageRotation * Math.PI) / 180);
-        
-        // Apply scale
-        ctx.scale(imageScale, imageScale);
-        
-        // Calculate the position based on image position and container
-        const drawX = imagePosition.x - canvas.width / 2;
-        const drawY = imagePosition.y - canvas.height / 2;
-        
-        // Draw the image
-        ctx.drawImage(img, drawX, drawY, img.naturalWidth, img.naturalHeight);
-        
-        // Restore the context state
-        ctx.restore();
-        
-        // Convert canvas to File object
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const croppedFile = new File([blob], "profile_photo.jpg", {
-              type: "image/jpeg"
-            });
-            onCrop(croppedFile);
-          }
-        }, 'image/jpeg', 0.9);
-        
-        onClose();
-      }
+  const handleCropImage = useCallback(() => {
+    if (!imageRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = imageRef.current;
+    
+    if (!ctx) return;
+
+    // Set canvas size to crop area (300x300)
+    const cropSize = 300;
+    canvas.width = cropSize;
+    canvas.height = cropSize;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, cropSize, cropSize);
+    
+    // Save context
+    ctx.save();
+    
+    // Move to center of canvas
+    ctx.translate(cropSize / 2, cropSize / 2);
+    
+    // Apply rotation
+    ctx.rotate((imageRotation * Math.PI) / 180);
+    
+    // Apply scale
+    ctx.scale(imageScale, imageScale);
+    
+    // Calculate image dimensions to maintain aspect ratio
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+    let drawWidth = img.naturalWidth;
+    let drawHeight = img.naturalHeight;
+    
+    // Adjust size to fit within crop area while maintaining aspect ratio
+    if (imgAspect > 1) {
+      // Landscape image
+      drawWidth = cropSize;
+      drawHeight = cropSize / imgAspect;
+    } else {
+      // Portrait or square image
+      drawHeight = cropSize;
+      drawWidth = cropSize * imgAspect;
     }
-  };
+    
+    // Apply position offset
+    const offsetX = imagePosition.x / imageScale;
+    const offsetY = imagePosition.y / imageScale;
+    
+    // Draw image centered with position offset
+    ctx.drawImage(
+      img,
+      -drawWidth / 2 + offsetX,
+      -drawHeight / 2 + offsetY,
+      drawWidth,
+      drawHeight
+    );
+    
+    // Restore context
+    ctx.restore();
+    
+    // Convert canvas to blob and create file
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const croppedFile = new File([blob], "profile_photo.jpg", {
+          type: "image/jpeg"
+        });
+        onCrop(croppedFile);
+      }
+    }, 'image/jpeg', 0.9);
+  }, [imagePosition, imageScale, imageRotation, onCrop]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -152,7 +171,8 @@ const CropDialog: React.FC<CropDialogProps> = ({
         <div className="flex flex-col items-center space-y-4">
           <div 
             ref={cropContainerRef}
-            className="relative w-full max-w-[300px] h-[300px] overflow-hidden rounded-md border cursor-move"
+            className="relative w-full max-w-[300px] h-[300px] overflow-hidden rounded-md border cursor-move select-none"
+            onWheel={handleWheel}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
@@ -165,7 +185,9 @@ const CropDialog: React.FC<CropDialogProps> = ({
               style={{
                 transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale}) rotate(${imageRotation}deg)`,
                 cursor: isDragging ? 'grabbing' : 'grab',
-                transformOrigin: 'center center'
+                transformOrigin: 'center center',
+                maxWidth: 'none',
+                maxHeight: 'none'
               }}
               onMouseDown={handleMouseDown}
               draggable={false}
@@ -179,13 +201,27 @@ const CropDialog: React.FC<CropDialogProps> = ({
           
           <div className="text-sm text-muted-foreground text-center">
             <Move className="h-4 w-4 inline mr-1" />
-            Перетащите изображение для позиционирования
+            Перетащите изображение для позиционирования • Прокрутите для масштабирования
           </div>
           
-          <PhotoControls 
-            onZoom={handleZoom}
-            onRotation={handleRotation}
-          />
+          <div className="flex gap-2 justify-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleRotation('ccw')}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Влево
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleRotation('cw')}
+            >
+              <RotateCw className="h-4 w-4 mr-1" />
+              Вправо
+            </Button>
+          </div>
           
           <canvas 
             ref={canvasRef} 

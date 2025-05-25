@@ -76,13 +76,15 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     };
     reader.readAsDataURL(croppedFile);
     
-    // Notify parent component
+    // Notify parent component with the cropped file
     onImageChange(croppedFile);
     setShowCropDialog(false);
+    
+    console.log("Photo cropped and ready:", croppedFile.name, croppedFile.size);
   };
   
   const handleRemoveImage = () => {
-    // Clear all states
+    // Clear all states completely
     setImageUrl('');
     setCroppingImageUrl('');
     
@@ -91,9 +93,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
       inputRef.current.value = '';
     }
     
-    // Notify parent component
+    // Notify parent component with null to indicate no image
     onImageChange(null);
     setShowRemoveConfirm(false);
+    
+    console.log("Photo removed completely");
     
     toast({
       title: "Фото удалено",
@@ -114,8 +118,11 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         onClick={() => inputRef.current?.click()}
       >
         <Avatar className={`${sizeClasses[size]}`}>
-          <AvatarImage src={imageUrl} alt="Profile" />
-          <AvatarFallback>{getInitials()}</AvatarFallback>
+          {imageUrl ? (
+            <AvatarImage src={imageUrl} alt="Profile" />
+          ) : (
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          )}
         </Avatar>
         
         {/* Camera overlay centered in the middle */}

@@ -65,6 +65,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [formChanged, setFormChanged] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
   
   // Use local state for form data without any default values
   const [formData, setFormData] = useState<ProfileData>(emptyProfileData);
@@ -76,6 +77,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       const dataToUse = initialData || {...emptyProfileData};
       setFormData({...dataToUse});
       setFormChanged(false);
+      setPhotoRemoved(false);
       
       // Reset photo state when modal opens
       setPhoto(null);
@@ -93,6 +95,8 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   
   // Handle image upload with proper storage
   const handleImageChange = React.useCallback((file: File | null) => {
+    console.log("Image change received:", file ? file.name : "null");
+    
     setPhoto(file);
     
     if (file) {
@@ -101,12 +105,16 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       reader.onload = (event) => {
         if (event.target?.result && typeof event.target.result === 'string') {
           handleChange('photoUrl', event.target.result);
+          setPhotoRemoved(false);
         }
       };
       reader.readAsDataURL(file);
       setFormChanged(true);
     } else {
+      // Photo was removed
       handleChange('photoUrl', '');
+      setPhotoRemoved(true);
+      setFormChanged(true);
     }
   }, [handleChange]);
   
@@ -124,14 +132,21 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       // For now, simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Process the photo (would typically send to a server in a real app)
-      if (photo) {
-        console.log("Photo ready for upload:", photo.name, photo.size);
+      // Prepare final form data
+      let finalFormData = { ...formData };
+      
+      // Handle photo removal case
+      if (photoRemoved) {
+        finalFormData.photoUrl = '';
+        console.log("Saving profile with photo removed");
+      } else if (photo) {
+        // New photo was uploaded and cropped
+        console.log("Saving profile with new photo:", photo.name, photo.size);
         // The photoUrl is already set in formData from the handleImageChange function
       }
       
-      // Save data including current photo URL
-      onSave(formData);
+      // Save data
+      onSave(finalFormData);
       
       toast({
         title: "Профиль обновлен",
