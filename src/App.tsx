@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -63,8 +62,9 @@ const App = () => (
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 
-                {/* New or updated routes */}
+                {/* Updated messages routes for private chat */}
                 <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages/:chatRoomId" element={<MessagesPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/saved" element={<SavedItemsPage />} />
                 <Route path="/school-catalog" element={<SchoolCatalogPage />} />
