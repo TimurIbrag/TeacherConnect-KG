@@ -19,6 +19,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import AvatarUploader from '@/components/AvatarUploader';
 import SchoolPhotoGallery from './SchoolPhotoGallery';
 
+interface ProfileTabProps {
+  onNavigateToVacancies?: () => void;
+}
+
 // Initial empty school profile data
 const emptySchoolData = {
   name: '',
@@ -37,7 +41,7 @@ const emptyStats = {
   applications: 0
 };
 
-const ProfileTab = () => {
+const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -295,7 +299,11 @@ const ProfileTab = () => {
               <CardTitle>Действия</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={onNavigateToVacancies}
+              >
                 <FilePlus className="mr-2 h-4 w-4" />
                 Добавить вакансию
               </Button>
