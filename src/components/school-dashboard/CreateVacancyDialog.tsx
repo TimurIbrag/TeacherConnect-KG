@@ -36,9 +36,17 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('Form submission started');
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
+    console.log('Form data collected:', {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      salaryMin: formData.get('salaryMin'),
+      salaryMax: formData.get('salaryMax')
+    });
+
     const newVacancy = {
       id: Date.now(),
       title: formData.get('title') as string,
@@ -56,12 +64,20 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       applications: 0
     };
 
+    console.log('New vacancy object created:', newVacancy);
+
     // Save to localStorage
     const existingVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
+    console.log('Existing vacancies:', existingVacancies);
+    
     const updatedVacancies = [...existingVacancies, newVacancy];
     localStorage.setItem('schoolVacancies', JSON.stringify(updatedVacancies));
+    console.log('Updated vacancies saved to localStorage:', updatedVacancies);
 
+    console.log('Calling onVacancyCreated callback');
     onVacancyCreated(newVacancy);
+    
+    console.log('Closing dialog');
     onOpenChange(false);
     setIsSubmitting(false);
 
@@ -71,6 +87,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     setNewRequirement('');
     setNewBenefit('');
 
+    console.log('Showing success toast');
     toast({
       title: "Вакансия создана",
       description: "Новая вакансия успешно добавлена",
@@ -78,6 +95,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const addRequirement = () => {
+    console.log('Adding requirement:', newRequirement);
     if (newRequirement.trim()) {
       setRequirements([...requirements, newRequirement.trim()]);
       setNewRequirement('');
@@ -85,10 +103,12 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const removeRequirement = (index: number) => {
+    console.log('Removing requirement at index:', index);
     setRequirements(requirements.filter((_, i) => i !== index));
   };
 
   const addBenefit = () => {
+    console.log('Adding benefit:', newBenefit);
     if (newBenefit.trim()) {
       setBenefits([...benefits, newBenefit.trim()]);
       setNewBenefit('');
@@ -96,8 +116,11 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const removeBenefit = (index: number) => {
+    console.log('Removing benefit at index:', index);
     setBenefits(benefits.filter((_, i) => i !== index));
   };
+
+  console.log('CreateVacancyDialog render - open:', open, 'isSubmitting:', isSubmitting);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
