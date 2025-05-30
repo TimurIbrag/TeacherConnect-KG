@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import AvatarUploader from '@/components/AvatarUploader';
+import SchoolPhotoGallery from './SchoolPhotoGallery';
 
 // Initial empty school profile data
 const emptySchoolData = {
@@ -179,7 +179,7 @@ const ProfileTab = () => {
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2">
+      <div className="md:col-span-2 space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
@@ -260,6 +260,9 @@ const ProfileTab = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Photo Gallery Section */}
+        <SchoolPhotoGallery />
       </div>
       
       <div>
