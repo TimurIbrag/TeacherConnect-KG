@@ -9,16 +9,392 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_at: string | null
+          cover_letter: string | null
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["application_status"] | null
+          teacher_id: string
+          vacancy_id: string
+        }
+        Insert: {
+          applied_at?: string | null
+          cover_letter?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          teacher_id: string
+          vacancy_id: string
+        }
+        Update: {
+          applied_at?: string | null
+          cover_letter?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          teacher_id?: string
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          application_id: string | null
+          content: string
+          id: string
+          read: boolean | null
+          recipient_id: string
+          sender_id: string
+          sent_at: string | null
+          subject: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          content: string
+          id?: string
+          read?: boolean | null
+          recipient_id: string
+          sender_id: string
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          content?: string
+          id?: string
+          read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      school_profiles: {
+        Row: {
+          address: string | null
+          description: string | null
+          facilities: string[] | null
+          founded_year: number | null
+          housing_provided: boolean | null
+          id: string
+          latitude: number | null
+          location_verified: boolean | null
+          longitude: number | null
+          photo_urls: string[] | null
+          school_name: string
+          school_type: string | null
+          student_count: number | null
+          verification_documents: string[] | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          description?: string | null
+          facilities?: string[] | null
+          founded_year?: number | null
+          housing_provided?: boolean | null
+          id: string
+          latitude?: number | null
+          location_verified?: boolean | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          school_name: string
+          school_type?: string | null
+          student_count?: number | null
+          verification_documents?: string[] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          description?: string | null
+          facilities?: string[] | null
+          founded_year?: number | null
+          housing_provided?: boolean | null
+          id?: string
+          latitude?: number | null
+          location_verified?: boolean | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          school_name?: string
+          school_type?: string | null
+          student_count?: number | null
+          verification_documents?: string[] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_profiles: {
+        Row: {
+          available: boolean | null
+          bio: string | null
+          cv_url: string | null
+          education: string | null
+          experience_years: number | null
+          id: string
+          languages: string[] | null
+          location: string | null
+          skills: string[] | null
+          specialization: string | null
+          verification_documents: string[] | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Insert: {
+          available?: boolean | null
+          bio?: string | null
+          cv_url?: string | null
+          education?: string | null
+          experience_years?: number | null
+          id: string
+          languages?: string[] | null
+          location?: string | null
+          skills?: string[] | null
+          specialization?: string | null
+          verification_documents?: string[] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Update: {
+          available?: boolean | null
+          bio?: string | null
+          cv_url?: string | null
+          education?: string | null
+          experience_years?: number | null
+          id?: string
+          languages?: string[] | null
+          location?: string | null
+          skills?: string[] | null
+          specialization?: string | null
+          verification_documents?: string[] | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vacancies: {
+        Row: {
+          application_deadline: string | null
+          benefits: string[] | null
+          created_at: string | null
+          description: string | null
+          employment_type: string | null
+          experience_required: number | null
+          housing_provided: boolean | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          requirements: string[] | null
+          salary_max: number | null
+          salary_min: number | null
+          school_id: string
+          subject: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_deadline?: string | null
+          benefits?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          employment_type?: string | null
+          experience_required?: number | null
+          housing_provided?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          requirements?: string[] | null
+          salary_max?: number | null
+          salary_min?: number | null
+          school_id: string
+          subject?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_deadline?: string | null
+          benefits?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          employment_type?: string | null
+          experience_required?: number | null
+          housing_provided?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          requirements?: string[] | null
+          salary_max?: number | null
+          salary_min?: number | null
+          school_id?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "school_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      application_status: "pending" | "reviewed" | "accepted" | "rejected"
+      user_role: "teacher" | "school" | "admin"
+      verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +509,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_status: ["pending", "reviewed", "accepted", "rejected"],
+      user_role: ["teacher", "school", "admin"],
+      verification_status: ["pending", "verified", "rejected"],
+    },
   },
 } as const
