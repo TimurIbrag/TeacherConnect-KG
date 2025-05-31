@@ -22,6 +22,7 @@ import AuthPage from "./pages/AuthPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import PasswordResetPage from "./pages/PasswordResetPage";
 import FAQPage from "./pages/FAQPage";
 import SupportPage from "./pages/SupportPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -54,6 +55,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/reset-password" element={<PasswordResetPage />} />
                   <Route path="/teachers" element={<TeachersPage />} />
                   <Route path="/teachers/:id" element={<TeacherProfilePage />} />
                   <Route path="/schools" element={<SchoolsPage />} />
