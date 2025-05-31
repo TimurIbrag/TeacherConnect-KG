@@ -1,155 +1,320 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import VacancyFormFields from './VacancyFormFields';
-import RequirementsBenefitsSection from './RequirementsBenefitsSection';
 
 interface CreateVacancyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVacancyCreated: (vacancy: any) => void;
+  isCreating?: boolean;
 }
 
 const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   open,
   onOpenChange,
-  onVacancyCreated
+  onVacancyCreated,
+  isCreating = false,
 }) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [schoolProfile, setSchoolProfile] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    subject: '',
+    location: '',
+    salary_min: '',
+    salary_max: '',
+    employment_type: 'full-time',
+    experience_required: '',
+    application_deadline: '',
+    housing_provided: false,
+  });
+
   const [requirements, setRequirements] = useState<string[]>([]);
-  const [newRequirement, setNewRequirement] = useState('');
   const [benefits, setBenefits] = useState<string[]>([]);
+  const [newRequirement, setNewRequirement] = useState('');
   const [newBenefit, setNewBenefit] = useState('');
 
-  // Load school profile data
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('schoolProfileData');
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      setSchoolProfile(profile);
-      console.log('Loaded school profile for vacancy:', profile);
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const addRequirement = () => {
+    if (newRequirement.trim() && !requirements.includes(newRequirement.trim())) {
+      setRequirements(prev => [...prev, newRequirement.trim()]);
+      setNewRequirement('');
     }
-  }, [open]);
+  };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const removeRequirement = (index: number) => {
+    setRequirements(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addBenefit = () => {
+    if (newBenefit.trim() && !benefits.includes(newBenefit.trim())) {
+      setBenefits(prev => [...prev, newBenefit.trim()]);
+      setNewBenefit('');
+    }
+  };
+
+  const removeBenefit = (index: number) => {
+    setBenefits(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Vacancy form submission started');
-    setIsSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
     
-    const newVacancy = {
-      id: Date.now(),
-      // Job-specific information
-      position: formData.get('position') as string,
-      subject: formData.get('subject') as string,
-      description: formData.get('description') as string,
-      salaryMin: parseInt(formData.get('salaryMin') as string) || 0,
-      salaryMax: parseInt(formData.get('salaryMax') as string) || 0,
-      schedule: formData.get('schedule') as string,
-      experience: formData.get('experience') as string,
-      education: formData.get('education') as string,
-      requirements,
-      benefits,
-      
-      // School information from profile
-      schoolName: schoolProfile?.name || 'Не указано',
-      schoolAddress: schoolProfile?.address || 'Не указано',
-      schoolType: schoolProfile?.type || 'Не указано',
-      schoolWebsite: schoolProfile?.website || '',
-      schoolInfrastructure: schoolProfile?.infrastructure || [],
-      
-      // Status and metadata
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      views: 0,
-      applications: 0
+    if (!formData.title.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Название вакансии обязательно для заполнения",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const vacancyData = {
+      ...formData,
+      salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
+      salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
+      experience_required: formData.experience_required ? parseInt(formData.experience_required) : null,
+      application_deadline: formData.application_deadline || null,
+      requirements: requirements.length > 0 ? requirements : null,
+      benefits: benefits.length > 0 ? benefits : null,
+      is_active: true,
     };
 
-    console.log('New vacancy object created:', newVacancy);
+    onVacancyCreated(vacancyData);
+  };
 
-    // Save to localStorage
-    const existingVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
-    const updatedVacancies = [...existingVacancies, newVacancy];
-    localStorage.setItem('schoolVacancies', JSON.stringify(updatedVacancies));
-
-    onVacancyCreated(newVacancy);
-    onOpenChange(false);
-    setIsSubmitting(false);
-
-    // Reset form
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      subject: '',
+      location: '',
+      salary_min: '',
+      salary_max: '',
+      employment_type: 'full-time',
+      experience_required: '',
+      application_deadline: '',
+      housing_provided: false,
+    });
     setRequirements([]);
     setBenefits([]);
     setNewRequirement('');
     setNewBenefit('');
+  };
 
-    toast({
-      title: "Вакансия создана",
-      description: "Новая вакансия успешно добавлена",
-    });
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && !isCreating) {
+      resetForm();
+    }
+    onOpenChange(newOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Создать новую вакансию</DialogTitle>
-          <DialogDescription>
-            Информация о школе будет взята из вашего профиля. Заполните детали вакансии.
-          </DialogDescription>
         </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Название вакансии *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                placeholder="Например: Учитель математики"
+                required
+              />
+            </div>
 
-        {/* School Info Preview */}
-        {schoolProfile && (
-          <div className="bg-muted/50 p-3 rounded-lg mb-4">
-            <h4 className="font-medium text-sm mb-2">Информация о школе:</h4>
-            <p className="text-sm text-muted-foreground">
-              {schoolProfile.name} • {schoolProfile.address}
-            </p>
+            <div>
+              <Label htmlFor="subject">Предмет</Label>
+              <Input
+                id="subject"
+                value={formData.subject}
+                onChange={(e) => handleInputChange('subject', e.target.value)}
+                placeholder="Например: Математика"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description">Описание вакансии</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Подробное описание вакансии, обязанностей и условий работы"
+                rows={4}
+              />
+            </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <VacancyFormFields />
-          
-          <RequirementsBenefitsSection
-            requirements={requirements}
-            setRequirements={setRequirements}
-            newRequirement={newRequirement}
-            setNewRequirement={setNewRequirement}
-            benefits={benefits}
-            setBenefits={setBenefits}
-            newBenefit={newBenefit}
-            setNewBenefit={setNewBenefit}
-          />
+          {/* Employment Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="employment_type">Тип занятости</Label>
+              <Select
+                value={formData.employment_type}
+                onValueChange={(value) => handleInputChange('employment_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full-time">Полная занятость</SelectItem>
+                  <SelectItem value="part-time">Частичная занятость</SelectItem>
+                  <SelectItem value="contract">Контракт</SelectItem>
+                  <SelectItem value="temporary">Временная работа</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+            <div>
+              <Label htmlFor="location">Местоположение</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder="Город или регион"
+              />
+            </div>
+          </div>
+
+          {/* Salary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="salary_min">Зарплата от (₽)</Label>
+              <Input
+                id="salary_min"
+                type="number"
+                value={formData.salary_min}
+                onChange={(e) => handleInputChange('salary_min', e.target.value)}
+                placeholder="50000"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="salary_max">Зарплата до (₽)</Label>
+              <Input
+                id="salary_max"
+                type="number"
+                value={formData.salary_max}
+                onChange={(e) => handleInputChange('salary_max', e.target.value)}
+                placeholder="80000"
+              />
+            </div>
+          </div>
+
+          {/* Experience and Deadline */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="experience_required">Требуемый опыт (лет)</Label>
+              <Input
+                id="experience_required"
+                type="number"
+                value={formData.experience_required}
+                onChange={(e) => handleInputChange('experience_required', e.target.value)}
+                placeholder="3"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="application_deadline">Срок подачи заявок</Label>
+              <Input
+                id="application_deadline"
+                type="date"
+                value={formData.application_deadline}
+                onChange={(e) => handleInputChange('application_deadline', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Requirements */}
+          <div>
+            <Label>Требования к кандидату</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                value={newRequirement}
+                onChange={(e) => setNewRequirement(e.target.value)}
+                placeholder="Добавить требование"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+              />
+              <Button type="button" onClick={addRequirement} size="sm">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {requirements.map((req, index) => (
+                <Badge key={index} variant="outline" className="flex items-center gap-1">
+                  {req}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => removeRequirement(index)}
+                  />
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Benefits */}
+          <div>
+            <Label>Преимущества работы</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                value={newBenefit}
+                onChange={(e) => setNewBenefit(e.target.value)}
+                placeholder="Добавить преимущество"
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addBenefit())}
+              />
+              <Button type="button" onClick={addBenefit} size="sm">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {benefits.map((benefit, index) => (
+                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                  {benefit}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => removeBenefit(index)}
+                  />
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isCreating}
             >
               Отмена
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Создание..." : "Создать вакансию"}
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? 'Создание...' : 'Создать вакансию'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

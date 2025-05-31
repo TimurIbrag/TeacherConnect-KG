@@ -112,3 +112,35 @@ export const useSchool = (id: string) => {
     enabled: !!id,
   });
 };
+
+// New hook to get vacancies for the homepage
+export const useActiveVacancies = (limit?: number) => {
+  return useQuery({
+    queryKey: ['active-vacancies', limit],
+    queryFn: async () => {
+      let query = supabase
+        .from('vacancies')
+        .select(`
+          *,
+          school_profiles (
+            school_name,
+            address,
+            profiles (
+              full_name
+            )
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data;
+    },
+  });
+};
