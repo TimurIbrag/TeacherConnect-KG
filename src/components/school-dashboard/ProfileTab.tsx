@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock } from 'lucide-react';
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock, CheckCircle } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -20,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import AvatarUploader from '@/components/AvatarUploader';
 import SchoolPhotoGallery from './SchoolPhotoGallery';
+import LocationVerificationModal from '@/components/LocationVerificationModal';
 
 interface ProfileTabProps {
   onNavigateToVacancies?: () => void;
@@ -33,7 +33,9 @@ const emptySchoolData = {
   category: 'Общеобразовательная',
   about: '',
   website: '',
-  infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая']
+  infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая'],
+  locationVerified: false,
+  coordinates: null as { lat: number; lng: number } | null
 };
 
 // Initial empty stats
@@ -50,6 +52,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [newInfrastructure, setNewInfrastructure] = useState('');
   const [isProfilePublic, setIsProfilePublic] = useState(false);
+  const [showLocationVerification, setShowLocationVerification] = useState(false);
   
   // Initialize with empty data from localStorage or use defaults
   const [schoolData, setSchoolData] = useState(() => {
@@ -103,7 +106,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       category: formData.get('category') as string,
       about: formData.get('about') as string,
       website: formData.get('website') as string,
-      infrastructure: schoolData.infrastructure // We'll handle this separately
+      infrastructure: schoolData.infrastructure, // We'll handle this separately
+      locationVerified: schoolData.locationVerified,
+      coordinates: schoolData.coordinates
     };
     
     // Save to localStorage and update state
@@ -151,6 +156,20 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
         ? "Ваш профиль и вакансии теперь видны соискателям" 
         : "Ваш профиль и вакансии скрыты от соискателей",
     });
+  };
+  
+  // Handle location verification
+  const handleLocationVerification = (verifiedData: { address: string; coordinates: { lat: number; lng: number } }) => {
+    const updatedData = {
+      ...schoolData,
+      address: verifiedData.address,
+      locationVerified: true,
+      coordinates: verifiedData.coordinates
+    };
+    
+    setSchoolData(updatedData);
+    localStorage.setItem('schoolProfileData', JSON.stringify(updatedData));
+    setShowLocationVerification(false);
   };
   
   // Add new infrastructure item
@@ -297,10 +316,27 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
               <div>
                 <h3 className="text-lg font-medium">{schoolData.name || "Название школы не указано"}</h3>
                 {schoolData.address && (
-                  <p className="text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {schoolData.address}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {schoolData.address}
+                    </p>
+                    {schoolData.locationVerified ? (
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Подтверждено
+                      </Badge>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setShowLocationVerification(true)}
+                      >
+                        Подтвердить адрес
+                      </Button>
+                    )}
+                  </div>
                 )}
                 {schoolData.website && (
                   <a 
@@ -534,6 +570,14 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Location Verification Modal */}
+      <LocationVerificationModal
+        isOpen={showLocationVerification}
+        onClose={() => setShowLocationVerification(false)}
+        currentAddress={schoolData.address}
+        onVerify={handleLocationVerification}
+      />
     </div>
   );
 };

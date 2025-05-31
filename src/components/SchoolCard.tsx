@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Briefcase, Navigation } from 'lucide-react';
+import { MapPin, Star, Eye, Briefcase, Navigation, CheckCircle } from 'lucide-react';
 
 interface SchoolCardProps {
   id: number;
@@ -19,6 +19,7 @@ interface SchoolCardProps {
   views: number;
   housing?: boolean;
   distance?: number;
+  locationVerified?: boolean;
 }
 
 const SchoolCard: React.FC<SchoolCardProps> = ({
@@ -33,6 +34,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   views,
   housing,
   distance,
+  locationVerified = Math.random() > 0.3, // Mock verification status
 }) => {
   const { t } = useLanguage();
 
@@ -44,11 +46,17 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
           alt={name} 
           className="h-full w-full object-cover" 
         />
-        {housing && (
-          <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex gap-2">
+          {housing && (
             <Badge className="bg-accent text-white">Жилье</Badge>
-          </div>
-        )}
+          )}
+          {locationVerified && (
+            <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" />
+              Адрес подтвержден
+            </Badge>
+          )}
+        </div>
       </div>
       <CardContent className="p-4">
         <h3 className="text-lg font-medium">{name}</h3>
@@ -57,8 +65,13 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
           <Badge variant="secondary">{specialization}</Badge>
         </div>
         <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-          <MapPin className="w-3 h-3" />
-          <span>{address}</span>
+          <div className="flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            <span>{address}</span>
+            {locationVerified && (
+              <CheckCircle className="w-3 h-3 text-green-600" />
+            )}
+          </div>
           {distance !== undefined && (
             <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
               <Navigation className="w-3 h-3" />

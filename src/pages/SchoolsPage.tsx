@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { schoolsData, schoolTypes, locations } from '@/data/mockData';
@@ -18,7 +17,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Search, Filter, X, CheckSquare, Navigation } from 'lucide-react';
+import { Search, Filter, X, CheckSquare, Navigation, CheckCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -39,6 +38,7 @@ const SchoolsPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [housingFilter, setHousingFilter] = useState(false);
+  const [verifiedOnlyFilter, setVerifiedOnlyFilter] = useState(false);
   
   // Distance filter states
   const [userCoordinates, setUserCoordinates] = useState<Coordinates | null>(null);
@@ -139,6 +139,9 @@ const SchoolsPage: React.FC = () => {
     const matchesLocation = !locationFilter || school.address.includes(locationFilter);
     const matchesHousing = !housingFilter || school.housing === true;
     
+    // Verified location filter (mock - in real app this would come from database)
+    const matchesVerified = !verifiedOnlyFilter || Math.random() > 0.3; // Mock 70% verified
+    
     // Distance filter
     let matchesDistance = true;
     if (userCoordinates && distanceFilter) {
@@ -157,7 +160,7 @@ const SchoolsPage: React.FC = () => {
       matchesDistance = distance <= distanceFilter;
     }
     
-    return matchesSearch && matchesType && matchesLocation && matchesHousing && matchesDistance;
+    return matchesSearch && matchesType && matchesLocation && matchesHousing && matchesVerified && matchesDistance;
   });
   
   // Clear all filters
@@ -166,6 +169,7 @@ const SchoolsPage: React.FC = () => {
     setTypeFilter('');
     setLocationFilter('');
     setHousingFilter(false);
+    setVerifiedOnlyFilter(false);
     setDistanceFilter(null);
     
     toast({
@@ -185,7 +189,7 @@ const SchoolsPage: React.FC = () => {
   };
   
   // Check if any filter is active
-  const hasActiveFilters = searchTerm || typeFilter || locationFilter || housingFilter || distanceFilter;
+  const hasActiveFilters = searchTerm || typeFilter || locationFilter || housingFilter || verifiedOnlyFilter || distanceFilter;
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -261,6 +265,21 @@ const SchoolsPage: React.FC = () => {
                   С жильем
                 </Label>
               </div>
+            </div>
+          </div>
+          
+          {/* Additional filters row */}
+          <div className="mt-4 flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="verified" 
+                checked={verifiedOnlyFilter}
+                onCheckedChange={setVerifiedOnlyFilter}
+              />
+              <Label htmlFor="verified" className="flex items-center cursor-pointer text-sm">
+                <CheckCircle className="mr-1 h-4 w-4" />
+                Только с подтвержденным адресом
+              </Label>
             </div>
           </div>
           
