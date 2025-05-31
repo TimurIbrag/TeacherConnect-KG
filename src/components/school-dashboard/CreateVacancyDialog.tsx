@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -29,27 +29,34 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [schoolProfile, setSchoolProfile] = useState<any>(null);
   const [requirements, setRequirements] = useState<string[]>([]);
   const [newRequirement, setNewRequirement] = useState('');
   const [benefits, setBenefits] = useState<string[]>([]);
   const [newBenefit, setNewBenefit] = useState('');
 
+  // Load school profile data
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('schoolProfileData');
+    if (savedProfile) {
+      const profile = JSON.parse(savedProfile);
+      setSchoolProfile(profile);
+      console.log('Loaded school profile for vacancy:', profile);
+    }
+  }, [open]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Form submission started');
+    console.log('Vacancy form submission started');
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    console.log('Form data collected:', {
-      title: formData.get('title'),
-      description: formData.get('description'),
-      salaryMin: formData.get('salaryMin'),
-      salaryMax: formData.get('salaryMax')
-    });
-
+    
     const newVacancy = {
       id: Date.now(),
-      title: formData.get('title') as string,
+      // Job-specific information
+      position: formData.get('position') as string,
+      subject: formData.get('subject') as string,
       description: formData.get('description') as string,
       salaryMin: parseInt(formData.get('salaryMin') as string) || 0,
       salaryMax: parseInt(formData.get('salaryMax') as string) || 0,
@@ -58,6 +65,15 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       education: formData.get('education') as string,
       requirements,
       benefits,
+      
+      // School information from profile
+      schoolName: schoolProfile?.name || 'Не указано',
+      schoolAddress: schoolProfile?.address || 'Не указано',
+      schoolType: schoolProfile?.type || 'Не указано',
+      schoolWebsite: schoolProfile?.website || '',
+      schoolInfrastructure: schoolProfile?.infrastructure || [],
+      
+      // Status and metadata
       status: 'active',
       createdAt: new Date().toISOString(),
       views: 0,
@@ -68,16 +84,10 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
     // Save to localStorage
     const existingVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
-    console.log('Existing vacancies:', existingVacancies);
-    
     const updatedVacancies = [...existingVacancies, newVacancy];
     localStorage.setItem('schoolVacancies', JSON.stringify(updatedVacancies));
-    console.log('Updated vacancies saved to localStorage:', updatedVacancies);
 
-    console.log('Calling onVacancyCreated callback');
     onVacancyCreated(newVacancy);
-    
-    console.log('Closing dialog');
     onOpenChange(false);
     setIsSubmitting(false);
 
@@ -87,7 +97,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     setNewRequirement('');
     setNewBenefit('');
 
-    console.log('Showing success toast');
     toast({
       title: "Вакансия создана",
       description: "Новая вакансия успешно добавлена",
@@ -95,7 +104,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const addRequirement = () => {
-    console.log('Adding requirement:', newRequirement);
     if (newRequirement.trim()) {
       setRequirements([...requirements, newRequirement.trim()]);
       setNewRequirement('');
@@ -103,12 +111,10 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const removeRequirement = (index: number) => {
-    console.log('Removing requirement at index:', index);
     setRequirements(requirements.filter((_, i) => i !== index));
   };
 
   const addBenefit = () => {
-    console.log('Adding benefit:', newBenefit);
     if (newBenefit.trim()) {
       setBenefits([...benefits, newBenefit.trim()]);
       setNewBenefit('');
@@ -116,11 +122,8 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const removeBenefit = (index: number) => {
-    console.log('Removing benefit at index:', index);
     setBenefits(benefits.filter((_, i) => i !== index));
   };
-
-  console.log('CreateVacancyDialog render - open:', open, 'isSubmitting:', isSubmitting);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,28 +131,49 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Создать новую вакансию</DialogTitle>
           <DialogDescription>
-            Заполните информацию о вакансии для привлечения лучших кандидатов.
+            Информация о школе будет взята из вашего профиля. Заполните детали вакансии.
           </DialogDescription>
         </DialogHeader>
 
+        {/* School Info Preview */}
+        {schoolProfile && (
+          <div className="bg-muted/50 p-3 rounded-lg mb-4">
+            <h4 className="font-medium text-sm mb-2">Информация о школе:</h4>
+            <p className="text-sm text-muted-foreground">
+              {schoolProfile.name} • {schoolProfile.address}
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Название должности</Label>
-            <Input 
-              id="title" 
-              name="title" 
-              placeholder="Например: Учитель математики"
-              required 
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Должность</Label>
+              <Input 
+                id="position" 
+                name="position" 
+                placeholder="Например: Учитель"
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subject">Предмет</Label>
+              <Input 
+                id="subject" 
+                name="subject" 
+                placeholder="Например: Математика"
+                required 
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Описание вакансии</Label>
+            <Label htmlFor="description">Описание работы</Label>
             <Textarea 
               id="description" 
               name="description" 
-              rows={4}
-              placeholder="Опишите обязанности, условия работы и ваши ожидания..."
+              rows={3}
+              placeholder="Опишите основные обязанности и условия работы..."
               required 
             />
           </div>
@@ -183,7 +207,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
               <Input 
                 id="schedule" 
                 name="schedule" 
-                placeholder="Полный день"
+                placeholder="Полный день, 5/2"
                 required 
               />
             </div>

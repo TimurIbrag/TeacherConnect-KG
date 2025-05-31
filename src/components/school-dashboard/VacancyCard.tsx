@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, UserCheck, Trash2, MoreHorizontal } from 'lucide-react';
+import { Edit, Eye, UserCheck, Trash2, MoreHorizontal, Building, MapPin } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,8 @@ import {
 interface VacancyCardProps {
   vacancy: {
     id: number;
-    title: string;
+    position: string;
+    subject: string;
     description: string;
     salaryMin: number;
     salaryMax: number;
@@ -23,6 +24,11 @@ interface VacancyCardProps {
     education: string;
     requirements: string[];
     benefits: string[];
+    schoolName: string;
+    schoolAddress: string;
+    schoolType: string;
+    schoolWebsite?: string;
+    schoolInfrastructure: string[];
     status: string;
     createdAt: string;
     views: number;
@@ -63,7 +69,20 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <CardTitle className="text-lg">{vacancy.title}</CardTitle>
+            <CardTitle className="text-lg">
+              {vacancy.position} • {vacancy.subject}
+            </CardTitle>
+            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+              <Building className="h-4 w-4" />
+              <span>{vacancy.schoolName}</span>
+              {vacancy.schoolAddress && (
+                <>
+                  <span>•</span>
+                  <MapPin className="h-4 w-4" />
+                  <span>{vacancy.schoolAddress}</span>
+                </>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               Опубликована: {formatDate(vacancy.createdAt)} • {vacancy.views} просмотров • {vacancy.applications} откликов
             </p>
@@ -101,9 +120,10 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2">
-          <span className="text-xs bg-muted px-2 py-1 rounded-full">{vacancy.schedule}</span>
-          <span className="text-xs bg-muted px-2 py-1 rounded-full">{formatSalary()}</span>
-          <span className="text-xs bg-muted px-2 py-1 rounded-full">{vacancy.experience}</span>
+          <Badge variant="outline">{vacancy.schedule}</Badge>
+          <Badge variant="outline">{formatSalary()}</Badge>
+          <Badge variant="outline">{vacancy.experience}</Badge>
+          <Badge variant="secondary">{vacancy.schoolType}</Badge>
         </div>
         
         <p className="text-sm line-clamp-2">{vacancy.description}</p>
@@ -120,6 +140,24 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
               {vacancy.requirements.length > 3 && (
                 <Badge variant="outline" className="text-xs">
                   +{vacancy.requirements.length - 3} еще
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
+        {vacancy.benefits.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Предлагаем:</p>
+            <div className="flex flex-wrap gap-1">
+              {vacancy.benefits.slice(0, 3).map((benefit, index) => (
+                <Badge key={index} variant="secondary" className="text-xs">
+                  {benefit}
+                </Badge>
+              ))}
+              {vacancy.benefits.length > 3 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{vacancy.benefits.length - 3} еще
                 </Badge>
               )}
             </div>
