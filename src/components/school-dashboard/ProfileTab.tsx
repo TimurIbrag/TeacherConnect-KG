@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -47,6 +49,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [newInfrastructure, setNewInfrastructure] = useState('');
+  const [isProfilePublic, setIsProfilePublic] = useState(false);
   
   // Initialize with empty data from localStorage or use defaults
   const [schoolData, setSchoolData] = useState(() => {
@@ -60,13 +63,32 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     return savedStats ? JSON.parse(savedStats) : emptyStats;
   });
 
-  // Load profile photo from localStorage on component mount
+  // Load profile photo and visibility setting from localStorage on component mount
   useEffect(() => {
     const savedPhoto = localStorage.getItem('schoolProfilePhoto');
     if (savedPhoto) {
       setProfilePhoto(savedPhoto);
     }
+    
+    const savedVisibility = localStorage.getItem('schoolProfilePublic');
+    if (savedVisibility) {
+      setIsProfilePublic(JSON.parse(savedVisibility));
+    }
   }, []);
+
+  // Update stats when profile becomes public/private
+  useEffect(() => {
+    const currentVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
+    const activeVacanciesCount = currentVacancies.filter((v: any) => v.status === 'active').length;
+    
+    const updatedStats = {
+      ...stats,
+      activeVacancies: activeVacanciesCount
+    };
+    
+    setStats(updatedStats);
+    localStorage.setItem('schoolProfileStats', JSON.stringify(updatedStats));
+  }, [isProfilePublic]);
   
   // Handler for updating profile data
   const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
@@ -116,6 +138,19 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       setProfilePhoto(null);
       localStorage.removeItem('schoolProfilePhoto');
     }
+  };
+
+  // Handle profile visibility toggle
+  const handleProfileVisibilityChange = (checked: boolean) => {
+    setIsProfilePublic(checked);
+    localStorage.setItem('schoolProfilePublic', JSON.stringify(checked));
+    
+    toast({
+      title: checked ? "Профиль опубликован" : "Профиль скрыт",
+      description: checked 
+        ? "Ваш профиль и вакансии теперь видны соискателям" 
+        : "Ваш профиль и вакансии скрыты от соискателей",
+    });
   };
   
   // Add new infrastructure item
@@ -169,21 +204,75 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     setSchoolData({...emptySchoolData});
     setStats({...emptyStats});
     setProfilePhoto(null);
+    setIsProfilePublic(false);
     
     // Clear from localStorage
     localStorage.removeItem('schoolProfileData');
     localStorage.removeItem('schoolProfileStats');
     localStorage.removeItem('schoolProfilePhoto');
+    localStorage.removeItem('schoolProfilePublic');
     
     toast({
       title: "Профиль сброшен",
       description: "Все данные профиля были сброшены до значений по умолчанию",
     });
   };
+
+  const isProfileComplete = schoolData.name && schoolData.address && schoolData.about;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="md:col-span-2 space-y-6">
+        {/* Profile Visibility Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {isProfilePublic ? (
+                <Globe className="h-5 w-5 text-green-600" />
+              ) : (
+                <Lock className="h-5 w-5 text-muted-foreground" />
+              )}
+              Видимость профиля
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  {isProfilePublic ? "Профиль опубликован" : "Профиль скрыт"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isProfilePublic 
+                    ? "Ваш профиль и активные вакансии видны соискателям"
+                    : "Только вы можете видеть ваш профиль и вакансии"
+                  }
+                </p>
+              </div>
+              <Switch
+                checked={isProfilePublic}
+                onCheckedChange={handleProfileVisibilityChange}
+                disabled={!isProfileComplete}
+              />
+            </div>
+            
+            {!isProfileComplete && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  Заполните обязательные поля профиля (название, адрес, описание) для публикации
+                </p>
+              </div>
+            )}
+
+            {isProfilePublic && isProfileComplete && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">
+                  ✓ Ваш профиль опубликован и доступен для поиска
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
