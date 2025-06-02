@@ -42,7 +42,6 @@ const SchoolProfilePage: React.FC = () => {
       toast({
         title: "Вы уже откликнулись на эту вакансию",
         description: "Вы получите уведомление, когда школа рассмотрит вашу заявку",
-        variant: "default",
       });
       return;
     }
@@ -51,7 +50,6 @@ const SchoolProfilePage: React.FC = () => {
     toast({
       title: "Заявка отправлена!",
       description: "Ваш отклик на вакансию успешно отправлен",
-      variant: "default",
     });
   };
   
@@ -157,7 +155,7 @@ const SchoolProfilePage: React.FC = () => {
                 
                 <TabsContent value="vacancies" className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Отк��ытые вакансии</h3>
+                    <h3 className="text-lg font-medium mb-4">Открытые вакансии</h3>
                     <div className="space-y-4">
                       {school.openPositions.map((job) => (
                         <JobCard
