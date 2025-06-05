@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,45 +90,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Handle Google OAuth signup - extract role from URL params if available
-          if (event === 'SIGNED_IN' && session.user.app_metadata.provider === 'google') {
-            console.log('Google OAuth user signed in');
-            const urlParams = new URLSearchParams(window.location.search);
-            const role = urlParams.get('role') || 'teacher';
-            
-            // Check if profile exists, if not create one
-            const { data: existingProfile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            console.log('Existing profile check:', existingProfile);
-            
-            if (!existingProfile) {
-              console.log('Creating new profile for Google user with role:', role);
-              // Create profile for Google user
-              const { data: newProfile, error: profileError } = await supabase
+        if (session?.user && event === 'SIGNED_IN') {
+          // Handle new user creation
+          setTimeout(async () => {
+            try {
+              // Check if profile exists
+              const { data: existingProfile } = await supabase
                 .from('profiles')
-                .insert({
-                  id: session.user.id,
-                  email: session.user.email || '',
-                  full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
-                  role: role as 'teacher' | 'school' | 'admin',
-                })
-                .select()
-                .single();
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              
+              console.log('Existing profile check:', existingProfile);
+              
+              if (!existingProfile) {
+                console.log('Creating new profile for user');
                 
-              if (profileError) {
-                console.error('Error creating profile:', profileError);
+                // Get user type from localStorage (set during registration)
+                const pendingUserType = localStorage.getItem('pendingUserType') || 'teacher';
+                localStorage.removeItem('pendingUserType'); // Clean up
+                
+                const { data: newProfile, error: profileError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    full_name: session.user.user_metadata?.full_name || 
+                             session.user.user_metadata?.name || 
+                             '',
+                    role: pendingUserType as 'teacher' | 'school' | 'admin',
+                  })
+                  .select()
+                  .single();
+                  
+                if (profileError) {
+                  console.error('Error creating profile:', profileError);
+                } else {
+                  console.log('Profile created successfully:', newProfile);
+                  setProfile(newProfile);
+                }
               } else {
-                console.log('Profile created successfully:', newProfile);
+                setProfile(existingProfile);
               }
+            } catch (error) {
+              console.error('Error handling new user:', error);
             }
-          }
-          
-          // Defer profile fetching to avoid blocking auth state changes
+          }, 100);
+        } else if (session?.user) {
+          // Existing user, just fetch profile
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 100);

@@ -22,9 +22,9 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
           redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+            prompt: 'consent'
+          }
+        }
       });
 
       console.log('Google OAuth response:', { data, error });
@@ -33,8 +33,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
         console.error('Google OAuth error:', error);
         toast({
           title: "Ошибка входа",
-          description: `Google OAuth error: ${error.message}`,
-          variant: "destructive",
+          description: `Ошибка входа через Google: ${error.message}`,
+          variant: "destructive"
         });
         return;
       }
@@ -47,7 +47,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
       toast({
         title: "Ошибка входа",
         description: error.message || 'Произошла неожиданная ошибка при входе через Google',
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
