@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface GoogleLoginButtonProps {
-  onClick?: () => void;
   isLoading: boolean;
 }
 
@@ -26,12 +25,15 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Google OAuth error:', error);
+        throw error;
+      }
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
         title: "Ошибка входа",
-        description: error.message || 'Не удалось войти через Google',
+        description: error.message || 'Не удалось войти через Google. Проверьте настройки OAuth.',
         variant: "destructive",
       });
     }

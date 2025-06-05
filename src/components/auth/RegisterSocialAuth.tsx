@@ -30,15 +30,17 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({ userType, isLoa
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Google OAuth error:', error);
+        throw error;
+      }
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
         title: "Ошибка",
-        description: error.message || "Не удалось выполнить регистрацию через Google. Попробуйте позже.",
+        description: error.message || "Не удалось выполнить регистрацию через Google. Проверьте настройки OAuth.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

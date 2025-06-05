@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
-import { useNavigate } from 'react-router-dom';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -89,11 +88,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Handle password reset completion
-          if (event === 'PASSWORD_RECOVERY') {
-            // Redirect to password reset page
-            window.location.href = '/reset-password';
-            return;
+          // Handle Google OAuth signup - extract role from URL params if available
+          if (event === 'SIGNED_IN' && session.user.app_metadata.provider === 'google') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role') || 'teacher';
+            
+            // Check if profile exists, if not create one
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (!existingProfile) {
+              // Create profile for Google user
+              await supabase
+                .from('profiles')
+                .insert({
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+                  role: role as 'teacher' | 'school' | 'admin',
+                });
+            }
           }
           
           // Defer profile fetching to avoid blocking auth state changes
