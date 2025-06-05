@@ -18,7 +18,9 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({ userType, isLoa
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google OAuth registration flow...', { userType });
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
@@ -30,15 +32,27 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({ userType, isLoa
         },
       });
 
+      console.log('Google OAuth registration response:', { data, error });
+
       if (error) {
         console.error('Google OAuth error:', error);
-        throw error;
+        toast({
+          title: "Ошибка",
+          description: `Google OAuth error: ${error.message}`,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
       }
+
+      // If we get here, the redirect should happen automatically
+      console.log('Google OAuth registration initiated successfully');
+      
     } catch (error: any) {
-      console.error('Google auth error:', error);
+      console.error('Unexpected error during Google registration:', error);
       toast({
         title: "Ошибка",
-        description: error.message || "Не удалось выполнить регистрацию через Google. Проверьте настройки OAuth.",
+        description: error.message || "Произошла неожиданная ошибка при регистрации через Google",
         variant: "destructive",
       });
       setIsLoading(false);

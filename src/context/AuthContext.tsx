@@ -34,6 +34,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -45,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      console.log('Profile fetched:', data);
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -83,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
+        console.log('Session details:', session);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -90,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           // Handle Google OAuth signup - extract role from URL params if available
           if (event === 'SIGNED_IN' && session.user.app_metadata.provider === 'google') {
+            console.log('Google OAuth user signed in');
             const urlParams = new URLSearchParams(window.location.search);
             const role = urlParams.get('role') || 'teacher';
             
@@ -98,25 +103,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
+            
+            console.log('Existing profile check:', existingProfile);
             
             if (!existingProfile) {
+              console.log('Creating new profile for Google user with role:', role);
               // Create profile for Google user
-              await supabase
+              const { data: newProfile, error: profileError } = await supabase
                 .from('profiles')
                 .insert({
                   id: session.user.id,
                   email: session.user.email || '',
                   full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
                   role: role as 'teacher' | 'school' | 'admin',
-                });
+                })
+                .select()
+                .single();
+                
+              if (profileError) {
+                console.error('Error creating profile:', profileError);
+              } else {
+                console.log('Profile created successfully:', newProfile);
+              }
             }
           }
           
           // Defer profile fetching to avoid blocking auth state changes
           setTimeout(() => {
             fetchProfile(session.user.id);
-          }, 0);
+          }, 100);
         } else {
           setProfile(null);
         }
@@ -127,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {

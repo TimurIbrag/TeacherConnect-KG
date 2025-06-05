@@ -14,7 +14,9 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
 
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google OAuth flow...');
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
@@ -25,15 +27,26 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
         },
       });
 
+      console.log('Google OAuth response:', { data, error });
+
       if (error) {
         console.error('Google OAuth error:', error);
-        throw error;
+        toast({
+          title: "Ошибка входа",
+          description: `Google OAuth error: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
       }
+
+      // If we get here, the redirect should happen automatically
+      console.log('Google OAuth initiated successfully');
+      
     } catch (error: any) {
-      console.error('Google auth error:', error);
+      console.error('Unexpected error during Google auth:', error);
       toast({
         title: "Ошибка входа",
-        description: error.message || 'Не удалось войти через Google. Проверьте настройки OAuth.',
+        description: error.message || 'Произошла неожиданная ошибка при входе через Google',
         variant: "destructive",
       });
     }
