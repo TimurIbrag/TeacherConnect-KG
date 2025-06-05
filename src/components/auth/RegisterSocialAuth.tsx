@@ -25,8 +25,6 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({ userType, isLoa
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-          },
-          data: {
             role: userType,
           },
         },
