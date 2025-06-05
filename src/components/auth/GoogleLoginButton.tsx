@@ -14,39 +14,46 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('Starting Google OAuth flow...');
+      console.log('Google OAuth button clicked');
+      console.log('Current URL:', window.location.href);
+      console.log('Origin:', window.location.origin);
+      
+      const redirectUrl = `${window.location.origin}/`;
+      console.log('Redirect URL that will be used:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
+          redirectTo: redirectUrl
         }
       });
 
-      console.log('Google OAuth response:', { data, error });
-
+      console.log('Supabase OAuth response:', { data, error });
+      
       if (error) {
-        console.error('Google OAuth error:', error);
+        console.error('Supabase OAuth error details:', {
+          message: error.message,
+          status: error.status,
+          details: error
+        });
+        
         toast({
           title: "Ошибка входа",
-          description: `Ошибка входа через Google: ${error.message}`,
+          description: `Детали ошибки: ${error.message}`,
           variant: "destructive"
         });
         return;
       }
 
-      // If we get here, the redirect should happen automatically
-      console.log('Google OAuth initiated successfully');
+      console.log('OAuth initiated successfully, should redirect to Google...');
       
     } catch (error: any) {
       console.error('Unexpected error during Google auth:', error);
+      console.error('Error stack:', error.stack);
+      
       toast({
         title: "Ошибка входа",
-        description: error.message || 'Произошла неожиданная ошибка при входе через Google',
+        description: `Неожиданная ошибка: ${error.message || 'Неизвестная ошибка'}`,
         variant: "destructive"
       });
     }

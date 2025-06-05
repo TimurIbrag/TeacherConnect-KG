@@ -21,42 +21,51 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
   const handleGoogleRegister = async () => {
     setIsLoading(true);
     try {
-      console.log('Starting Google OAuth registration flow...', { userType });
+      console.log('Google OAuth registration button clicked');
+      console.log('User type:', userType);
+      console.log('Current URL:', window.location.href);
+      console.log('Origin:', window.location.origin);
       
       // Store the user type in localStorage so we can use it after redirect
       localStorage.setItem('pendingUserType', userType);
+      console.log('Stored pendingUserType in localStorage:', userType);
+      
+      const redirectUrl = `${window.location.origin}/`;
+      console.log('Redirect URL that will be used:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
+          redirectTo: redirectUrl
         }
       });
 
-      console.log('Google OAuth registration response:', { data, error });
+      console.log('Supabase OAuth registration response:', { data, error });
 
       if (error) {
-        console.error('Google OAuth error:', error);
+        console.error('Supabase OAuth registration error details:', {
+          message: error.message,
+          status: error.status,
+          details: error
+        });
+        
         toast({
           title: "Ошибка",
-          description: `Ошибка входа через Google: ${error.message}`,
+          description: `Детали ошибки: ${error.message}`,
           variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
 
-      // If we get here, the redirect should happen automatically
-      console.log('Google OAuth registration initiated successfully');
+      console.log('OAuth registration initiated successfully, should redirect to Google...');
     } catch (error: any) {
       console.error('Unexpected error during Google registration:', error);
+      console.error('Error stack:', error.stack);
+      
       toast({
         title: "Ошибка",
-        description: error.message || "Произошла неожиданная ошибка при регистрации через Google",
+        description: `Неожиданная ошибка: ${error.message || "Неизвестная ошибка"}`,
         variant: "destructive"
       });
       setIsLoading(false);
