@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
@@ -16,56 +17,31 @@ import LanguageSwitcher from './LanguageSwitcher';
 const Navbar: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState<'teacher' | 'school' | null>(null);
-  const [userData, setUserData] = useState<any>(null);
-  
-  // Check if user is logged in
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const user = localStorage.getItem('user');
-      
-      if (user) {
-        setIsLoggedIn(true);
-        try {
-          const userData = JSON.parse(user);
-          setUserData(userData);
-          setUserType(userData.type);
-        } catch (e) {
-          console.error('Error parsing user data', e);
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUserType(null);
-        setUserData(null);
-      }
-    };
-    
-    checkLoginStatus();
-    window.addEventListener('login', checkLoginStatus);
-    window.addEventListener('logout', checkLoginStatus);
-    
-    return () => {
-      window.removeEventListener('login', checkLoginStatus);
-      window.removeEventListener('logout', checkLoginStatus);
-    };
-  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.dispatchEvent(new Event('logout'));
-    
-    toast({
-      title: "Выход выполнен",
-      description: "Вы успешно вышли из системы",
-    });
-    
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы",
+      });
+      
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Ошибка",
+        description: "Произошла ошибка при выходе",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -77,10 +53,10 @@ const Navbar: React.FC = () => {
         <DesktopNav />
 
         <div className="flex items-center gap-3">
-          {isLoggedIn ? (
+          {user ? (
             <UserMenuDesktop 
-              userData={userData} 
-              userType={userType} 
+              userData={profile} 
+              userType={profile?.role} 
               handleLogout={handleLogout} 
             />
           ) : (
@@ -103,8 +79,8 @@ const Navbar: React.FC = () => {
       <MobileNav 
         isOpen={mobileMenuOpen} 
         setIsOpen={setMobileMenuOpen} 
-        isLoggedIn={isLoggedIn} 
-        userType={userType} 
+        isLoggedIn={!!user} 
+        userType={profile?.role} 
         handleLogout={handleLogout}
       />
     </header>

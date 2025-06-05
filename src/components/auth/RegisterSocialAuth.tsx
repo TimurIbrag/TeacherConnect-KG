@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RegisterSocialAuthProps {
   userType: 'teacher' | 'school';
@@ -13,42 +13,31 @@ interface RegisterSocialAuthProps {
 
 const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({ userType, isLoading, setIsLoading }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleGoogleRegister = async () => {
     setIsLoading(true);
     
     try {
-      // Simulate Google authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // This would be replaced with actual Google Auth API implementation
-      // For demo, we'll create a mock user based on the selected type
-      const googleUser = {
-        email: `google-user-${Date.now()}@gmail.com`,
-        type: userType,
-        name: userType === 'school' ? 'Google School' : 'Google Teacher',
-        authProvider: 'google'
-      };
-      
-      localStorage.setItem('user', JSON.stringify(googleUser));
-      
-      window.dispatchEvent(new Event('login'));
-      
-      toast({
-        title: "Google регистрация успешна",
-        description: "Добро пожаловать в личный кабинет",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          data: {
+            role: userType,
+          },
+        },
       });
-      
-      if (userType === 'school') {
-        navigate('/school-dashboard');
-      } else {
-        navigate('/teacher-dashboard');
-      }
-    } catch (error) {
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google auth error:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось выполнить регистрацию через Google. Попробуйте позже.",
+        description: error.message || "Не удалось выполнить регистрацию через Google. Попробуйте позже.",
         variant: "destructive",
       });
     } finally {

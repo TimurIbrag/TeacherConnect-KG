@@ -2,17 +2,45 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Chrome } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface GoogleLoginButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   isLoading: boolean;
 }
 
-const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onClick, isLoading }) => {
+const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
+  const { toast } = useToast();
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      toast({
+        title: "Ошибка входа",
+        description: error.message || 'Не удалось войти через Google',
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Button 
       variant="outline" 
-      onClick={onClick} 
+      onClick={handleGoogleLogin} 
       disabled={isLoading}
       className="w-full"
     >
