@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -14,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, MapPin, Book, Clock, Star, Users, Eye, Phone, Mail, Globe, Award, GraduationCap, Languages, FileText, CheckCircle } from 'lucide-react';
+import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
 
 interface ScheduleItem {
   day: string;
@@ -506,21 +506,7 @@ const TeacherDashboardPage = () => {
         </TabsContent>
 
         <TabsContent value="services" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Мои услуги</CardTitle>
-              <CardDescription>
-                Управляйте вашими предложениями услуг
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Функция управления услугами будет добавлена позже
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <ServicesTab />
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
