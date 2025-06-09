@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CreateVacancyDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   isCreating = false,
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -76,8 +78,8 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     
     if (!formData.title.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Название вакансии обязательно для заполнения",
+        title: t('common.error'),
+        description: t('vacancy.titleRequired'),
         variant: "destructive",
       });
       return;
@@ -127,14 +129,14 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Создать новую вакансию</DialogTitle>
+          <DialogTitle>{t('vacancy.createNew')}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="title">Название вакансии *</Label>
+              <Label htmlFor="title">{t('vacancy.title')} *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -145,7 +147,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="subject">Предмет</Label>
+              <Label htmlFor="subject">{t('vacancy.subject')}</Label>
               <Input
                 id="subject"
                 value={formData.subject}
@@ -155,7 +157,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="description">Описание вакансии</Label>
+              <Label htmlFor="description">{t('vacancy.description')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -169,7 +171,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
           {/* Employment Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="employment_type">Тип занятости</Label>
+              <Label htmlFor="employment_type">{t('vacancy.employment')}</Label>
               <Select
                 value={formData.employment_type}
                 onValueChange={(value) => handleInputChange('employment_type', value)}
@@ -178,16 +180,16 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full-time">Полная занятость</SelectItem>
-                  <SelectItem value="part-time">Частичная занятость</SelectItem>
-                  <SelectItem value="contract">Контракт</SelectItem>
-                  <SelectItem value="temporary">Временная работа</SelectItem>
+                  <SelectItem value="full-time">{t('employment.fullTime')}</SelectItem>
+                  <SelectItem value="part-time">{t('employment.partTime')}</SelectItem>
+                  <SelectItem value="contract">{t('employment.contract')}</SelectItem>
+                  <SelectItem value="temporary">{t('employment.temporary')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="location">Местоположение</Label>
+              <Label htmlFor="location">{t('vacancy.location')}</Label>
               <Input
                 id="location"
                 value={formData.location}
@@ -200,24 +202,24 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
           {/* Salary */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="salary_min">Зарплата от (₽)</Label>
+              <Label htmlFor="salary_min">{t('vacancy.salaryFrom')} (сом)</Label>
               <Input
                 id="salary_min"
                 type="number"
                 value={formData.salary_min}
                 onChange={(e) => handleInputChange('salary_min', e.target.value)}
-                placeholder="50000"
+                placeholder="25000"
               />
             </div>
 
             <div>
-              <Label htmlFor="salary_max">Зарплата до (₽)</Label>
+              <Label htmlFor="salary_max">{t('vacancy.salaryTo')} (сом)</Label>
               <Input
                 id="salary_max"
                 type="number"
                 value={formData.salary_max}
                 onChange={(e) => handleInputChange('salary_max', e.target.value)}
-                placeholder="80000"
+                placeholder="40000"
               />
             </div>
           </div>
@@ -225,7 +227,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
           {/* Experience and Deadline */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="experience_required">Требуемый опыт (лет)</Label>
+              <Label htmlFor="experience_required">{t('vacancy.experience')} (лет)</Label>
               <Input
                 id="experience_required"
                 type="number"
@@ -237,7 +239,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="application_deadline">Срок подачи заявок</Label>
+              <Label htmlFor="application_deadline">{t('vacancy.deadline')}</Label>
               <Input
                 id="application_deadline"
                 type="date"
@@ -249,7 +251,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
           {/* Requirements */}
           <div>
-            <Label>Требования к кандидату</Label>
+            <Label>{t('vacancy.requirements')}</Label>
             <div className="flex gap-2 mt-2">
               <Input
                 value={newRequirement}
@@ -276,7 +278,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
           {/* Benefits */}
           <div>
-            <Label>Преимущества работы</Label>
+            <Label>{t('vacancy.benefits')}</Label>
             <div className="flex gap-2 mt-2">
               <Input
                 value={newBenefit}
@@ -309,10 +311,10 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
               onClick={() => handleOpenChange(false)}
               disabled={isCreating}
             >
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isCreating}>
-              {isCreating ? 'Создание...' : 'Создать вакансию'}
+              {isCreating ? t('vacancy.creating') : t('vacancy.createNew')}
             </Button>
           </div>
         </form>

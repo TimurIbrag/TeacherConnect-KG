@@ -1,244 +1,460 @@
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode
-} from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-// Define language type as one of the three supported languages
-export type LanguageType = 'ru' | 'kg' | 'en';
+type Language = 'ru' | 'en' | 'ky';
 
-// Define the context shape
-interface LanguageContextProps {
-  language: LanguageType;
-  setLanguage: (language: LanguageType) => void;
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (language: Language) => void;
   t: (key: string) => string;
 }
 
-// Create context with default values
-const LanguageContext = createContext<LanguageContextProps>({
-  language: 'ru',
-  setLanguage: () => {},
-  t: () => ''
-});
-
-// Define translations for all three languages
 const translations = {
   ru: {
+    // Navigation
     'nav.home': 'Главная',
     'nav.teachers': 'Учителя',
     'nav.schools': 'Школы',
-    'nav.about': 'О нас',
+    'nav.vacancies': 'Вакансии',
+    'nav.messages': 'Сообщения',
+    'nav.profile': 'Профиль',
+    'nav.dashboard': 'Панель управления',
     'nav.login': 'Войти',
     'nav.register': 'Регистрация',
-    'nav.profile': 'Профиль',
     'nav.logout': 'Выйти',
     
-    'home.title': 'Соединяем учителей и школы в Кыргызстане',
-    'home.subtitle': 'Платформа для поиска работы учителям и подходящих кандидатов для образовательных учреждений',
-    'home.description': 'Наша платформа помогает учителям и школам найти друг друга',
-    'home.cta.teacher': 'Я учитель',
-    'home.cta.school': 'Я представитель школы',
-    'home.search.placeholder': 'Поиск учителей или школ...',
-    'home.search.button': 'Найти',
-    'home.feature.matching': 'Умный подбор',
-    'home.feature.profiles': 'Профессиональные профили',
-    'home.feature.chat': 'Прямое общение',
+    // Common
+    'common.save': 'Сохранить',
+    'common.cancel': 'Отмена',
+    'common.delete': 'Удалить',
+    'common.edit': 'Редактировать',
+    'common.create': 'Создать',
+    'common.search': 'Поиск',
+    'common.loading': 'Загрузка...',
+    'common.error': 'Ошибка',
+    'common.success': 'Успешно',
+    'common.yes': 'Да',
+    'common.no': 'Нет',
+    'common.close': 'Закрыть',
+    'common.back': 'Назад',
+    'common.next': 'Далее',
+    'common.submit': 'Отправить',
     
-    'auth.login': 'Вход в аккаунт',
-    'auth.register': 'Создать аккаунт',
-    'auth.email': 'Email',
+    // Vacancy Management
+    'vacancy.title': 'Название вакансии',
+    'vacancy.description': 'Описание вакансии',
+    'vacancy.subject': 'Предмет',
+    'vacancy.location': 'Местоположение',
+    'vacancy.salary': 'Зарплата',
+    'vacancy.salaryFrom': 'Зарплата от',
+    'vacancy.salaryTo': 'Зарплата до',
+    'vacancy.employment': 'Тип занятости',
+    'vacancy.experience': 'Требуемый опыт',
+    'vacancy.deadline': 'Срок подачи заявок',
+    'vacancy.requirements': 'Требования к кандидату',
+    'vacancy.benefits': 'Преимущества работы',
+    'vacancy.active': 'Активна',
+    'vacancy.inactive': 'Неактивна',
+    'vacancy.created': 'Вакансия создана',
+    'vacancy.updated': 'Вакансия обновлена',
+    'vacancy.deleted': 'Вакансия удалена',
+    'vacancy.createNew': 'Новая вакансия',
+    'vacancy.createFirst': 'Создать первую вакансию',
+    'vacancy.noVacancies': 'У вас пока нет опубликованных вакансий',
+    'vacancy.schoolVacancies': 'Вакансии школы',
+    'vacancy.applications': 'Отклики',
+    'vacancy.activate': 'Активировать',
+    'vacancy.deactivate': 'Деактивировать',
+    'vacancy.titleRequired': 'Название вакансии обязательно для заполнения',
+    'vacancy.creating': 'Создание...',
+    'vacancy.featureInDevelopment': 'Функция в разработке',
+    'vacancy.editingFeature': 'Редактирование вакансий будет доступно в следующем обновлении',
+    'vacancy.applicationsFeature': 'Просмотр откликов будет доступен в следующем обновлении',
+    
+    // Employment Types
+    'employment.fullTime': 'Полная занятость',
+    'employment.partTime': 'Частичная занятость',
+    'employment.contract': 'Контракт',
+    'employment.temporary': 'Временная работа',
+    
+    // Profile
+    'profile.fullName': 'Полное имя',
+    'profile.email': 'Email',
+    'profile.phone': 'Телефон',
+    'profile.bio': 'О себе',
+    'profile.education': 'Образование',
+    'profile.experience': 'Опыт работы',
+    'profile.skills': 'Навыки',
+    'profile.languages': 'Языки',
+    'profile.photo': 'Фотография профиля',
+    'profile.uploadPhoto': 'Загрузить фото',
+    'profile.changePhoto': 'Изменить фото',
+    'profile.removePhoto': 'Удалить фото',
+    'profile.photoUploaded': 'Фотография загружена',
+    'profile.photoRemoved': 'Фотография удалена',
+    'profile.uploadError': 'Ошибка загрузки фотографии',
+    
+    // School Profile
+    'school.name': 'Название школы',
+    'school.address': 'Адрес',
+    'school.description': 'Описание школы',
+    'school.type': 'Тип школы',
+    'school.studentCount': 'Количество учеников',
+    'school.foundedYear': 'Год основания',
+    'school.website': 'Веб-сайт',
+    'school.facilities': 'Удобства',
+    'school.housingProvided': 'Предоставляется жилье',
+    
+    // Authentication
+    'auth.login': 'Вход',
+    'auth.register': 'Регистрация',
+    'auth.loginWithGoogle': 'Войти через Google',
+    'auth.registerWithGoogle': 'Зарегистрироваться через Google',
     'auth.password': 'Пароль',
     'auth.confirmPassword': 'Подтвердите пароль',
-    'auth.submit': 'Войти',
-    'auth.register.submit': 'Зарегистрироваться',
+    'auth.forgotPassword': 'Забыли пароль?',
+    'auth.alreadyHaveAccount': 'Уже есть аккаунт?',
+    'auth.dontHaveAccount': 'Нет аккаунта?',
+    'auth.loginError': 'Ошибка входа',
+    'auth.registerError': 'Ошибка регистрации',
     'auth.userType': 'Тип пользователя',
-    'auth.userType.teacher': 'Учитель',
-    'auth.userType.school': 'Школа',
-    'auth.userType.guest': 'Гость',
-    'auth.name': 'Ваше имя',
+    'auth.teacher': 'Учитель',
+    'auth.school': 'Школа',
     
-    'teachers.title': 'Учителя',
-    'schools.title': 'Школы',
-    'button.loadMore': 'Показать больше',
-    
-    'language.ru': 'Русский',
-    'language.kg': 'Кыргызский',
-    'language.en': 'English',
-
+    // Dashboard
     'dashboard.profile': 'Профиль',
     'dashboard.vacancies': 'Вакансии',
-    'dashboard.applications': 'Отклики',
+    'dashboard.applications': 'Заявки',
+    'dashboard.teachers': 'Учителя',
     'dashboard.messages': 'Сообщения',
-    'dashboard.saved': 'Избранное',
-    'dashboard.notifications': 'Уведомления',
-
-    'profile.photo': 'Фото профиля',
-    'profile.update': 'Обновить',
-    'profile.save': 'Сохранить',
-    'profile.cancel': 'Отмена',
-    'profile.saveSuccess': 'Профиль успешно сохранен',
+    'dashboard.settings': 'Настройки',
+    
+    // Maps & Address
+    'address.searchPlaceholder': 'Введите адрес...',
+    'address.selectLocation': 'Выберите местоположение на карте',
+    'address.currentLocation': 'Текущее местоположение',
+    'address.useCurrentLocation': 'Использовать текущее местоположение',
+    'address.locationVerified': 'Местоположение подтверждено',
+    'address.verifyLocation': 'Подтвердить местоположение',
+    
+    // Errors
+    'error.general': 'Произошла ошибка. Попробуйте снова.',
+    'error.network': 'Ошибка сети. Проверьте подключение к интернету.',
+    'error.unauthorized': 'Доступ запрещен',
+    'error.notFound': 'Страница не найдена',
+    'error.validation': 'Ошибка валидации данных',
+    'error.fileUpload': 'Ошибка загрузки файла',
+    'error.fileTooLarge': 'Файл слишком большой',
+    'error.invalidFileType': 'Недопустимый тип файла',
   },
-  kg: {
-    'nav.home': 'Башкы бет',
-    'nav.teachers': 'Мугалимдер',
-    'nav.schools': 'Мектептер',
-    'nav.about': 'Биз жөнүндө',
-    'nav.login': 'Кирүү',
-    'nav.register': 'Катталуу',
-    'nav.profile': 'Профиль',
-    'nav.logout': 'Чыгуу',
-    
-    'home.title': 'Кыргызстанда мугалимдерди жана мектептерди бириктиребиз',
-    'home.subtitle': 'Мугалимдер үчүн жумуш жана билим берүү мекемелери үчүн ылайыктуу талапкерлерди издөө платформасы',
-    'home.description': 'Биздин платформа мугалимдер менен мектептерге бири-бирин табууга жардам берет',
-    'home.cta.teacher': 'Мен мугалиммин',
-    'home.cta.school': 'Мен мектеп өкүлүмүн',
-    'home.search.placeholder': 'Мугалимдерди же мектептерди издөө...',
-    'home.search.button': 'Издөө',
-    'home.feature.matching': 'Акылдуу шайкештик',
-    'home.feature.profiles': 'Кесиптик профилдер',
-    'home.feature.chat': 'Түз байланыш',
-    
-    'auth.login': 'Аккаунтка кирүү',
-    'auth.register': 'Аккаунт түзүү',
-    'auth.email': 'Email',
-    'auth.password': 'Сырсөз',
-    'auth.confirmPassword': 'Сырсөздү ырастаңыз',
-    'auth.submit': 'Кирүү',
-    'auth.register.submit': 'Катталуу',
-    'auth.userType': 'Колдонуучу түрү',
-    'auth.userType.teacher': 'Мугалим',
-    'auth.userType.school': 'Мектеп',
-    'auth.userType.guest': 'Конок',
-    'auth.name': 'Атыңыз',
-    
-    'teachers.title': 'Мугалимдер',
-    'schools.title': 'Мектептер',
-    'button.loadMore': 'Көбүрөөк көрсөтүү',
-    
-    'language.ru': 'Русский',
-    'language.kg': 'Кыргызча',
-    'language.en': 'English',
-
-    'dashboard.profile': 'Профиль',
-    'dashboard.vacancies': 'Бош орундар',
-    'dashboard.applications': 'Арыздар',
-    'dashboard.messages': 'Билдирүүлөр',
-    'dashboard.saved': 'Тандалмалар',
-    'dashboard.notifications': 'Билдирмелер',
-
-    'profile.photo': 'Профиль сүрөтү',
-    'profile.update': 'Жаңыртуу',
-    'profile.save': 'Сактоо',
-    'profile.cancel': 'Жокко чыгаруу',
-    'profile.saveSuccess': 'Профиль ийгиликтүү сакталды',
-  },
+  
   en: {
+    // Navigation
     'nav.home': 'Home',
     'nav.teachers': 'Teachers',
     'nav.schools': 'Schools',
-    'nav.about': 'About',
+    'nav.vacancies': 'Vacancies',
+    'nav.messages': 'Messages',
+    'nav.profile': 'Profile',
+    'nav.dashboard': 'Dashboard',
     'nav.login': 'Login',
     'nav.register': 'Register',
-    'nav.profile': 'Profile',
     'nav.logout': 'Logout',
     
-    'home.title': 'Connecting Teachers and Schools in Kyrgyzstan',
-    'home.subtitle': 'A platform for teachers to find jobs and educational institutions to find suitable candidates',
-    'home.description': 'Our platform helps teachers and schools find each other',
-    'home.cta.teacher': 'I am a Teacher',
-    'home.cta.school': 'I represent a School',
-    'home.search.placeholder': 'Search for teachers or schools...',
-    'home.search.button': 'Search',
-    'home.feature.matching': 'Smart Matching',
-    'home.feature.profiles': 'Professional Profiles',
-    'home.feature.chat': 'Direct Communication',
+    // Common
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.create': 'Create',
+    'common.search': 'Search',
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.yes': 'Yes',
+    'common.no': 'No',
+    'common.close': 'Close',
+    'common.back': 'Back',
+    'common.next': 'Next',
+    'common.submit': 'Submit',
     
-    'auth.login': 'Log In',
-    'auth.register': 'Create Account',
-    'auth.email': 'Email',
+    // Vacancy Management
+    'vacancy.title': 'Vacancy Title',
+    'vacancy.description': 'Job Description',
+    'vacancy.subject': 'Subject',
+    'vacancy.location': 'Location',
+    'vacancy.salary': 'Salary',
+    'vacancy.salaryFrom': 'Salary From',
+    'vacancy.salaryTo': 'Salary To',
+    'vacancy.employment': 'Employment Type',
+    'vacancy.experience': 'Required Experience',
+    'vacancy.deadline': 'Application Deadline',
+    'vacancy.requirements': 'Requirements',
+    'vacancy.benefits': 'Benefits',
+    'vacancy.active': 'Active',
+    'vacancy.inactive': 'Inactive',
+    'vacancy.created': 'Vacancy Created',
+    'vacancy.updated': 'Vacancy Updated',
+    'vacancy.deleted': 'Vacancy Deleted',
+    'vacancy.createNew': 'New Vacancy',
+    'vacancy.createFirst': 'Create First Vacancy',
+    'vacancy.noVacancies': 'You have no published vacancies yet',
+    'vacancy.schoolVacancies': 'School Vacancies',
+    'vacancy.applications': 'Applications',
+    'vacancy.activate': 'Activate',
+    'vacancy.deactivate': 'Deactivate',
+    'vacancy.titleRequired': 'Vacancy title is required',
+    'vacancy.creating': 'Creating...',
+    'vacancy.featureInDevelopment': 'Feature in Development',
+    'vacancy.editingFeature': 'Vacancy editing will be available in the next update',
+    'vacancy.applicationsFeature': 'Applications view will be available in the next update',
+    
+    // Employment Types
+    'employment.fullTime': 'Full Time',
+    'employment.partTime': 'Part Time',
+    'employment.contract': 'Contract',
+    'employment.temporary': 'Temporary',
+    
+    // Profile
+    'profile.fullName': 'Full Name',
+    'profile.email': 'Email',
+    'profile.phone': 'Phone',
+    'profile.bio': 'About',
+    'profile.education': 'Education',
+    'profile.experience': 'Experience',
+    'profile.skills': 'Skills',
+    'profile.languages': 'Languages',
+    'profile.photo': 'Profile Photo',
+    'profile.uploadPhoto': 'Upload Photo',
+    'profile.changePhoto': 'Change Photo',
+    'profile.removePhoto': 'Remove Photo',
+    'profile.photoUploaded': 'Photo Uploaded',
+    'profile.photoRemoved': 'Photo Removed',
+    'profile.uploadError': 'Photo Upload Error',
+    
+    // School Profile
+    'school.name': 'School Name',
+    'school.address': 'Address',
+    'school.description': 'School Description',
+    'school.type': 'School Type',
+    'school.studentCount': 'Student Count',
+    'school.foundedYear': 'Founded Year',
+    'school.website': 'Website',
+    'school.facilities': 'Facilities',
+    'school.housingProvided': 'Housing Provided',
+    
+    // Authentication
+    'auth.login': 'Login',
+    'auth.register': 'Register',
+    'auth.loginWithGoogle': 'Login with Google',
+    'auth.registerWithGoogle': 'Register with Google',
     'auth.password': 'Password',
     'auth.confirmPassword': 'Confirm Password',
-    'auth.submit': 'Submit',
-    'auth.register.submit': 'Register',
+    'auth.forgotPassword': 'Forgot Password?',
+    'auth.alreadyHaveAccount': 'Already have an account?',
+    'auth.dontHaveAccount': 'Don\'t have an account?',
+    'auth.loginError': 'Login Error',
+    'auth.registerError': 'Registration Error',
     'auth.userType': 'User Type',
-    'auth.userType.teacher': 'Teacher',
-    'auth.userType.school': 'School',
-    'auth.userType.guest': 'Guest',
-    'auth.name': 'Your Name',
+    'auth.teacher': 'Teacher',
+    'auth.school': 'School',
     
-    'teachers.title': 'Teachers',
-    'schools.title': 'Schools',
-    'button.loadMore': 'Load More',
-    
-    'language.ru': 'Русский',
-    'language.kg': 'Кыргызча',
-    'language.en': 'English',
-
+    // Dashboard
     'dashboard.profile': 'Profile',
     'dashboard.vacancies': 'Vacancies',
     'dashboard.applications': 'Applications',
+    'dashboard.teachers': 'Teachers',
     'dashboard.messages': 'Messages',
-    'dashboard.saved': 'Saved',
-    'dashboard.notifications': 'Notifications',
-
-    'profile.photo': 'Profile Photo',
-    'profile.update': 'Update',
-    'profile.save': 'Save',
-    'profile.cancel': 'Cancel',
-    'profile.saveSuccess': 'Profile saved successfully',
+    'dashboard.settings': 'Settings',
+    
+    // Maps & Address
+    'address.searchPlaceholder': 'Enter address...',
+    'address.selectLocation': 'Select location on map',
+    'address.currentLocation': 'Current Location',
+    'address.useCurrentLocation': 'Use Current Location',
+    'address.locationVerified': 'Location Verified',
+    'address.verifyLocation': 'Verify Location',
+    
+    // Errors
+    'error.general': 'An error occurred. Please try again.',
+    'error.network': 'Network error. Check your internet connection.',
+    'error.unauthorized': 'Access denied',
+    'error.notFound': 'Page not found',
+    'error.validation': 'Data validation error',
+    'error.fileUpload': 'File upload error',
+    'error.fileTooLarge': 'File too large',
+    'error.invalidFileType': 'Invalid file type',
+  },
+  
+  ky: {
+    // Navigation
+    'nav.home': 'Башкы бет',
+    'nav.teachers': 'Мугалимдер',
+    'nav.schools': 'Мектептер',
+    'nav.vacancies': 'Жумуш орундары',
+    'nav.messages': 'Билдирүүлөр',
+    'nav.profile': 'Профиль',
+    'nav.dashboard': 'Башкаруу панели',
+    'nav.login': 'Кирүү',
+    'nav.register': 'Катталуу',
+    'nav.logout': 'Чыгуу',
+    
+    // Common
+    'common.save': 'Сактоо',
+    'common.cancel': 'Жокко чыгаруу',
+    'common.delete': 'Өчүрүү',
+    'common.edit': 'Өзгөртүү',
+    'common.create': 'Түзүү',
+    'common.search': 'Издөө',
+    'common.loading': 'Жүктөлүүдө...',
+    'common.error': 'Ката',
+    'common.success': 'Ийгиликтүү',
+    'common.yes': 'Ооба',
+    'common.no': 'Жок',
+    'common.close': 'Жабуу',
+    'common.back': 'Артка',
+    'common.next': 'Кийинки',
+    'common.submit': 'Жөнөтүү',
+    
+    // Vacancy Management
+    'vacancy.title': 'Вакансиянын аталышы',
+    'vacancy.description': 'Жумуштун сыпаттамасы',
+    'vacancy.subject': 'Предмет',
+    'vacancy.location': 'Жайгашкан жери',
+    'vacancy.salary': 'Айлык акы',
+    'vacancy.salaryFrom': 'Айлык акы башынан',
+    'vacancy.salaryTo': 'Айлык акы чейин',
+    'vacancy.employment': 'Жумуш түрү',
+    'vacancy.experience': 'Талап кылынган тажрыйба',
+    'vacancy.deadline': 'Арыз берүү мөөнөтү',
+    'vacancy.requirements': 'Талаптар',
+    'vacancy.benefits': 'Артыкчылыктар',
+    'vacancy.active': 'Активдүү',
+    'vacancy.inactive': 'Активдүү эмес',
+    'vacancy.created': 'Вакансия түзүлдү',
+    'vacancy.updated': 'Вакансия жаңыртылды',
+    'vacancy.deleted': 'Вакансия өчүрүлдү',
+    'vacancy.createNew': 'Жаңы вакансия',
+    'vacancy.createFirst': 'Биринчи вакансияны түзүү',
+    'vacancy.noVacancies': 'Сизде азырынча жарыяланган вакансиялар жок',
+    'vacancy.schoolVacancies': 'Мектептин вакансиялары',
+    'vacancy.applications': 'Арыздар',
+    'vacancy.activate': 'Активдештирүү',
+    'vacancy.deactivate': 'Активдештирбөө',
+    'vacancy.titleRequired': 'Вакансиянын аталышы милдеттүү',
+    'vacancy.creating': 'Түзүлүүдө...',
+    'vacancy.featureInDevelopment': 'Функция иштелип жатат',
+    'vacancy.editingFeature': 'Вакансияларды өзгөртүү кийинки жаңыртууда жеткиликтүү болот',
+    'vacancy.applicationsFeature': 'Арыздарды көрүү кийинки жаңыртууда жеткиликтүү болот',
+    
+    // Employment Types
+    'employment.fullTime': 'Толук жумуш күнү',
+    'employment.partTime': 'Жарым жумуш күнү',
+    'employment.contract': 'Контракт',
+    'employment.temporary': 'Убактылуу жумуш',
+    
+    // Profile
+    'profile.fullName': 'Толук аты',
+    'profile.email': 'Электрондук почта',
+    'profile.phone': 'Телефон',
+    'profile.bio': 'Өзү жөнүндө',
+    'profile.education': 'Билими',
+    'profile.experience': 'Тажрыйбасы',
+    'profile.skills': 'Көндүмдөрү',
+    'profile.languages': 'Тилдери',
+    'profile.photo': 'Профиль сүрөтү',
+    'profile.uploadPhoto': 'Сүрөт жүктөө',
+    'profile.changePhoto': 'Сүрөт өзгөртүү',
+    'profile.removePhoto': 'Сүрөт өчүрүү',
+    'profile.photoUploaded': 'Сүрөт жүктөлдү',
+    'profile.photoRemoved': 'Сүрөт өчүрүлдү',
+    'profile.uploadError': 'Сүрөт жүктөө катасы',
+    
+    // School Profile
+    'school.name': 'Мектептин аталышы',
+    'school.address': 'Дареги',
+    'school.description': 'Мектептин сыпаттамасы',
+    'school.type': 'Мектептин түрү',
+    'school.studentCount': 'Окуучулардын саны',
+    'school.foundedYear': 'Түзүлгөн жылы',
+    'school.website': 'Веб-сайт',
+    'school.facilities': 'Шарттар',
+    'school.housingProvided': 'Турак жай берилет',
+    
+    // Authentication
+    'auth.login': 'Кирүү',
+    'auth.register': 'Катталуу',
+    'auth.loginWithGoogle': 'Google аркылуу кирүү',
+    'auth.registerWithGoogle': 'Google аркылуу катталуу',
+    'auth.password': 'Сыр сөз',
+    'auth.confirmPassword': 'Сыр сөздү ырастоо',
+    'auth.forgotPassword': 'Сыр сөздү унуттуңузбу?',
+    'auth.alreadyHaveAccount': 'Аккаунтуңуз барбы?',
+    'auth.dontHaveAccount': 'Аккаунтуңуз жокпу?',
+    'auth.loginError': 'Кирүү катасы',
+    'auth.registerError': 'Катталуу катасы',
+    'auth.userType': 'Колдонуучу түрү',
+    'auth.teacher': 'Мугалим',
+    'auth.school': 'Мектеп',
+    
+    // Dashboard
+    'dashboard.profile': 'Профиль',
+    'dashboard.vacancies': 'Вакансиялар',
+    'dashboard.applications': 'Арыздар',
+    'dashboard.teachers': 'Мугалимдер',
+    'dashboard.messages': 'Билдирүүлөр',
+    'dashboard.settings': 'Параметрлер',
+    
+    // Maps & Address
+    'address.searchPlaceholder': 'Даректи киргизиңиз...',
+    'address.selectLocation': 'Картадан жерди тандаңыз',
+    'address.currentLocation': 'Учурдагы жер',
+    'address.useCurrentLocation': 'Учурдагы жерди колдонуу',
+    'address.locationVerified': 'Жер ырасталды',
+    'address.verifyLocation': 'Жерди ырастоо',
+    
+    // Errors
+    'error.general': 'Ката кетти. Кайра аракет кылыңыз.',
+    'error.network': 'Тармак катасы. Интернет байланышыңызды текшериңиз.',
+    'error.unauthorized': 'Кирүүгө тыюу салынган',
+    'error.notFound': 'Бет табылган жок',
+    'error.validation': 'Маалыматтарды текшерүү катасы',
+    'error.fileUpload': 'Файл жүктөө катасы',
+    'error.fileTooLarge': 'Файл өтө чоң',
+    'error.invalidFileType': 'Жараксыз файл түрү',
   }
 };
 
-// Define props for LanguageProvider
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
 interface LanguageProviderProps {
   children: ReactNode;
 }
 
-// Create provider component
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguageState] = useState<LanguageType>(() => {
-    // Try to get the language from localStorage
-    const storedLanguage = localStorage.getItem('language') as LanguageType;
-    if (storedLanguage && ['ru', 'kg', 'en'].includes(storedLanguage)) {
-      return storedLanguage;
-    }
-    
-    // Try to detect from browser
-    const browserLanguage = navigator.language.split('-')[0];
-    if (browserLanguage === 'ru') return 'ru';
-    if (browserLanguage === 'ky') return 'kg'; // 'ky' is the ISO code for Kyrgyz
-    if (browserLanguage === 'en') return 'en';
-    
-    // Default to Russian
-    return 'ru';
-  });
-  
-  // Function to set language and save to localStorage
-  const setLanguage = (newLanguage: LanguageType) => {
-    localStorage.setItem('language', newLanguage);
-    setLanguageState(newLanguage);
-  };
-  
-  // Translation function
+  const [language, setLanguage] = useState<Language>('ru');
+
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations[typeof language]] || key;
+    return translations[language][key] || key;
   };
-  
-  // Effects
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
-  
+
+  const value = {
+    language,
+    setLanguage,
+    t,
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 };
-
-// Custom hook for using the language context
-export const useLanguage = () => useContext(LanguageContext);

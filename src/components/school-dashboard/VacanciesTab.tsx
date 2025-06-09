@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import CreateVacancyDialog from './CreateVacancyDialog';
@@ -11,6 +12,7 @@ import VacancyCard from './VacancyCard';
 
 const VacanciesTab = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -66,7 +68,7 @@ const VacanciesTab = () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
       toast({
-        title: "Вакансия создана",
+        title: t('vacancy.created'),
         description: "Вакансия была успешно опубликована",
       });
       setCreateDialogOpen(false);
@@ -74,7 +76,7 @@ const VacanciesTab = () => {
     onError: (error) => {
       console.error('Error creating vacancy:', error);
       toast({
-        title: "Ошибка",
+        title: t('common.error'),
         description: "Не удалось создать вакансию. Попробуйте снова.",
         variant: "destructive",
       });
@@ -95,14 +97,14 @@ const VacanciesTab = () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
       toast({
-        title: "Вакансия удалена",
+        title: t('vacancy.deleted'),
         description: "Вакансия была успешно удалена",
       });
     },
     onError: (error) => {
       console.error('Error deleting vacancy:', error);
       toast({
-        title: "Ошибка",
+        title: t('common.error'),
         description: "Не удалось удалить вакансию",
         variant: "destructive",
       });
@@ -126,14 +128,14 @@ const VacanciesTab = () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
       toast({
-        title: "Вакансия обновлена",
+        title: t('vacancy.updated'),
         description: "Изменения сохранены",
       });
     },
     onError: (error) => {
       console.error('Error updating vacancy:', error);
       toast({
-        title: "Ошибка",
+        title: t('common.error'),
         description: "Не удалось обновить вакансию",
         variant: "destructive",
       });
@@ -149,8 +151,8 @@ const VacanciesTab = () => {
     console.log('Edit vacancy clicked for:', vacancy);
     // TODO: Implement edit functionality
     toast({
-      title: "Функция в разработке",
-      description: "Редактирование вакансий будет доступно в следующем обновлении",
+      title: t('vacancy.featureInDevelopment'),
+      description: t('vacancy.editingFeature'),
     });
   };
 
@@ -171,8 +173,8 @@ const VacanciesTab = () => {
     console.log('View applications clicked for id:', id);
     // TODO: Implement applications view
     toast({
-      title: "Функция в разработке",
-      description: "Просмотр откликов будет доступен в следующем обновлении",
+      title: t('vacancy.featureInDevelopment'),
+      description: t('vacancy.applicationsFeature'),
     });
   };
 
@@ -195,10 +197,10 @@ const VacanciesTab = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Вакансии школы</h2>
+          <h2 className="text-xl font-semibold">{t('vacancy.schoolVacancies')}</h2>
         </div>
         <div className="text-center py-12">
-          <p className="text-muted-foreground">Загрузка вакансий...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -207,21 +209,21 @@ const VacanciesTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Вакансии школы</h2>
+        <h2 className="text-xl font-semibold">{t('vacancy.schoolVacancies')}</h2>
         <Button onClick={handleCreateButtonClick} disabled={createVacancyMutation.isPending}>
           <Plus className="h-4 w-4 mr-2" />
-          {createVacancyMutation.isPending ? 'Создание...' : 'Новая вакансия'}
+          {createVacancyMutation.isPending ? t('vacancy.creating') : t('vacancy.createNew')}
         </Button>
       </div>
       
       {vacancies.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">
-            У вас пока нет опубликованных вакансий
+            {t('vacancy.noVacancies')}
           </p>
           <Button onClick={handleCreateButtonClick} disabled={createVacancyMutation.isPending}>
             <Plus className="h-4 w-4 mr-2" />
-            Создать первую вакансию
+            {t('vacancy.createFirst')}
           </Button>
         </div>
       ) : (
