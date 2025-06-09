@@ -56,7 +56,7 @@ import {
   ThumbsDown,
   Trash2,
   UserRound,
-  Publish
+  Upload
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import ProfileEditModal, { emptyProfileData, ProfileData } from '@/components/ProfileEditModal';
@@ -114,7 +114,12 @@ const getStoredProfile = (): ProfileFormData => {
   try {
     const storedData = localStorage.getItem('teacherProfileData');
     if (storedData) {
-      return JSON.parse(storedData);
+      const parsed = JSON.parse(storedData);
+      // Ensure schedule is always an array
+      return {
+        ...parsed,
+        schedule: Array.isArray(parsed.schedule) ? parsed.schedule : []
+      };
     }
   } catch (error) {
     console.error("Error loading profile data:", error);
@@ -188,6 +193,63 @@ const TeacherDashboardPage: React.FC = () => {
   const form = useForm<ProfileFormData>({
     defaultValues: profileData
   });
+
+  // Handler for publishing profile
+  const handlePublishProfile = () => {
+    // Check if required fields are filled
+    const requiredFields = ['fullName', 'specialization', 'education', 'experience'];
+    const missingFields = requiredFields.filter(field => !profileData[field as keyof ProfileFormData]);
+    
+    if (missingFields.length > 0) {
+      toast({
+        title: "Заполните профиль",
+        description: "Пожалуйста, заполните все обязательные поля перед публикацией профиля",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsPublished(true);
+      try {
+        localStorage.setItem('teacherProfilePublished', 'true');
+      } catch (error) {
+        console.error("Error saving published status:", error);
+      }
+      
+      setIsPublishing(false);
+      
+      toast({
+        title: "Профиль опубликован",
+        description: "Ваш профиль теперь виден в каталоге учителей",
+      });
+    }, 1000);
+  };
+
+  // Handler for unpublishing profile
+  const handleUnpublishProfile = () => {
+    setIsPublishing(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsPublished(false);
+      try {
+        localStorage.setItem('teacherProfilePublished', 'false');
+      } catch (error) {
+        console.error("Error saving published status:", error);
+      }
+      
+      setIsPublishing(false);
+      
+      toast({
+        title: "Профиль скрыт",
+        description: "Ваш профиль больше не виден в каталоге учителей",
+      });
+    }, 1000);
+  };
   
   // Initialize form when profileData changes, but only when not in edit mode
   useEffect(() => {
@@ -681,7 +743,7 @@ const TeacherDashboardPage: React.FC = () => {
                         onClick={handlePublishProfile}
                         disabled={isPublishing}
                       >
-                        <Publish className="h-4 w-4" />
+                        <Upload className="h-4 w-4" />
                         {isPublishing ? "Публикуем..." : "Опубликовать"}
                       </Button>
                     )}
@@ -1152,7 +1214,6 @@ const TeacherDashboardPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Use the imported ProfileEditModal with properly mapped data */}
       <ProfileEditModal 
         isOpen={editMode}
         onClose={() => setEditMode(false)}
