@@ -1,84 +1,90 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
-type Application = Database['public']['Tables']['applications']['Row'];
-type ApplicationInsert = Database['public']['Tables']['applications']['Insert'];
+type Application = Database['public']['Tables']['applications']['Row'] & {
+  vacancies?: Database['public']['Tables']['vacancies']['Row'] & {
+    school_profiles?: Database['public']['Tables']['school_profiles']['Row'];
+  };
+};
 
 export const useTeacherApplications = () => {
-  const { user } = useAuth();
-  
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
   return useQuery({
     queryKey: ['teacher-applications', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
+    queryFn: async (): Promise<Application[]> => {
+      if (!user?.id) return [];
+
       const { data, error } = await supabase
         .from('applications')
         .select(`
           *,
           vacancies (
-            title,
+            *,
             school_profiles (
-              school_name,
-              profiles (
-                full_name
-              )
+              school_name
             )
           )
         `)
         .eq('teacher_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('applied_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching teacher applications:', error);
+        throw error;
+      }
+
+      return (data || []) as Application[];
     },
-    enabled: !!user,
+    enabled: !!user?.id,
   });
 };
 
-export const useCreateApplication = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+export const useSchoolApplications = () => {
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
 
-  return useMutation({
-    mutationFn: async ({ vacancyId, coverLetter }: { vacancyId: string; coverLetter?: string }) => {
-      if (!user) throw new Error('User not authenticated');
-
-      const applicationData: ApplicationInsert = {
-        teacher_id: user.id,
-        vacancy_id: vacancyId,
-        cover_letter: coverLetter,
-        status: 'pending',
-      };
+  return useQuery({
+    queryKey: ['school-applications', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
 
       const { data, error } = await supabase
         .from('applications')
-        .insert(applicationData)
-        .select()
-        .single();
+        .select(`
+          *,
+          profiles!applications_teacher_id_fkey (
+            full_name,
+            avatar_url
+          ),
+          vacancies!applications_vacancy_id_fkey (
+            title,
+            subject
+          )
+        `)
+        .eq('vacancies.school_id', user.id)
+        .order('applied_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching school applications:', error);
+        throw error;
+      }
+
+      return data || [];
     },
-    onSuccess: () => {
-      toast({
-        title: 'Успешно',
-        description: 'Отклик отправлен',
-      });
-      queryClient.invalidateQueries({ queryKey: ['teacher-applications'] });
-    },
-    onError: (error) => {
-      console.error('Error creating application:', error);
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить отклик',
-        variant: 'destructive',
-      });
-    },
+    enabled: !!user?.id,
   });
 };

@@ -260,8 +260,12 @@ export const useTeacherVacancies = () => {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as TeacherVacancy[];
+      if (error) {
+        console.error('Error fetching teacher vacancies:', error);
+        throw error;
+      }
+      
+      return (data || []) as TeacherVacancy[];
     },
   });
 };
@@ -277,7 +281,7 @@ export const useMyTeacherVacancies = (teacherId: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!teacherId,
   });

@@ -244,9 +244,11 @@ const TeacherDashboardPage = () => {
                               <div key={application.id} className="p-4 border rounded-lg">
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <h4 className="font-medium">{application.vacancies?.title}</h4>
+                                    <h4 className="font-medium">
+                                      {application.vacancies?.title || 'Без названия'}
+                                    </h4>
                                     <p className="text-sm text-muted-foreground">
-                                      {application.vacancies?.school_profiles?.school_name}
+                                      {application.vacancies?.school_profiles?.school_name || 'Школа не указана'}
                                     </p>
                                     <div className="mt-2">
                                       <Badge 
