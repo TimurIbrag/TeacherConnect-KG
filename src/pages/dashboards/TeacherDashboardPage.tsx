@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,18 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, MapPin, Book, Clock, Star, Users, Eye, Phone, Mail, Globe, Award, GraduationCap, Languages, FileText, CheckCircle } from 'lucide-react';
-import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
+import { Eye, User, MessageSquare, Bookmark, Edit, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
-
-interface ScheduleItem {
-  day: string;
-  timeSlots: string[];
-}
 
 interface TeacherProfileData {
   fullName: string;
@@ -30,87 +24,15 @@ interface TeacherProfileData {
   experience: string;
   education: string;
   bio: string;
-  schedule: ScheduleItem[];
-  subjects: string[];
-  languages: string[];
-  skills: string[];
-  certifications: string[];
-  achievements: string[];
-  hourlyRate: string;
-  groupRate: string;
-  availability: string;
-  teachingMethods: string[];
-  targetAudience: string[];
-  onlineTeaching: boolean;
-  homeVisits: boolean;
   avatar: string;
 }
-
-// Get published teachers from localStorage
-const getPublishedTeachers = () => {
-  try {
-    const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
-    const profileData = localStorage.getItem('teacherProfileData');
-    
-    if (isPublished && profileData) {
-      const profile = JSON.parse(profileData);
-      return [{
-        id: 'local-teacher',
-        profiles: {
-          full_name: profile.fullName,
-          avatar_url: profile.avatar || null
-        },
-        specialization: profile.specialization,
-        bio: profile.bio,
-        experience_years: parseInt(profile.experience) || 0,
-        location: profile.location,
-        education: profile.education,
-        skills: profile.skills || [],
-        languages: profile.languages || [],
-        verification_status: 'verified' as const
-      }];
-    }
-  } catch (error) {
-    console.error('Error loading published teacher:', error);
-  }
-  return [];
-};
-
-// Set/get published status
-const setTeacherProfilePublished = (published: boolean) => {
-  localStorage.setItem('teacherProfilePublished', published.toString());
-};
-
-const isTeacherProfilePublished = () => {
-  return localStorage.getItem('teacherProfilePublished') === 'true';
-};
 
 // Get/set teacher profile data
 const getTeacherProfileData = (): TeacherProfileData => {
   const saved = localStorage.getItem('teacherProfileData');
   if (saved) {
     try {
-      const parsed = JSON.parse(saved);
-      // Ensure all array fields are properly initialized
-      return {
-        ...parsed,
-        schedule: parsed.schedule || [
-          { day: 'monday', timeSlots: [] },
-          { day: 'tuesday', timeSlots: [] },
-          { day: 'wednesday', timeSlots: [] },
-          { day: 'thursday', timeSlots: [] },
-          { day: 'friday', timeSlots: [] },
-          { day: 'saturday', timeSlots: [] },
-          { day: 'sunday', timeSlots: [] },
-        ],
-        subjects: parsed.subjects || [],
-        languages: parsed.languages || [],
-        skills: parsed.skills || [],
-        certifications: parsed.certifications || [],
-        achievements: parsed.achievements || [],
-        teachingMethods: parsed.teachingMethods || [],
-        targetAudience: parsed.targetAudience || [],
-      };
+      return JSON.parse(saved);
     } catch (error) {
       console.error('Error parsing teacher profile data:', error);
     }
@@ -125,27 +47,6 @@ const getTeacherProfileData = (): TeacherProfileData => {
     experience: '',
     education: '',
     bio: '',
-    schedule: [
-      { day: 'monday', timeSlots: [] },
-      { day: 'tuesday', timeSlots: [] },
-      { day: 'wednesday', timeSlots: [] },
-      { day: 'thursday', timeSlots: [] },
-      { day: 'friday', timeSlots: [] },
-      { day: 'saturday', timeSlots: [] },
-      { day: 'sunday', timeSlots: [] },
-    ],
-    subjects: [],
-    languages: [],
-    skills: [],
-    certifications: [],
-    achievements: [],
-    hourlyRate: '',
-    groupRate: '',
-    availability: '',
-    teachingMethods: [],
-    targetAudience: [],
-    onlineTeaching: false,
-    homeVisits: false,
     avatar: '',
   };
 };
@@ -154,31 +55,18 @@ const setTeacherProfileData = (data: TeacherProfileData) => {
   localStorage.setItem('teacherProfileData', JSON.stringify(data));
 };
 
-// Validation functions
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
-  return phoneRegex.test(phone.replace(/\s/g, ''));
-};
-
 const TeacherDashboardPage = () => {
   const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
   const [profileData, setProfileData] = useState<TeacherProfileData>(getTeacherProfileData());
-  const [isPublished, setIsPublished] = useState(isTeacherProfilePublished());
-  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     setTeacherProfileData(profileData);
   }, [profileData]);
 
-  const handleInputChange = (field: keyof TeacherProfileData, value: any) => {
+  const handleInputChange = (field: keyof TeacherProfileData, value: string) => {
     setProfileData(prev => ({
       ...prev,
       [field]: value
@@ -201,135 +89,6 @@ const TeacherDashboardPage = () => {
     });
   };
 
-  const handleArrayAdd = (field: keyof TeacherProfileData, value: string) => {
-    if (value.trim()) {
-      setProfileData(prev => ({
-        ...prev,
-        [field]: [...(prev[field] as string[]), value.trim()]
-      }));
-    }
-  };
-
-  const handleArrayRemove = (field: keyof TeacherProfileData, index: number) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: (prev[field] as string[]).filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleScheduleChange = (dayIndex: number, timeSlots: string[]) => {
-    setProfileData(prev => ({
-      ...prev,
-      schedule: prev.schedule.map((item, index) => 
-        index === dayIndex ? { ...item, timeSlots } : item
-      )
-    }));
-  };
-
-  const handleProfileSave = (data: any) => {
-    console.log('handleProfileSave called with:', data);
-    
-    const updatedProfile = {
-      ...profileData,
-      fullName: data.fullName,
-      phone: data.phone,
-      email: data.email,
-      location: data.location,
-      specialization: data.specialization,
-      education: data.education,
-      experience: data.experience,
-      schedule: profileData.schedule || [], // Keep the existing schedule array
-      districts: data.location,
-      about: data.bio,
-    };
-    
-    setProfileData(updatedProfile);
-    setTeacherProfileData(updatedProfile);
-    
-    toast({
-      title: t('profile.updated'),
-      description: t('profile.updateSuccess'),
-    });
-  };
-
-  const handlePublishProfile = () => {
-    // Basic validation
-    if (!profileData.fullName || !profileData.email || !profileData.specialization) {
-      toast({
-        title: 'Заполните обязательные поля',
-        description: 'Имя, email и специализация обязательны для публикации профиля',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!validateEmail(profileData.email)) {
-      toast({
-        title: 'Неверный email',
-        description: 'Пожалуйста, введите корректный email адрес',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (profileData.phone && !validatePhone(profileData.phone)) {
-      toast({
-        title: 'Неверный номер телефона',
-        description: 'Пожалуйста, введите корректный номер телефона',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const newPublishedStatus = !isPublished;
-    setIsPublished(newPublishedStatus);
-    setTeacherProfilePublished(newPublishedStatus);
-    
-    toast({
-      title: newPublishedStatus ? 'Профиль опубликован' : 'Профиль снят с публикации',
-      description: newPublishedStatus 
-        ? 'Ваш профиль теперь виден другим пользователям' 
-        : 'Ваш профиль больше не виден другим пользователям',
-    });
-  };
-
-  const getDayName = (day: string): string => {
-    const dayNames: { [key: string]: string } = {
-      monday: 'Понедельник',
-      tuesday: 'Вторник',
-      wednesday: 'Среда',
-      thursday: 'Четверг',
-      friday: 'Пятница',
-      saturday: 'Суббота',
-      sunday: 'Воскресенье'
-    };
-    return dayNames[day] || day;
-  };
-
-  const getCompletionPercentage = (): number => {
-    const fields = [
-      profileData.fullName,
-      profileData.email,
-      profileData.phone,
-      profileData.location,
-      profileData.specialization,
-      profileData.education,
-      profileData.bio,
-      profileData.experience,
-    ];
-    
-    const filledFields = fields.filter(field => field && field.toString().trim()).length;
-    
-    // Add safety checks for array fields
-    const arrayFields = [
-      (profileData.subjects || []).length > 0,
-      (profileData.languages || []).length > 0,
-      (profileData.skills || []).length > 0,
-    ].filter(Boolean).length;
-    
-    return Math.round(((filledFields + arrayFields) / (fields.length + 3)) * 100);
-  };
-
   if (profile?.role !== 'teacher') {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -347,265 +106,224 @@ const TeacherDashboardPage = () => {
     );
   }
 
-  if (previewMode) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        {/* Preview content - keep existing preview implementation */}
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Панель преподавателя
+          Личный кабинет учителя
         </h1>
-        <p className="text-gray-600">
-          Управляйте своим профилем, услугами и взаимодействием с учениками
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Eye className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">1,234</p>
-                <p className="text-sm text-muted-foreground">Просмотры профиля</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-full">
-                <Users className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">28</p>
-                <p className="text-sm text-muted-foreground">Активных учеников</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-full">
-                <Star className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">4.8</p>
-                <p className="text-sm text-muted-foreground">Средний рейтинг</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{getCompletionPercentage()}%</p>
-                <p className="text-sm text-muted-foreground">Заполнение профиля</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Профиль</TabsTrigger>
-          <TabsTrigger value="services">Мои услуги</TabsTrigger>
-          <TabsTrigger value="schedule">Расписание</TabsTrigger>
-          <TabsTrigger value="students">Ученики</TabsTrigger>
+          <TabsTrigger value="applications">Отклики</TabsTrigger>
           <TabsTrigger value="messages">Сообщения</TabsTrigger>
-          <TabsTrigger value="analytics">Аналитика</TabsTrigger>
+          <TabsTrigger value="saved">Сохраненные</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Основная информация</CardTitle>
-              <CardDescription>
-                Заполните основные данные о себе
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Avatar Upload Section */}
-              <div className="flex justify-center mb-6">
-                <EnhancedAvatarUploader
-                  currentAvatarUrl={profileData.avatar}
-                  onAvatarUploaded={handleAvatarUploaded}
-                  onAvatarRemoved={handleAvatarRemoved}
-                />
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <TabsContent value="profile" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Мой профиль</CardTitle>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Редактировать
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Profile Photo and Basic Info */}
+                  <div className="flex items-start gap-6">
+                    <div className="flex flex-col items-center space-y-4">
+                      <EnhancedAvatarUploader
+                        currentAvatarUrl={profileData.avatar}
+                        onAvatarUploaded={handleAvatarUploaded}
+                        onAvatarRemoved={handleAvatarRemoved}
+                      />
+                    </div>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="text-xl font-semibold">
+                          {profileData.fullName || "Заполните ваше имя"}
+                        </h3>
+                        <p className="text-muted-foreground">
+                          {profileData.specialization || "Укажите вашу специализацию"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Полное имя *</Label>
-                  <Input
-                    id="fullName"
-                    value={profileData.fullName}
-                    onChange={(e) => handleInputChange('fullName', e.target.value)}
-                    placeholder="Введите ваше полное имя"
-                  />
+                  <Separator />
+
+                  {/* Profile Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <GraduationCap className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-medium">Образование</p>
+                          <p className="text-sm text-muted-foreground">
+                            {profileData.education || "Не указано"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium">Опыт работы</p>
+                          <p className="text-sm text-muted-foreground">
+                            {profileData.experience || "Не указано"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-purple-600" />
+                        <div>
+                          <p className="text-sm font-medium">График работы</p>
+                          <p className="text-sm text-muted-foreground">Не указано</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-orange-600" />
+                        <div>
+                          <p className="text-sm font-medium">Предпочтительные районы</p>
+                          <p className="text-sm text-muted-foreground">
+                            {profileData.location || "Не указано"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* About Section */}
+                  <div>
+                    <h4 className="text-lg font-medium mb-3">О себе</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {profileData.bio || "Расскажите о себе, опыте работы и методах преподавания"}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Заполните все разделы профиля, чтобы повысить шансы найти подходящую школу.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="applications" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Отклики</CardTitle>
+                  <CardDescription>
+                    Ваши отклики на вакансии школ
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      У вас пока нет откликов на вакансии
+                    </p>
+                    <Button variant="outline" className="mt-4">
+                      <Search className="h-4 w-4 mr-2" />
+                      Найти вакансии
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="messages" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Сообщения</CardTitle>
+                  <CardDescription>
+                    Переписка с школами и администрацией
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      Нет новых сообщений
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="saved" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Сохраненные</CardTitle>
+                  <CardDescription>
+                    Сохраненные вакансии и школы
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      Нет сохраненных элементов
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Статистика</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Просмотры профиля:</span>
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">0</span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="example@email.com"
-                  />
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Отклики:</span>
+                  <span className="font-medium">0</span>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Телефон</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="+996 XXX XXX XXX"
-                  />
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Сообщения:</span>
+                  <span className="font-medium">0</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">Местоположение</Label>
-                  <Input
-                    id="location"
-                    value={profileData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="Город, район"
-                  />
-                </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="specialization">Специализация *</Label>
-                <Input
-                  id="specialization"
-                  value={profileData.specialization}
-                  onChange={(e) => handleInputChange('specialization', e.target.value)}
-                  placeholder="Математика, Физика, Английский язык..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">О себе</Label>
-                <Textarea
-                  id="bio"
-                  value={profileData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
-                  placeholder="Расскажите о своем опыте, методах преподавания..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex justify-between items-center pt-4">
-                <Button
-                  onClick={handlePublishProfile}
-                  variant={isPublished ? "destructive" : "default"}
-                >
-                  {isPublished ? 'Снять с публикации' : 'Опубликовать'}
+            <Card>
+              <CardHeader>
+                <CardTitle>Действия</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start">
+                  <Search className="mr-2 h-4 w-4" />
+                  Искать вакансии
                 </Button>
-                {isPublished && (
-                  <Badge variant="default">Профиль опубликован</Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="services" className="space-y-6">
-          <ServicesTab />
-        </TabsContent>
-
-        <TabsContent value="schedule" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Расписание</CardTitle>
-              <CardDescription>
-                Настройте ваше расписание доступности
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Управление расписанием будет добавлено позже
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="students" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ученики</CardTitle>
-              <CardDescription>
-                Управляйте списком ваших учеников
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Список учеников пуст
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="messages" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Сообщения</CardTitle>
-              <CardDescription>
-                Переписка с учениками и школами
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Нет новых сообщений
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Аналитика</CardTitle>
-              <CardDescription>
-                Статистика просмотров и активности
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  Аналитика будет доступна позже
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <Button variant="outline" className="w-full justify-start">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Сообщения
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <Award className="mr-2 h-4 w-4" />
+                  Сертификаты
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </Tabs>
     </div>
   );
