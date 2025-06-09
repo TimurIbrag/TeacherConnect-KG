@@ -20,11 +20,11 @@ export const useUserMessages = () => {
         .from('messages')
         .select(`
           *,
-          sender:sender_id (
+          sender:profiles!messages_sender_id_fkey (
             full_name,
             avatar_url
           ),
-          recipient:recipient_id (
+          recipient:profiles!messages_recipient_id_fkey (
             full_name,
             avatar_url
           )
