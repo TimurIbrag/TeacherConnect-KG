@@ -55,6 +55,20 @@ export type Database = {
             referencedRelation: "vacancies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_applications_teacher"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_applications_vacancy"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
         ]
       }
       messages: {
@@ -89,6 +103,27 @@ export type Database = {
           subject?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_messages_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_messages_recipient"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_messages_sender"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_application_id_fkey"
             columns: ["application_id"]
@@ -141,6 +176,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_notifications_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
@@ -367,6 +409,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_teacher_vacancies_teacher"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "teacher_vacancies_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
@@ -434,6 +483,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_vacancies_school"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vacancies_school_id_fkey"
             columns: ["school_id"]
