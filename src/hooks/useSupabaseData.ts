@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -252,7 +251,7 @@ export const useTeacherVacancies = () => {
         .from('teacher_vacancies')
         .select(`
           *,
-          profiles (
+          profiles!teacher_vacancies_teacher_id_fkey (
             full_name,
             avatar_url
           )

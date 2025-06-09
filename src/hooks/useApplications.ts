@@ -27,9 +27,9 @@ export const useTeacherApplications = () => {
         .from('applications')
         .select(`
           *,
-          vacancies (
+          vacancies!applications_vacancy_id_fkey (
             *,
-            school_profiles (
+            school_profiles!vacancies_school_id_fkey (
               school_name
             )
           )
