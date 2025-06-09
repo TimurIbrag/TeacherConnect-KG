@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, MapPin, Book, Clock, Star, Users, Eye, Phone, Mail, Globe, Award, GraduationCap, Languages, FileText, CheckCircle } from 'lucide-react';
-import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
 
 interface ScheduleItem {
   day: string;
@@ -89,7 +89,27 @@ const getTeacherProfileData = (): TeacherProfileData => {
   const saved = localStorage.getItem('teacherProfileData');
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Ensure all array fields are properly initialized
+      return {
+        ...parsed,
+        schedule: parsed.schedule || [
+          { day: 'monday', timeSlots: [] },
+          { day: 'tuesday', timeSlots: [] },
+          { day: 'wednesday', timeSlots: [] },
+          { day: 'thursday', timeSlots: [] },
+          { day: 'friday', timeSlots: [] },
+          { day: 'saturday', timeSlots: [] },
+          { day: 'sunday', timeSlots: [] },
+        ],
+        subjects: parsed.subjects || [],
+        languages: parsed.languages || [],
+        skills: parsed.skills || [],
+        certifications: parsed.certifications || [],
+        achievements: parsed.achievements || [],
+        teachingMethods: parsed.teachingMethods || [],
+        targetAudience: parsed.targetAudience || [],
+      };
     } catch (error) {
       console.error('Error parsing teacher profile data:', error);
     }
@@ -282,10 +302,12 @@ const TeacherDashboardPage = () => {
     ];
     
     const filledFields = fields.filter(field => field && field.toString().trim()).length;
+    
+    // Add safety checks for array fields
     const arrayFields = [
-      profileData.subjects.length > 0,
-      profileData.languages.length > 0,
-      profileData.skills.length > 0,
+      (profileData.subjects || []).length > 0,
+      (profileData.languages || []).length > 0,
+      (profileData.skills || []).length > 0,
     ].filter(Boolean).length;
     
     return Math.round(((filledFields + arrayFields) / (fields.length + 3)) * 100);
@@ -484,7 +506,21 @@ const TeacherDashboardPage = () => {
         </TabsContent>
 
         <TabsContent value="services" className="space-y-6">
-          <ServicesTab />
+          <Card>
+            <CardHeader>
+              <CardTitle>Мои услуги</CardTitle>
+              <CardDescription>
+                Управляйте вашими предложениями услуг
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Функция управления услугами будет добавлена позже
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
