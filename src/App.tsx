@@ -32,9 +32,6 @@ import MessagesPage from "./pages/MessagesPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import SavedItemsPage from "./pages/SavedItemsPage";
 
-// School Catalog Page
-import SchoolCatalogPage from "./pages/SchoolCatalogPage";
-
 // Dashboard prototypes (placeholder pages)
 import TeacherDashboardPage from "./pages/dashboards/TeacherDashboardPage";
 import SchoolDashboardPage from "./pages/dashboards/SchoolDashboardPage";
@@ -74,7 +71,6 @@ const App = () => (
                   <Route path="/messages/:chatRoomId" element={<MessagesPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
                   <Route path="/saved" element={<SavedItemsPage />} />
-                  <Route path="/school-catalog" element={<SchoolCatalogPage />} />
                   
                   {/* Dashboard routes */}
                   <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
