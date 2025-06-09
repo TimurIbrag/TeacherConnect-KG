@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, MapPin, Book, Clock, Star, Users, Eye, Phone, Mail, Globe, Award, GraduationCap, Languages, FileText, CheckCircle } from 'lucide-react';
 import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
+import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
 
 interface ScheduleItem {
   day: string;
@@ -182,6 +183,22 @@ const TeacherDashboardPage = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleAvatarUploaded = (url: string) => {
+    handleInputChange('avatar', url);
+    toast({
+      title: 'Фото загружено',
+      description: 'Фотография профиля успешно обновлена',
+    });
+  };
+
+  const handleAvatarRemoved = () => {
+    handleInputChange('avatar', '');
+    toast({
+      title: 'Фото удалено',
+      description: 'Фотография профиля была удалена',
+    });
   };
 
   const handleArrayAdd = (field: keyof TeacherProfileData, value: string) => {
@@ -426,6 +443,15 @@ const TeacherDashboardPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Avatar Upload Section */}
+              <div className="flex justify-center mb-6">
+                <EnhancedAvatarUploader
+                  currentAvatarUrl={profileData.avatar}
+                  onAvatarUploaded={handleAvatarUploaded}
+                  onAvatarRemoved={handleAvatarRemoved}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Полное имя *</Label>
