@@ -313,6 +313,68 @@ export type Database = {
           },
         ]
       }
+      teacher_vacancies: {
+        Row: {
+          availability: string[] | null
+          created_at: string
+          description: string | null
+          employment_type: string | null
+          experience_required: number | null
+          group_rate: number | null
+          hourly_rate: number | null
+          id: string
+          is_active: boolean | null
+          languages: string[] | null
+          location: string | null
+          subject: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          availability?: string[] | null
+          created_at?: string
+          description?: string | null
+          employment_type?: string | null
+          experience_required?: number | null
+          group_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          is_active?: boolean | null
+          languages?: string[] | null
+          location?: string | null
+          subject?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          availability?: string[] | null
+          created_at?: string
+          description?: string | null
+          employment_type?: string | null
+          experience_required?: number | null
+          group_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          is_active?: boolean | null
+          languages?: string[] | null
+          location?: string | null
+          subject?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_vacancies_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacancies: {
         Row: {
           application_deadline: string | null

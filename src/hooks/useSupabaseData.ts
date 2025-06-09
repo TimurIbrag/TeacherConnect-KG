@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -13,6 +12,10 @@ type School = Database['public']['Tables']['school_profiles']['Row'] & {
 
 type Vacancy = Database['public']['Tables']['vacancies']['Row'] & {
   school_profiles: School;
+};
+
+type TeacherVacancy = Database['public']['Tables']['teacher_vacancies']['Row'] & {
+  profiles: Database['public']['Tables']['profiles']['Row'];
 };
 
 export const useTeachers = () => {
@@ -142,5 +145,45 @@ export const useActiveVacancies = (limit?: number) => {
       if (error) throw error;
       return data;
     },
+  });
+};
+
+// Teacher vacancies hooks
+export const useTeacherVacancies = () => {
+  return useQuery({
+    queryKey: ['teacher-vacancies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teacher_vacancies')
+        .select(`
+          *,
+          profiles (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as TeacherVacancy[];
+    },
+  });
+};
+
+export const useMyTeacherVacancies = (teacherId: string) => {
+  return useQuery({
+    queryKey: ['my-teacher-vacancies', teacherId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teacher_vacancies')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!teacherId,
   });
 };
