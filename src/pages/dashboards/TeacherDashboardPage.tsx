@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -11,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail } from 'lucide-react';
+import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
+import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
 
 const TeacherDashboardPage = () => {
   const { t } = useLanguage();
@@ -86,12 +86,19 @@ const TeacherDashboardPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm border">
-            <TabsList className="grid w-full grid-cols-4 bg-transparent border-b rounded-none h-12">
+            <TabsList className="grid w-full grid-cols-5 bg-transparent border-b rounded-none h-12">
               <TabsTrigger 
                 value="profile" 
                 className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none"
               >
                 Профиль
+              </TabsTrigger>
+              <TabsTrigger 
+                value="services" 
+                className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none"
+              >
+                <Briefcase className="h-4 w-4 mr-1" />
+                Услуги
               </TabsTrigger>
               <TabsTrigger 
                 value="applications" 
@@ -213,6 +220,10 @@ const TeacherDashboardPage = () => {
                         </CardContent>
                       </Card>
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="services" className="mt-0">
+                    <ServicesTab />
                   </TabsContent>
 
                   <TabsContent value="applications" className="mt-0">
