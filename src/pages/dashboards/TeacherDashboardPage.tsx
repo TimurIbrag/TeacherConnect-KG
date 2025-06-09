@@ -391,7 +391,7 @@ const TeacherDashboardPage: React.FC = () => {
       specialization: data.specialization,
       education: data.education,
       experience: data.experience,
-      schedule: data.schedule || [],
+      schedule: profileData.schedule || [], // Keep the existing schedule array
       districts: data.location,
       about: data.bio,
     };
