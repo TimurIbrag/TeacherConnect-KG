@@ -107,6 +107,9 @@ type ProfileFormData = {
   hourlyRate: string;
   groupRate: string;
   availability: 'full-time' | 'part-time' | 'remote';
+  workScheduleType: string;
+  districts: string;
+  about: string;
 };
 
 type CertificateType = {
@@ -122,10 +125,13 @@ const getStoredProfile = (): ProfileFormData => {
     const storedData = localStorage.getItem('teacherProfileData');
     if (storedData) {
       const parsed = JSON.parse(storedData);
-      // Ensure schedule is always an array
+      // Ensure schedule is always an array and add missing properties
       return {
         ...parsed,
-        schedule: Array.isArray(parsed.schedule) ? parsed.schedule : []
+        schedule: Array.isArray(parsed.schedule) ? parsed.schedule : [],
+        workScheduleType: parsed.workScheduleType || '',
+        districts: parsed.districts || '',
+        about: parsed.about || parsed.bio || ''
       };
     }
   } catch (error) {
@@ -145,10 +151,13 @@ const getStoredProfile = (): ProfileFormData => {
     bio: '',
     cv: null,
     portfolio: [],
-    schedule: [], // Changed from empty string to empty array
+    schedule: [],
     hourlyRate: '',
     groupRate: '',
-    availability: 'full-time' as const
+    availability: 'full-time' as const,
+    workScheduleType: '',
+    districts: '',
+    about: ''
   };
 };
 
@@ -300,9 +309,6 @@ const TeacherDashboardPage: React.FC = () => {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Set file in the form
-    form.setValue('profilePhoto', file);
     
     // Create preview
     const reader = new FileReader();
