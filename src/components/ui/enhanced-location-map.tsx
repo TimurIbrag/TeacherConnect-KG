@@ -32,7 +32,7 @@ const EnhancedLocationMap: React.FC<EnhancedLocationMapProps> = ({
 
   useEffect(() => {
     // Check if Google Maps is loaded
-    if (typeof window !== 'undefined' && window.google && window.google.maps) {
+    if (typeof window !== 'undefined' && window.google?.maps) {
       setIsGoogleMapsLoaded(true);
     }
   }, []);

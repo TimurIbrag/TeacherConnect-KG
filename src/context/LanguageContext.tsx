@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'ru' | 'en' | 'ky';
@@ -11,6 +10,11 @@ interface LanguageContextType {
 
 const translations = {
   ru: {
+    // Language names
+    'language.ky': 'Кыргызча',
+    'language.ru': 'Русский',
+    'language.en': 'English',
+    
     // Navigation
     'nav.home': 'Главная',
     'nav.teachers': 'Учителя',
@@ -149,6 +153,11 @@ const translations = {
   },
   
   en: {
+    // Language names
+    'language.ky': 'Кыргызча',
+    'language.ru': 'Русский',
+    'language.en': 'English',
+    
     // Navigation
     'nav.home': 'Home',
     'nav.teachers': 'Teachers',
@@ -287,6 +296,11 @@ const translations = {
   },
   
   ky: {
+    // Language names
+    'language.ky': 'Кыргызча',
+    'language.ru': 'Русский',
+    'language.en': 'English',
+    
     // Navigation
     'nav.home': 'Башкы бет',
     'nav.teachers': 'Мугалимдер',

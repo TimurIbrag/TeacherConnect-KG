@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLanguage, LanguageType } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
@@ -13,7 +13,7 @@ import { Globe } from 'lucide-react';
 const LanguageSwitcher: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
 
-  const handleLanguageChange = (lang: LanguageType) => {
+  const handleLanguageChange = (lang: 'ru' | 'en' | 'ky') => {
     setLanguage(lang);
   };
 
@@ -26,10 +26,10 @@ const LanguageSwitcher: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-white">
         <DropdownMenuItem 
-          onClick={() => handleLanguageChange('kg')}
-          className={language === 'kg' ? 'bg-primary/10' : ''}
+          onClick={() => handleLanguageChange('ky')}
+          className={language === 'ky' ? 'bg-primary/10' : ''}
         >
-          {t('language.kg')}
+          {t('language.ky')}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => handleLanguageChange('ru')}
