@@ -92,14 +92,21 @@ type ScheduleItem = {
 
 type ProfileFormData = {
   fullName: string;
+  email: string;
+  phone: string;
+  location: string;
   specialization: string;
   education: string;
   experience: string;
-  workScheduleType: string;
-  districts: string;
-  about: string;
+  skills: string[];
+  languages: string[];
+  bio: string;
+  cv: File | null;
+  portfolio: File[];
   schedule: ScheduleItem[];
-  profilePhoto?: File | null;
+  hourlyRate: string;
+  groupRate: string;
+  availability: 'full-time' | 'part-time' | 'remote';
 };
 
 type CertificateType = {
@@ -125,16 +132,23 @@ const getStoredProfile = (): ProfileFormData => {
     console.error("Error loading profile data:", error);
   }
   
-  // Return completely empty data if nothing is stored
   return {
     fullName: '',
+    email: '',
+    phone: '',
+    location: '',
     specialization: '',
     education: '',
     experience: '',
-    workScheduleType: '',
-    districts: '',
-    about: '',
-    schedule: []
+    skills: [],
+    languages: [],
+    bio: '',
+    cv: null,
+    portfolio: [],
+    schedule: [], // Changed from empty string to empty array
+    hourlyRate: '',
+    groupRate: '',
+    availability: 'full-time' as const
   };
 };
 

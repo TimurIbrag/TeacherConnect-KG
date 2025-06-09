@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers } from '@/hooks/useSupabaseData';
@@ -12,6 +11,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, MapPin, BookOpen, Star } from 'lucide-react';
 
+// Get published teachers from localStorage
+const getPublishedTeachers = () => {
+  try {
+    const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
+    const profileData = localStorage.getItem('teacherProfileData');
+    
+    if (isPublished && profileData) {
+      const profile = JSON.parse(profileData);
+      return [{
+        id: 'local-teacher',
+        profiles: {
+          full_name: profile.fullName,
+          avatar_url: null
+        },
+        specialization: profile.specialization,
+        bio: profile.bio,
+        experience_years: parseInt(profile.experience) || 0,
+        location: profile.location,
+        education: profile.education,
+        skills: profile.skills || [],
+        languages: profile.languages || [],
+        verification_status: 'verified' as const
+      }];
+    }
+  } catch (error) {
+    console.error('Error loading published teacher:', error);
+  }
+  return [];
+};
+
 const TeachersPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -21,8 +50,12 @@ const TeachersPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
 
+  // Combine Supabase teachers with published local teachers
+  const publishedLocalTeachers = getPublishedTeachers();
+  const allTeachers = [...(teachers || []), ...publishedLocalTeachers];
+
   // Filter teachers based on search criteria
-  const filteredTeachers = teachers?.filter(teacher => {
+  const filteredTeachers = allTeachers?.filter(teacher => {
     const matchesSearch = !searchTerm || 
       teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -37,8 +70,8 @@ const TeachersPage = () => {
   });
 
   // Get unique subjects and locations for filters
-  const subjects = [...new Set(teachers?.map(t => t.specialization).filter(Boolean))];
-  const locations = [...new Set(teachers?.map(t => t.location).filter(Boolean))];
+  const subjects = [...new Set(allTeachers?.map(t => t.specialization).filter(Boolean))];
+  const locations = [...new Set(allTeachers?.map(t => t.location).filter(Boolean))];
 
   if (isLoading) {
     return (
@@ -149,7 +182,7 @@ const TeachersPage = () => {
             <Card 
               key={teacher.id} 
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(`/teachers/${teacher.id}`)}
+              onClick={() => teacher.id !== 'local-teacher' ? navigate(`/teachers/${teacher.id}`) : null}
             >
               <CardHeader>
                 <div className="flex items-center gap-4">
