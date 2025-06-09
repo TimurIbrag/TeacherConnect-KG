@@ -1,92 +1,58 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTeacherProfile } from '@/hooks/useTeacherProfile';
+import { useTeacherApplications } from '@/hooks/useApplications';
+import { useUserMessages } from '@/hooks/useMessages';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Eye, User, MessageSquare, Bookmark, Edit, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
 
-interface TeacherProfileData {
-  fullName: string;
-  phone: string;
-  email: string;
-  location: string;
-  specialization: string;
-  experience: string;
-  education: string;
-  bio: string;
-  avatar: string;
-}
-
-// Get/set teacher profile data
-const getTeacherProfileData = (): TeacherProfileData => {
-  const saved = localStorage.getItem('teacherProfileData');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (error) {
-      console.error('Error parsing teacher profile data:', error);
-    }
-  }
-  
-  return {
-    fullName: '',
-    phone: '',
-    email: '',
-    location: '',
-    specialization: '',
-    experience: '',
-    education: '',
-    bio: '',
-    avatar: '',
-  };
-};
-
-const setTeacherProfileData = (data: TeacherProfileData) => {
-  localStorage.setItem('teacherProfileData', JSON.stringify(data));
-};
-
 const TeacherDashboardPage = () => {
   const { t } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const { toast } = useToast();
+  const { teacherProfile, loading: profileLoading, updateTeacherProfile } = useTeacherProfile();
+  const { data: applications = [], isLoading: applicationsLoading } = useTeacherApplications();
+  const { data: messages = [], isLoading: messagesLoading } = useUserMessages();
   const [activeTab, setActiveTab] = useState('profile');
-  const [profileData, setProfileData] = useState<TeacherProfileData>(getTeacherProfileData());
 
-  useEffect(() => {
-    setTeacherProfileData(profileData);
-  }, [profileData]);
-
-  const handleInputChange = (field: keyof TeacherProfileData, value: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleAvatarUploaded = async (url: string) => {
+    try {
+      await updateProfile({ avatar_url: url });
+      toast({
+        title: 'Фото загружено',
+        description: 'Фотография профиля успешно обновлена',
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить фотографию',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleAvatarUploaded = (url: string) => {
-    handleInputChange('avatar', url);
-    toast({
-      title: 'Фото загружено',
-      description: 'Фотография профиля успешно обновлена',
-    });
-  };
-
-  const handleAvatarRemoved = () => {
-    handleInputChange('avatar', '');
-    toast({
-      title: 'Фото удалено',
-      description: 'Фотография профиля была удалена',
-    });
+  const handleAvatarRemoved = async () => {
+    try {
+      await updateProfile({ avatar_url: null });
+      toast({
+        title: 'Фото удалено',
+        description: 'Фотография профиля была удалена',
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить фотографию',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (profile?.role !== 'teacher') {
@@ -106,6 +72,8 @@ const TeacherDashboardPage = () => {
     );
   }
 
+  const unreadMessages = messages.filter(msg => !msg.read && msg.recipient_id === user?.id).length;
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8">
@@ -117,8 +85,22 @@ const TeacherDashboardPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Профиль</TabsTrigger>
-          <TabsTrigger value="applications">Отклики</TabsTrigger>
-          <TabsTrigger value="messages">Сообщения</TabsTrigger>
+          <TabsTrigger value="applications" className="relative">
+            Отклики
+            {applications.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs">
+                {applications.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="relative">
+            Сообщения
+            {unreadMessages > 0 && (
+              <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+                {unreadMessages}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="saved">Сохраненные</TabsTrigger>
         </TabsList>
 
@@ -139,7 +121,7 @@ const TeacherDashboardPage = () => {
                   <div className="flex items-start gap-6">
                     <div className="flex flex-col items-center space-y-4">
                       <EnhancedAvatarUploader
-                        currentAvatarUrl={profileData.avatar}
+                        currentAvatarUrl={profile?.avatar_url || ''}
                         onAvatarUploaded={handleAvatarUploaded}
                         onAvatarRemoved={handleAvatarRemoved}
                       />
@@ -147,10 +129,10 @@ const TeacherDashboardPage = () => {
                     <div className="flex-1 space-y-4">
                       <div>
                         <h3 className="text-xl font-semibold">
-                          {profileData.fullName || "Заполните ваше имя"}
+                          {profile?.full_name || "Заполните ваше имя"}
                         </h3>
                         <p className="text-muted-foreground">
-                          {profileData.specialization || "Укажите вашу специализацию"}
+                          {teacherProfile?.specialization || "Укажите вашу специализацию"}
                         </p>
                       </div>
                     </div>
@@ -166,7 +148,7 @@ const TeacherDashboardPage = () => {
                         <div>
                           <p className="text-sm font-medium">Образование</p>
                           <p className="text-sm text-muted-foreground">
-                            {profileData.education || "Не указано"}
+                            {teacherProfile?.education || "Не указано"}
                           </p>
                         </div>
                       </div>
@@ -176,7 +158,7 @@ const TeacherDashboardPage = () => {
                         <div>
                           <p className="text-sm font-medium">Опыт работы</p>
                           <p className="text-sm text-muted-foreground">
-                            {profileData.experience || "Не указано"}
+                            {teacherProfile?.experience_years ? `${teacherProfile.experience_years} лет` : "Не указано"}
                           </p>
                         </div>
                       </div>
@@ -186,17 +168,19 @@ const TeacherDashboardPage = () => {
                       <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-purple-600" />
                         <div>
-                          <p className="text-sm font-medium">График работы</p>
-                          <p className="text-sm text-muted-foreground">Не указано</p>
+                          <p className="text-sm font-medium">Языки</p>
+                          <p className="text-sm text-muted-foreground">
+                            {teacherProfile?.languages?.join(', ') || "Не указано"}
+                          </p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-3">
                         <MapPin className="h-5 w-5 text-orange-600" />
                         <div>
-                          <p className="text-sm font-medium">Предпочтительные районы</p>
+                          <p className="text-sm font-medium">Локация</p>
                           <p className="text-sm text-muted-foreground">
-                            {profileData.location || "Не указано"}
+                            {teacherProfile?.location || "Не указано"}
                           </p>
                         </div>
                       </div>
@@ -209,11 +193,18 @@ const TeacherDashboardPage = () => {
                   <div>
                     <h4 className="text-lg font-medium mb-3">О себе</h4>
                     <p className="text-sm text-muted-foreground">
-                      {profileData.bio || "Расскажите о себе, опыте работы и методах преподавания"}
+                      {teacherProfile?.bio || "Расскажите о себе, опыте работы и методах преподавания"}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Заполните все разделы профиля, чтобы повысить шансы найти подходящую школу.
-                    </p>
+                    {teacherProfile?.skills && teacherProfile.skills.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium mb-2">Навыки:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {teacherProfile.skills.map((skill, index) => (
+                            <Badge key={index} variant="secondary">{skill}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -228,15 +219,53 @@ const TeacherDashboardPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      У вас пока нет откликов на вакансии
-                    </p>
-                    <Button variant="outline" className="mt-4">
-                      <Search className="h-4 w-4 mr-2" />
-                      Найти вакансии
-                    </Button>
-                  </div>
+                  {applicationsLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Загрузка...</p>
+                    </div>
+                  ) : applications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        У вас пока нет откликов на вакансии
+                      </p>
+                      <Button variant="outline" className="mt-4">
+                        <Search className="h-4 w-4 mr-2" />
+                        Найти вакансии
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {applications.map((application) => (
+                        <Card key={application.id} className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium">{application.vacancies?.title}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {application.vacancies?.school_profiles?.school_name}
+                              </p>
+                              <div className="mt-2">
+                                <Badge 
+                                  variant={
+                                    application.status === 'accepted' ? 'default' :
+                                    application.status === 'rejected' ? 'destructive' :
+                                    'secondary'
+                                  }
+                                >
+                                  {application.status === 'pending' && 'На рассмотрении'}
+                                  {application.status === 'accepted' && 'Принят'}
+                                  {application.status === 'rejected' && 'Отклонен'}
+                                  {application.status === 'reviewed' && 'Рассмотрен'}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {application.applied_at && new Date(application.applied_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -250,11 +279,48 @@ const TeacherDashboardPage = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Нет новых сообщений
-                    </p>
-                  </div>
+                  {messagesLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Загрузка...</p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        Нет сообщений
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.slice(0, 5).map((message) => (
+                        <Card key={message.id} className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">
+                                  {message.sender_id === user?.id ? 'Вы' : message.sender?.full_name}
+                                </h4>
+                                {!message.read && message.recipient_id === user?.id && (
+                                  <Badge variant="destructive" className="h-2 w-2 p-0"></Badge>
+                                )}
+                              </div>
+                              {message.subject && (
+                                <p className="text-sm font-medium text-muted-foreground">
+                                  {message.subject}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {message.content.substring(0, 100)}
+                                {message.content.length > 100 && '...'}
+                              </p>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {message.sent_at && new Date(message.sent_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -294,11 +360,11 @@ const TeacherDashboardPage = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Отклики:</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{applications.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Сообщения:</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{messages.length}</span>
                 </div>
               </CardContent>
             </Card>

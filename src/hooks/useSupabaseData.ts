@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { useEffect } from 'react';
 
 type Teacher = Database['public']['Tables']['teacher_profiles']['Row'] & {
   profiles: Database['public']['Tables']['profiles']['Row'];
@@ -19,6 +21,30 @@ type TeacherVacancy = Database['public']['Tables']['teacher_vacancies']['Row'] &
 };
 
 export const useTeachers = () => {
+  const queryClient = useQueryClient();
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('teacher-profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_profiles'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['teachers'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['teachers'],
     queryFn: async () => {
@@ -37,6 +63,29 @@ export const useTeachers = () => {
 };
 
 export const useSchools = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('school-profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'school_profiles'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['schools'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
@@ -54,6 +103,29 @@ export const useSchools = () => {
 };
 
 export const useVacancies = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('vacancies-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vacancies'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['vacancies'],
     queryFn: async () => {
@@ -148,8 +220,31 @@ export const useActiveVacancies = (limit?: number) => {
   });
 };
 
-// Teacher vacancies hooks
+// Teacher vacancies hooks with real-time updates
 export const useTeacherVacancies = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('teacher-vacancies-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_vacancies'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['teacher-vacancies'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['teacher-vacancies'],
     queryFn: async () => {
@@ -185,5 +280,47 @@ export const useMyTeacherVacancies = (teacherId: string) => {
       return data;
     },
     enabled: !!teacherId,
+  });
+};
+
+// New mutations for creating/updating data
+export const useCreateVacancy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (vacancyData: Database['public']['Tables']['vacancies']['Insert']) => {
+      const { data, error } = await supabase
+        .from('vacancies')
+        .insert(vacancyData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] });
+    },
+  });
+};
+
+export const useCreateTeacherVacancy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (vacancyData: Database['public']['Tables']['teacher_vacancies']['Insert']) => {
+      const { data, error } = await supabase
+        .from('teacher_vacancies')
+        .insert(vacancyData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teacher-vacancies'] });
+    },
   });
 };
