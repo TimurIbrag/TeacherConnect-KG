@@ -55,7 +55,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Trash2,
-  UserRound
+  UserRound,
+  Publish
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import ProfileEditModal, { emptyProfileData, ProfileData } from '@/components/ProfileEditModal';
@@ -141,6 +142,16 @@ const TeacherDashboardPage: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isPublished, setIsPublished] = useState(() => {
+    // Check if profile is published from localStorage
+    try {
+      return localStorage.getItem('teacherProfilePublished') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [isPublishing, setIsPublishing] = useState(false);
+  
   // Initialize with empty data or data from localStorage
   const [profileData, setProfileData] = useState<ProfileFormData>(getStoredProfile());
   
@@ -298,7 +309,7 @@ const TeacherDashboardPage: React.FC = () => {
       specialization: data.specialization,
       education: data.education,
       experience: data.experience,
-      workScheduleType: data.schedule,
+      schedule: data.schedule,
       districts: data.location,
       about: data.bio,
     };
@@ -647,12 +658,69 @@ const TeacherDashboardPage: React.FC = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>Мой профиль</CardTitle>
-                  <Button variant="outline" size="sm" className="gap-1" onClick={openProfileEditModal}>
-                    <Edit className="h-4 w-4" />
-                    Редактировать
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" onClick={openProfileEditModal}>
+                      <Edit className="h-4 w-4" />
+                      Редактировать
+                    </Button>
+                    {isPublished ? (
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="gap-1"
+                        onClick={handleUnpublishProfile}
+                        disabled={isPublishing}
+                      >
+                        <Eye className="h-4 w-4" />
+                        {isPublishing ? "Скрываем..." : "Скрыть профиль"}
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        className="gap-1"
+                        onClick={handlePublishProfile}
+                        disabled={isPublishing}
+                      >
+                        <Publish className="h-4 w-4" />
+                        {isPublishing ? "Публикуем..." : "Опубликовать"}
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {isPublished && (
+                    <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-800 font-medium">
+                          Профиль опубликован и виден в каталоге учителей
+                        </span>
+                      </div>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="p-0 h-auto text-green-700 hover:text-green-900"
+                        onClick={() => navigate('/teachers')}
+                      >
+                        Посмотреть в каталоге
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {!isPublished && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                      <div className="flex items-center gap-2">
+                        <UserRound className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm text-yellow-800 font-medium">
+                          Профиль не опубликован
+                        </span>
+                      </div>
+                      <p className="text-xs text-yellow-700 mt-1">
+                        Опубликуйте профиль, чтобы школы могли найти вас в каталоге учителей
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center gap-4">
                     <Avatar className="h-20 w-20">
                       {profilePhoto ? (
