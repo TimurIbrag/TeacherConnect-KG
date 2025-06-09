@@ -396,7 +396,91 @@ const TeacherDashboardPage = () => {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
-          {/* Keep existing profile tab content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Основная информация</CardTitle>
+              <CardDescription>
+                Заполните основные данные о себе
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Полное имя *</Label>
+                  <Input
+                    id="fullName"
+                    value={profileData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    placeholder="Введите ваше полное имя"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="example@email.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Телефон</Label>
+                  <Input
+                    id="phone"
+                    value={profileData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="+996 XXX XXX XXX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Местоположение</Label>
+                  <Input
+                    id="location"
+                    value={profileData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder="Город, район"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="specialization">Специализация *</Label>
+                <Input
+                  id="specialization"
+                  value={profileData.specialization}
+                  onChange={(e) => handleInputChange('specialization', e.target.value)}
+                  placeholder="Математика, Физика, Английский язык..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">О себе</Label>
+                <Textarea
+                  id="bio"
+                  value={profileData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  placeholder="Расскажите о своем опыте, методах преподавания..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-4">
+                <Button
+                  onClick={handlePublishProfile}
+                  variant={isPublished ? "destructive" : "default"}
+                >
+                  {isPublished ? 'Снять с публикации' : 'Опубликовать'}
+                </Button>
+                {isPublished && (
+                  <Badge variant="default">Профиль опубликован</Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="services" className="space-y-6">
@@ -404,19 +488,75 @@ const TeacherDashboardPage = () => {
         </TabsContent>
 
         <TabsContent value="schedule" className="space-y-6">
-          {/* Keep existing schedule tab content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Расписание</CardTitle>
+              <CardDescription>
+                Настройте ваше расписание доступности
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Управление расписанием будет добавлено позже
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="students" className="space-y-6">
-          {/* Keep existing students tab content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Ученики</CardTitle>
+              <CardDescription>
+                Управляйте списком ваших учеников
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Список учеников пуст
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="messages" className="space-y-6">
-          {/* Keep existing messages tab content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Сообщения</CardTitle>
+              <CardDescription>
+                Переписка с учениками и школами
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Нет новых сообщений
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          {/* Keep existing analytics tab content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Аналитика</CardTitle>
+              <CardDescription>
+                Статистика просмотров и активности
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Аналитика будет доступна позже
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
