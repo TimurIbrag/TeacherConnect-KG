@@ -36,57 +36,67 @@ import SavedItemsPage from "./pages/SavedItemsPage";
 import TeacherDashboardPage from "./pages/dashboards/TeacherDashboardPage";
 import SchoolDashboardPage from "./pages/dashboards/SchoolDashboardPage";
 
-const queryClient = new QueryClient();
+// Create QueryClient instance outside component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <main className="flex-grow">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/reset-password" element={<PasswordResetPage />} />
-                  <Route path="/teachers" element={<TeachersPage />} />
-                  <Route path="/teachers/:id" element={<TeacherProfilePage />} />
-                  <Route path="/schools" element={<SchoolsPage />} />
-                  <Route path="/schools/:id" element={<SchoolProfilePage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                  <Route path="/support" element={<SupportPage />} />
-                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/terms" element={<TermsOfServicePage />} />
-                  
-                  {/* Updated messages routes for private chat */}
-                  <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/messages/:chatRoomId" element={<MessagesPage />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/saved" element={<SavedItemsPage />} />
-                  
-                  {/* Dashboard routes */}
-                  <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
-                  <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
-                  
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <main className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/reset-password" element={<PasswordResetPage />} />
+                    <Route path="/teachers" element={<TeachersPage />} />
+                    <Route path="/teachers/:id" element={<TeacherProfilePage />} />
+                    <Route path="/schools" element={<SchoolsPage />} />
+                    <Route path="/schools/:id" element={<SchoolProfilePage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/support" element={<SupportPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
+                    
+                    {/* Updated messages routes for private chat */}
+                    <Route path="/messages" element={<MessagesPage />} />
+                    <Route path="/messages/:chatRoomId" element={<MessagesPage />} />
+                    <Route path="/notifications" element={<NotificationsPage />} />
+                    <Route path="/saved" element={<SavedItemsPage />} />
+                    
+                    {/* Dashboard routes */}
+                    <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
+                    <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
+                    
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
