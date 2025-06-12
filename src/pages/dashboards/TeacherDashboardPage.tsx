@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText } from 'lucide-react';
+import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText, Save, Clock } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
 import ProfileEditModal, { ProfileData } from '@/components/ProfileEditModal';
 
@@ -24,10 +24,29 @@ const TeacherDashboardPage = () => {
   const { data: messages = [], isLoading: messagesLoading } = useUserMessages();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Auto-save functionality
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleAvatarUploaded = async (url: string) => {
     try {
+      setIsAutoSaving(true);
       await updateProfile({ avatar_url: url });
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
       toast({
         title: 'Фото загружено',
         description: 'Фотография профиля успешно обновлена',
@@ -38,12 +57,17 @@ const TeacherDashboardPage = () => {
         description: 'Не удалось обновить фотографию',
         variant: 'destructive',
       });
+    } finally {
+      setIsAutoSaving(false);
     }
   };
 
   const handleAvatarRemoved = async () => {
     try {
+      setIsAutoSaving(true);
       await updateProfile({ avatar_url: null });
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
       toast({
         title: 'Фото удалено',
         description: 'Фотография профиля была удалена',
@@ -54,11 +78,15 @@ const TeacherDashboardPage = () => {
         description: 'Не удалось удалить фотографию',
         variant: 'destructive',
       });
+    } finally {
+      setIsAutoSaving(false);
     }
   };
 
   const handleProfileSave = async (data: ProfileData) => {
     try {
+      setIsAutoSaving(true);
+      
       // Update user profile
       await updateProfile({ 
         full_name: data.name,
@@ -74,9 +102,12 @@ const TeacherDashboardPage = () => {
         bio: data.bio
       });
 
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+      
       toast({
         title: 'Профиль обновлен',
-        description: 'Изменения успешно сохранены',
+        description: 'Изменения успешно сохранены и отображаются немедленно',
       });
     } catch (error) {
       toast({
@@ -84,7 +115,46 @@ const TeacherDashboardPage = () => {
         description: 'Не удалось сохранить изменения',
         variant: 'destructive',
       });
+    } finally {
+      setIsAutoSaving(false);
     }
+  };
+
+  // Auto-save draft data to localStorage
+  const saveDraftToLocalStorage = (data: Partial<ProfileData>) => {
+    try {
+      const existingDraft = localStorage.getItem('teacher_profile_draft');
+      const draft = existingDraft ? JSON.parse(existingDraft) : {};
+      const updatedDraft = { ...draft, ...data, lastUpdated: new Date().toISOString() };
+      localStorage.setItem('teacher_profile_draft', JSON.stringify(updatedDraft));
+      setHasUnsavedChanges(true);
+      
+      // Show auto-save indicator
+      toast({
+        title: 'Черновик сохранен',
+        description: 'Ваши изменения сохранены локально',
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+    }
+  };
+
+  // Load draft from localStorage
+  const loadDraftFromLocalStorage = (): Partial<ProfileData> | null => {
+    try {
+      const draft = localStorage.getItem('teacher_profile_draft');
+      return draft ? JSON.parse(draft) : null;
+    } catch (error) {
+      console.error('Failed to load draft:', error);
+      return null;
+    }
+  };
+
+  // Clear draft from localStorage
+  const clearDraft = () => {
+    localStorage.removeItem('teacher_profile_draft');
+    setHasUnsavedChanges(false);
   };
 
   if (profile?.role !== 'teacher') {
@@ -106,26 +176,51 @@ const TeacherDashboardPage = () => {
 
   const unreadMessages = messages.filter(msg => !msg.read && msg.recipient_id === user?.id).length;
   
-  // Prepare profile data for edit modal
+  // Prepare profile data for edit modal with draft support
+  const draft = loadDraftFromLocalStorage();
   const currentProfileData: ProfileData = {
-    name: profile?.full_name || '',
-    specialization: teacherProfile?.specialization || '',
-    education: teacherProfile?.education || '',
-    experience: teacherProfile?.experience_years?.toString() || '',
-    schedule: 'full-time', // Default value since schedule doesn't exist in teacher_profiles
-    location: teacherProfile?.location || '',
-    bio: teacherProfile?.bio || '',
-    photoUrl: profile?.avatar_url || ''
+    name: draft?.name || profile?.full_name || '',
+    specialization: draft?.specialization || teacherProfile?.specialization || '',
+    education: draft?.education || teacherProfile?.education || '',
+    experience: draft?.experience || teacherProfile?.experience_years?.toString() || '',
+    schedule: draft?.schedule || 'full-time',
+    location: draft?.location || teacherProfile?.location || '',
+    bio: draft?.bio || teacherProfile?.bio || '',
+    photoUrl: draft?.photoUrl || profile?.avatar_url || ''
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
+        {/* Header with Auto-save Status */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Личный кабинет учителя
-          </h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Личный кабинет учителя
+            </h1>
+            <div className="flex items-center gap-4">
+              {isAutoSaving && (
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Save className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Сохранение...</span>
+                </div>
+              )}
+              {lastSaved && !isAutoSaving && (
+                <div className="flex items-center gap-2 text-green-600">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm">
+                    Сохранено {lastSaved.toLocaleTimeString()}
+                  </span>
+                </div>
+              )}
+              {hasUnsavedChanges && !isAutoSaving && (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm">Есть несохраненные изменения</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -185,7 +280,7 @@ const TeacherDashboardPage = () => {
                       <Calendar className="h-5 w-5 text-green-600" />
                       <div>
                         <p className="text-sm font-medium text-gray-500">График работы</p>
-                        <p className="text-gray-900">Не указано</p>
+                        <p className="text-gray-900">Полный день</p>
                       </div>
                     </div>
                   </div>
@@ -465,13 +560,22 @@ const TeacherDashboardPage = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Profile Edit Modal */}
+        {/* Enhanced Profile Edit Modal with Auto-save */}
         <ProfileEditModal
           isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            if (!hasUnsavedChanges) {
+              clearDraft();
+            }
+          }}
           initialData={currentProfileData}
-          onSave={handleProfileSave}
+          onSave={(data) => {
+            handleProfileSave(data);
+            clearDraft(); // Clear draft after successful save
+          }}
           userType="teacher"
+          onDraftSave={saveDraftToLocalStorage} // Pass auto-save function
         />
       </div>
     </div>

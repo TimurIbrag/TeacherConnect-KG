@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Save, Clock } from 'lucide-react';
 import AvatarUploader from './AvatarUploader';
 
 export interface ProfileData {
@@ -52,6 +52,7 @@ interface ProfileEditModalProps {
   initialData?: ProfileData;
   onSave: (data: ProfileData) => void;
   userType: 'teacher' | 'school';
+  onDraftSave?: (data: Partial<ProfileData>) => void;
 }
 
 const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
@@ -60,12 +61,14 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   initialData,
   onSave,
   userType,
+  onDraftSave,
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formChanged, setFormChanged] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   
   // Use local state for form data without any default values
   const [formData, setFormData] = useState<ProfileData>(emptyProfileData);
@@ -83,6 +86,24 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       setPhoto(null);
     }
   }, [isOpen, initialData]);
+
+  // Auto-save functionality with debouncing
+  const debouncedAutoSave = useCallback(
+    debounce((data: ProfileData) => {
+      if (onDraftSave && formChanged) {
+        onDraftSave(data);
+        setLastAutoSaved(new Date());
+      }
+    }, 2000), // 2 second delay
+    [onDraftSave, formChanged]
+  );
+
+  // Auto-save when form data changes
+  useEffect(() => {
+    if (formChanged && isOpen) {
+      debouncedAutoSave(formData);
+    }
+  }, [formData, formChanged, isOpen, debouncedAutoSave]);
   
   // Track form changes with memoized handler
   const handleChange = React.useCallback((field: keyof ProfileData, value: string) => {
@@ -150,9 +171,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       
       toast({
         title: "Профиль обновлен",
-        description: "Ваши изменения успешно сохранены",
+        description: "Ваши изменения успешно сохранены и отображаются немедленно",
       });
       
+      setFormChanged(false);
       onClose();
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -177,11 +199,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Редактировать профиль</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Редактировать профиль</span>
+            {lastAutoSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <Save className="h-4 w-4" />
+                <span>Сохранен {lastAutoSaved.toLocaleTimeString()}</span>
+              </div>
+            )}
+          </DialogTitle>
           <DialogDescription>
             {userType === 'teacher' 
-              ? 'Обновите информацию своего преподавательского профиля' 
-              : 'Обновите информацию о вашей школе'}
+              ? 'Обновите информацию своего преподавательского профиля. Изменения автоматически сохраняются как черновик.' 
+              : 'Обновите информацию о вашей школе. Изменения автоматически сохраняются как черновик.'}
           </DialogDescription>
         </DialogHeader>
         
@@ -316,9 +346,21 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             )}
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </div>
     </Dialog>
   );
 };
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(null, args), wait);
+  };
+}
 
 export default ProfileEditModal;
