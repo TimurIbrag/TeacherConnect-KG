@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, MapPin, BookOpen, Star, Clock, DollarSign } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle, Send } from 'lucide-react';
 
 // Get published teachers from localStorage
 const getPublishedTeachers = () => {
@@ -23,7 +35,7 @@ const getPublishedTeachers = () => {
         id: 'local-teacher',
         profiles: {
           full_name: profile.fullName,
-          avatar_url: null
+          avatar_url: profile.photoUrl
         },
         specialization: profile.specialization,
         bio: profile.bio,
@@ -44,6 +56,8 @@ const getPublishedTeachers = () => {
 const TeachersPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { data: teachers, isLoading: teachersLoading } = useTeachers();
   const { data: teacherVacancies, isLoading: vacanciesLoading } = useTeacherVacancies();
   
@@ -51,6 +65,10 @@ const TeachersPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
+  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
 
   // Combine Supabase teachers with published local teachers
   const publishedLocalTeachers = getPublishedTeachers();
@@ -97,6 +115,48 @@ const TeachersPage = () => {
   const locations = [...new Set([...teacherLocations, ...vacancyLocations])];
 
   const isLoading = teachersLoading || vacanciesLoading;
+
+  // Handle contact teacher
+  const handleContactTeacher = (teacher: any) => {
+    if (!user) {
+      toast({
+        title: 'Требуется авторизация',
+        description: 'Войдите в систему, чтобы связаться с преподавателем',
+        variant: 'destructive',
+      });
+      navigate('/login');
+      return;
+    }
+
+    setSelectedTeacher(teacher);
+    setContactSubject(`Заинтересованность в услугах преподавателя: ${teacher.profiles?.full_name}`);
+    setContactMessage('');
+    setIsContactModalOpen(true);
+  };
+
+  // Send contact message
+  const handleSendMessage = () => {
+    if (!contactMessage.trim()) {
+      toast({
+        title: 'Ошибка',
+        description: 'Введите сообщение',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // In a real app, this would send to the backend
+    // For now, we'll simulate sending a message
+    toast({
+      title: 'Сообщение отправлено',
+      description: `Ваше сообщение отправлено преподавателю ${selectedTeacher?.profiles?.full_name}`,
+    });
+
+    setIsContactModalOpen(false);
+    setContactMessage('');
+    setContactSubject('');
+    setSelectedTeacher(null);
+  };
 
   if (isLoading) {
     return (
@@ -231,8 +291,7 @@ const TeachersPage = () => {
             {filteredTeachers.map((teacher) => (
               <Card 
                 key={teacher.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => teacher.id !== 'local-teacher' ? navigate(`/teachers/${teacher.id}`) : null}
+                className="hover:shadow-lg transition-shadow"
               >
                 <CardHeader>
                   <div className="flex items-center gap-4">
@@ -309,13 +368,23 @@ const TeachersPage = () => {
                   )}
 
                   {/* Verification Status */}
-                  <div className="mt-4">
+                  <div className="mt-4 flex justify-between items-center">
                     <Badge 
                       variant={teacher.verification_status === 'verified' ? 'default' : 'secondary'}
                       className="text-xs"
                     >
                       {teacher.verification_status === 'verified' ? 'Подтвержден' : 'На проверке'}
                     </Badge>
+
+                    {/* Contact Button */}
+                    <Button
+                      size="sm"
+                      onClick={() => handleContactTeacher(teacher)}
+                      className="gap-2"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Связаться
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -427,6 +496,51 @@ const TeachersPage = () => {
           </div>
         )
       )}
+      
+      {/* Contact Teacher Modal */}
+      <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Связаться с преподавателем</DialogTitle>
+            <DialogDescription>
+              Отправьте сообщение преподавателю {selectedTeacher?.profiles?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="subject">Тема сообщения</Label>
+              <Input
+                id="subject"
+                value={contactSubject}
+                onChange={(e) => setContactSubject(e.target.value)}
+                placeholder="Укажите тему сообщения"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="message">Сообщение</Label>
+              <Textarea
+                id="message"
+                rows={4}
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+                placeholder="Напишите ваше сообщение преподавателю..."
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setIsContactModalOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleSendMessage} className="gap-2">
+              <Send className="h-4 w-4" />
+              Отправить
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

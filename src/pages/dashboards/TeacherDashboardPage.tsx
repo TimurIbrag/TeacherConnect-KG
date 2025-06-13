@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText, Save, Clock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText, Save, Clock, Globe, Lock } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
 import ProfileEditModal, { ProfileData } from '@/components/ProfileEditModal';
 
@@ -27,6 +28,13 @@ const TeacherDashboardPage = () => {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+
+  // Load published status from localStorage on mount
+  useEffect(() => {
+    const publishedStatus = localStorage.getItem('teacherProfilePublished');
+    setIsPublished(publishedStatus === 'true');
+  }, []);
 
   // Auto-save functionality
   useEffect(() => {
@@ -102,6 +110,23 @@ const TeacherDashboardPage = () => {
         bio: data.bio
       });
 
+      // Save profile data to localStorage for published profiles
+      if (isPublished) {
+        const profileForPublish = {
+          fullName: data.name,
+          specialization: data.specialization,
+          education: data.education,
+          experience: data.experience,
+          location: data.location,
+          bio: data.bio,
+          schedule: data.schedule,
+          photoUrl: data.photoUrl,
+          skills: teacherProfile?.skills || [],
+          languages: teacherProfile?.languages || []
+        };
+        localStorage.setItem('teacherProfileData', JSON.stringify(profileForPublish));
+      }
+
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       
@@ -117,6 +142,40 @@ const TeacherDashboardPage = () => {
       });
     } finally {
       setIsAutoSaving(false);
+    }
+  };
+
+  // Handle publish/unpublish toggle
+  const handlePublishToggle = (checked: boolean) => {
+    setIsPublished(checked);
+    localStorage.setItem('teacherProfilePublished', checked.toString());
+
+    if (checked) {
+      // Save current profile data for publishing
+      const profileForPublish = {
+        fullName: profile?.full_name || '',
+        specialization: teacherProfile?.specialization || '',
+        education: teacherProfile?.education || '',
+        experience: teacherProfile?.experience_years?.toString() || '',
+        location: teacherProfile?.location || '',
+        bio: teacherProfile?.bio || '',
+        schedule: 'full-time',
+        photoUrl: profile?.avatar_url || '',
+        skills: teacherProfile?.skills || [],
+        languages: teacherProfile?.languages || []
+      };
+      localStorage.setItem('teacherProfileData', JSON.stringify(profileForPublish));
+      
+      toast({
+        title: 'Профиль опубликован',
+        description: 'Ваш профиль теперь виден на странице преподавателей',
+      });
+    } else {
+      localStorage.removeItem('teacherProfileData');
+      toast({
+        title: 'Профиль скрыт',
+        description: 'Ваш профиль больше не отображается публично',
+      });
     }
   };
 
@@ -188,6 +247,8 @@ const TeacherDashboardPage = () => {
     bio: draft?.bio || teacherProfile?.bio || '',
     photoUrl: draft?.photoUrl || profile?.avatar_url || ''
   };
+
+  const isProfileComplete = profile?.full_name && teacherProfile?.specialization && teacherProfile?.bio;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -321,6 +382,43 @@ const TeacherDashboardPage = () => {
                     <p className="mb-2">Заполните все разделы профиля, чтобы повысить шансы найти подходящую школу.</p>
                   </div>
                 )}
+
+                {/* Profile Visibility Section */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {isPublished ? (
+                        <Globe className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <Lock className="h-5 w-5 text-gray-600" />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {isPublished ? "Профиль опубликован" : "Профиль скрыт"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {isPublished 
+                            ? "Ваш профиль виден на странице преподавателей"
+                            : "Только вы можете видеть ваш профиль"
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={isPublished}
+                      onCheckedChange={handlePublishToggle}
+                      disabled={!isProfileComplete}
+                    />
+                  </div>
+                  
+                  {!isProfileComplete && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        Заполните обязательные поля профиля (имя, специализация, описание) для публикации
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
