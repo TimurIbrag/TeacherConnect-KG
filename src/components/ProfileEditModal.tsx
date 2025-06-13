@@ -194,6 +194,20 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       onClose();
     }
   };
+
+  // Update local state when modal opens with new initial data
+  useEffect(() => {
+    if (isOpen) {
+      // If initialData is provided, use it; otherwise use empty data
+      const dataToUse = initialData || {...emptyProfileData};
+      setFormData({...dataToUse});
+      setFormChanged(false);
+      setPhotoRemoved(false);
+      
+      // Reset photo state when modal opens
+      setPhoto(null);
+    }
+  }, [isOpen, initialData]);
   
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
