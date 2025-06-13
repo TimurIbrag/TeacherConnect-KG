@@ -1,13 +1,13 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ChatRoom, ChatMessage } from '@/types/chat';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import SecureMessageInput from '@/components/security/SecureMessageInput';
 
 interface PrivateChatWindowProps {
   chatRoom: ChatRoom | null;
@@ -26,7 +26,6 @@ const PrivateChatWindow: React.FC<PrivateChatWindowProps> = ({
   onBackToList,
   isLoading
 }) => {
-  const [messageText, setMessageText] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,43 +34,35 @@ const PrivateChatWindow: React.FC<PrivateChatWindowProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      onSendMessage(messageText);
-      setMessageText('');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Get other participant info
+  // Get other participant info with security checks
   const getOtherParticipant = () => {
-    if (!chatRoom) return null;
+    if (!chatRoom || !currentUserId) return null;
     
     const otherUserId = chatRoom.participant_a === currentUserId 
       ? chatRoom.participant_b 
       : chatRoom.participant_a;
     
-    // Try to get teacher info from localStorage
+    // Try to get participant info from localStorage (cached profile data)
     try {
-      const teacherInfo = localStorage.getItem(`teacher_${otherUserId}`);
-      if (teacherInfo) {
-        return JSON.parse(teacherInfo);
+      const participantInfo = localStorage.getItem(`profile_${otherUserId}`);
+      if (participantInfo) {
+        const parsed = JSON.parse(participantInfo);
+        return {
+          id: otherUserId,
+          name: parsed.full_name || parsed.name || 'Пользователь',
+          avatar: parsed.avatar_url || null,
+          role: parsed.role || null
+        };
       }
     } catch (error) {
-      console.error('Error loading teacher info:', error);
+      console.error('Error loading participant info:', error);
     }
     
     return {
       id: otherUserId,
       name: 'Пользователь',
       avatar: null,
-      specialization: null
+      role: null
     };
   };
 
@@ -107,8 +98,12 @@ const PrivateChatWindow: React.FC<PrivateChatWindowProps> = ({
         
         <div className="flex-1">
           <h3 className="font-semibold">{otherParticipant?.name || 'Пользователь'}</h3>
-          {otherParticipant?.specialization && (
-            <p className="text-sm text-muted-foreground">{otherParticipant.specialization}</p>
+          {otherParticipant?.role && (
+            <p className="text-sm text-muted-foreground">
+              {otherParticipant.role === 'teacher' ? 'Учитель' : 
+               otherParticipant.role === 'school' ? 'Школа' : 
+               otherParticipant.role}
+            </p>
           )}
         </div>
       </div>
@@ -140,11 +135,18 @@ const PrivateChatWindow: React.FC<PrivateChatWindowProps> = ({
                         : 'bg-muted'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {message.text}
+                    </p>
                     <p className={`text-xs mt-1 ${
                       isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
                     }`}>
                       {format(new Date(message.created_at), 'HH:mm', { locale: ru })}
+                      {isOwn && (
+                        <span className="ml-1">
+                          {message.read ? '✓✓' : '✓'}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -155,20 +157,13 @@ const PrivateChatWindow: React.FC<PrivateChatWindowProps> = ({
         </div>
       </ScrollArea>
 
-      {/* Message Input */}
+      {/* Secure Message Input */}
       <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Input
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Напишите сообщение..."
-            className="flex-1"
-          />
-          <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        <SecureMessageInput 
+          onSendMessage={onSendMessage}
+          disabled={isLoading}
+          placeholder="Напишите сообщение..."
+        />
       </div>
     </div>
   );

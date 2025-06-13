@@ -1,27 +1,22 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import PrivateChatList from '@/components/chat/PrivateChatList';
 import PrivateChatWindow from '@/components/chat/PrivateChatWindow';
-import { usePrivateChat } from '@/hooks/usePrivateChat';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 const MessagesPage: React.FC = () => {
   const navigate = useNavigate();
   const { chatRoomId } = useParams<{ chatRoomId?: string }>();
   const { toast } = useToast();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const { user, profile, loading } = useAuth();
 
-  // Check authentication
+  // Security: Check authentication properly
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      const userData = JSON.parse(user);
-      setIsLoggedIn(true);
-      setCurrentUserId(userData.email || 'current_user');
-    } else {
+    if (!loading && (!user || !profile)) {
       navigate('/login');
       toast({
         title: "Требуется авторизация",
@@ -29,7 +24,7 @@ const MessagesPage: React.FC = () => {
         variant: "destructive",
       });
     }
-  }, [navigate, toast]);
+  }, [user, profile, loading, navigate, toast]);
 
   const {
     chatRooms,
@@ -39,37 +34,62 @@ const MessagesPage: React.FC = () => {
     sendMessage,
     markMessagesAsRead,
     getOrCreateChatRoom,
-  } = usePrivateChat(currentUserId);
+    isAuthenticated,
+  } = useSecurePrivateChat();
 
-  // Handle chat selection
-  const handleSelectChat = (selectedChatRoomId: string) => {
-    markMessagesAsRead(selectedChatRoomId);
+  // Handle chat selection with security checks
+  const handleSelectChat = async (selectedChatRoomId: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Ошибка доступа",
+        description: "Необходима авторизация для доступа к чату",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await markMessagesAsRead(selectedChatRoomId);
     if (window.innerWidth < 768) {
-      // On mobile, navigate to the chat room
       navigate(`/messages/${selectedChatRoomId}`);
     }
   };
 
-  // Handle sending message
+  // Handle sending message with security validation
   const handleSendMessage = async (text: string) => {
-    if (!chatRoomId) return;
+    if (!chatRoomId || !isAuthenticated) {
+      toast({
+        title: "Ошибка отправки",
+        description: "Не удалось отправить сообщение. Проверьте подключение.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Make sure the chat room exists
-    await getOrCreateChatRoom(chatRoomId);
-    await sendMessage(chatRoomId, text);
+    try {
+      // Ensure the chat room exists and user has access
+      await getOrCreateChatRoom(chatRoomId);
+      await sendMessage(chatRoomId, text);
+    } catch (error: any) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Ошибка отправки",
+        description: error.message || "Сообщение не отправлено. Попробуйте еще раз.",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Get current chat room
+  // Get current chat room with security validation
   const currentChatRoom = chatRoomId 
     ? chatRooms.find(room => room.id === chatRoomId)
     : null;
 
-  // If chat room doesn't exist yet, create it
+  // Ensure chat room exists for authenticated users
   useEffect(() => {
-    if (chatRoomId && !currentChatRoom && currentUserId) {
+    if (chatRoomId && !currentChatRoom && isAuthenticated && !isLoading) {
       getOrCreateChatRoom(chatRoomId);
     }
-  }, [chatRoomId, currentChatRoom, currentUserId, getOrCreateChatRoom]);
+  }, [chatRoomId, currentChatRoom, isAuthenticated, isLoading, getOrCreateChatRoom]);
 
   // Get messages for current chat room
   const currentMessages = chatRoomId ? (messages[chatRoomId] || []) : [];
@@ -79,7 +99,22 @@ const MessagesPage: React.FC = () => {
     navigate('/messages');
   };
 
-  if (!isLoggedIn) {
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="container px-4 py-8 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Загрузка...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -102,7 +137,7 @@ const MessagesPage: React.FC = () => {
             <div className="flex-1 overflow-hidden">
               <PrivateChatList 
                 chatRooms={chatRooms}
-                currentUserId={currentUserId}
+                currentUserId={user?.id || ''}
                 selectedChatId={chatRoomId}
                 onSelectChat={handleSelectChat}
               />
@@ -116,7 +151,7 @@ const MessagesPage: React.FC = () => {
             <PrivateChatWindow 
               chatRoom={currentChatRoom}
               messages={currentMessages}
-              currentUserId={currentUserId}
+              currentUserId={user?.id || ''}
               onSendMessage={handleSendMessage}
               onBackToList={handleBackToList}
               isLoading={isLoading}

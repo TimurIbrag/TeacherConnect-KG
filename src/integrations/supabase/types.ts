@@ -71,6 +71,87 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          chat_room_id: string
+          created_at: string
+          id: string
+          read: boolean
+          sender_id: string
+          text: string
+        }
+        Insert: {
+          chat_room_id: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          sender_id: string
+          text: string
+        }
+        Update: {
+          chat_room_id?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          sender_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          participant_a: string
+          participant_b: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          participant_a: string
+          participant_b: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          participant_a?: string
+          participant_b?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_participant_a_fkey"
+            columns: ["participant_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_participant_b_fkey"
+            columns: ["participant_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           application_id: string | null

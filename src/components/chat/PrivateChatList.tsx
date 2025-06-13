@@ -26,17 +26,53 @@ const PrivateChatList: React.FC<PrivateChatListProps> = ({
     return isParticipantA ? room.participant_b : room.participant_a;
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 3600);
+  const getParticipantInfo = (participantId: string) => {
+    // Try to get cached participant info
+    try {
+      const cachedInfo = localStorage.getItem(`profile_${participantId}`);
+      if (cachedInfo) {
+        const parsed = JSON.parse(cachedInfo);
+        return {
+          name: parsed.full_name || parsed.name || `Пользователь ${participantId.slice(-4)}`,
+          avatar: parsed.avatar_url || null,
+          role: parsed.role || null
+        };
+      }
+    } catch (error) {
+      console.error('Error loading cached participant info:', error);
+    }
     
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { // 7 days
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return {
+      name: `Пользователь ${participantId.slice(-4)}`,
+      avatar: null,
+      role: null
+    };
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffInHours = (now.getTime() - date.getTime()) / (1000 * 3600);
+      
+      if (diffInHours < 24) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else if (diffInHours < 168) { // 7 days
+        return date.toLocaleDateString([], { weekday: 'short' });
+      } else {
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+    } catch (error) {
+      return 'Недавно';
+    }
+  };
+
+  const handleChatClick = (roomId: string) => {
+    try {
+      onSelectChat(roomId);
+      navigate(`/messages/${roomId}`);
+    } catch (error) {
+      console.error('Error selecting chat:', error);
     }
   };
 
@@ -60,15 +96,13 @@ const PrivateChatList: React.FC<PrivateChatListProps> = ({
     <div className="divide-y">
       {chatRooms.map((room) => {
         const otherParticipantId = getOtherParticipant(room);
+        const participantInfo = getParticipantInfo(otherParticipantId);
         const isSelected = selectedChatId === room.id;
         
         return (
           <div
             key={room.id}
-            onClick={() => {
-              onSelectChat(room.id);
-              navigate(`/messages/${room.id}`);
-            }}
+            onClick={() => handleChatClick(room.id)}
             className={cn(
               "p-4 cursor-pointer hover:bg-muted/50 transition-colors flex items-center gap-3",
               isSelected && "bg-muted"
@@ -76,9 +110,9 @@ const PrivateChatList: React.FC<PrivateChatListProps> = ({
           >
             <div className="relative">
               <Avatar className="h-12 w-12">
-                <AvatarImage src="" alt="Participant" />
+                <AvatarImage src={participantInfo.avatar || ''} alt="Participant" />
                 <AvatarFallback>
-                  {otherParticipantId.charAt(0).toUpperCase()}
+                  {participantInfo.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {room.unread_count && room.unread_count > 0 && (
@@ -94,8 +128,7 @@ const PrivateChatList: React.FC<PrivateChatListProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-medium truncate">
-                  {/* Placeholder for participant name */}
-                  Участник {otherParticipantId.slice(-4)}
+                  {participantInfo.name}
                 </h3>
                 {room.last_message && (
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
@@ -108,6 +141,13 @@ const PrivateChatList: React.FC<PrivateChatListProps> = ({
                 <p className="text-sm text-muted-foreground truncate">
                   {room.last_message?.text || 'Начать общение...'}
                 </p>
+                {participantInfo.role && (
+                  <span className="text-xs bg-secondary px-2 py-1 rounded ml-2 flex-shrink-0">
+                    {participantInfo.role === 'teacher' ? 'Учитель' : 
+                     participantInfo.role === 'school' ? 'Школа' : 
+                     participantInfo.role}
+                  </span>
+                )}
               </div>
             </div>
           </div>
