@@ -131,7 +131,7 @@ export const usePrivateChat = (currentUserId: string) => {
 
       // Create new chat room
       const newRoom: ChatRoom = {
-        id: `room_${Date.now()}`,
+        id: `chat_${[currentUserId, otherUserId].sort().join('_')}`,
         participant_a: currentUserId,
         participant_b: otherUserId,
         created_at: new Date().toISOString(),
@@ -170,6 +170,38 @@ export const usePrivateChat = (currentUserId: string) => {
     );
   }, []);
 
+  // Get or create chat room for a specific chat ID
+  const getOrCreateChatRoom = useCallback(async (chatRoomId: string) => {
+    // Check if the chat room already exists
+    const existingRoom = chatRooms.find(room => room.id === chatRoomId);
+    if (existingRoom) {
+      return existingRoom;
+    }
+
+    // Extract participants from chat room ID (format: chat_userId1_userId2)
+    const participants = chatRoomId.replace('chat_', '').split('_');
+    const otherUserId = participants.find(id => id !== currentUserId);
+    
+    if (otherUserId) {
+      // Create new chat room
+      const newRoom: ChatRoom = {
+        id: chatRoomId,
+        participant_a: currentUserId,
+        participant_b: otherUserId,
+        created_at: new Date().toISOString(),
+        unread_count: 0,
+      };
+
+      setChatRooms(prev => [newRoom, ...prev]);
+      setMessages(prev => ({ ...prev, [chatRoomId]: [] }));
+
+      console.log('Chat room created from ID:', newRoom);
+      return newRoom;
+    }
+
+    return null;
+  }, [currentUserId, chatRooms]);
+
   return {
     chatRooms,
     messages,
@@ -178,5 +210,6 @@ export const usePrivateChat = (currentUserId: string) => {
     sendMessage,
     createChatRoom,
     markMessagesAsRead,
+    getOrCreateChatRoom,
   };
 };

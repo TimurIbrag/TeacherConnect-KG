@@ -38,6 +38,7 @@ const MessagesPage: React.FC = () => {
     isConnected,
     sendMessage,
     markMessagesAsRead,
+    getOrCreateChatRoom,
   } = usePrivateChat(currentUserId);
 
   // Handle chat selection
@@ -52,6 +53,9 @@ const MessagesPage: React.FC = () => {
   // Handle sending message
   const handleSendMessage = async (text: string) => {
     if (!chatRoomId) return;
+    
+    // Make sure the chat room exists
+    await getOrCreateChatRoom(chatRoomId);
     await sendMessage(chatRoomId, text);
   };
 
@@ -59,6 +63,13 @@ const MessagesPage: React.FC = () => {
   const currentChatRoom = chatRoomId 
     ? chatRooms.find(room => room.id === chatRoomId)
     : null;
+
+  // If chat room doesn't exist yet, create it
+  useEffect(() => {
+    if (chatRoomId && !currentChatRoom && currentUserId) {
+      getOrCreateChatRoom(chatRoomId);
+    }
+  }, [chatRoomId, currentChatRoom, currentUserId, getOrCreateChatRoom]);
 
   // Get messages for current chat room
   const currentMessages = chatRoomId ? (messages[chatRoomId] || []) : [];

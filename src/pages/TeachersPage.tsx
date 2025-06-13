@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
@@ -11,17 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle, Send } from 'lucide-react';
+import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle } from 'lucide-react';
 
 // Get published teachers from localStorage
 const getPublishedTeachers = () => {
@@ -31,8 +22,12 @@ const getPublishedTeachers = () => {
     
     if (isPublished && profileData) {
       const profile = JSON.parse(profileData);
+      const currentUser = localStorage.getItem('user');
+      const userData = currentUser ? JSON.parse(currentUser) : null;
+      
       return [{
         id: 'local-teacher',
+        user_id: userData?.email || 'local-teacher-id',
         profiles: {
           full_name: profile.fullName,
           avatar_url: profile.photoUrl
@@ -65,10 +60,6 @@ const TeachersPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
-  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [contactMessage, setContactMessage] = useState('');
-  const [contactSubject, setContactSubject] = useState('');
 
   // Combine Supabase teachers with published local teachers
   const publishedLocalTeachers = getPublishedTeachers();
@@ -116,7 +107,7 @@ const TeachersPage = () => {
 
   const isLoading = teachersLoading || vacanciesLoading;
 
-  // Handle contact teacher
+  // Handle contact teacher - redirect to messages page
   const handleContactTeacher = (teacher: any) => {
     if (!user) {
       toast({
@@ -128,34 +119,22 @@ const TeachersPage = () => {
       return;
     }
 
-    setSelectedTeacher(teacher);
-    setContactSubject(`Заинтересованность в услугах преподавателя: ${teacher.profiles?.full_name}`);
-    setContactMessage('');
-    setIsContactModalOpen(true);
-  };
-
-  // Send contact message
-  const handleSendMessage = () => {
-    if (!contactMessage.trim()) {
-      toast({
-        title: 'Ошибка',
-        description: 'Введите сообщение',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // In a real app, this would send to the backend
-    // For now, we'll simulate sending a message
-    toast({
-      title: 'Сообщение отправлено',
-      description: `Ваше сообщение отправлено преподавателю ${selectedTeacher?.profiles?.full_name}`,
-    });
-
-    setIsContactModalOpen(false);
-    setContactMessage('');
-    setContactSubject('');
-    setSelectedTeacher(null);
+    // Create a unique chat room ID based on both user IDs
+    const currentUserId = user.email || 'current_user';
+    const teacherId = teacher.user_id || teacher.id;
+    const chatRoomId = `chat_${[currentUserId, teacherId].sort().join('_')}`;
+    
+    // Store teacher info in localStorage for the chat
+    const teacherInfo = {
+      id: teacherId,
+      name: teacher.profiles?.full_name || 'Преподаватель',
+      avatar: teacher.profiles?.avatar_url,
+      specialization: teacher.specialization
+    };
+    localStorage.setItem(`teacher_${teacherId}`, JSON.stringify(teacherInfo));
+    
+    // Navigate to messages page with the specific chat room
+    navigate(`/messages/${chatRoomId}`);
   };
 
   if (isLoading) {
@@ -496,51 +475,6 @@ const TeachersPage = () => {
           </div>
         )
       )}
-      
-      {/* Contact Teacher Modal */}
-      <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Связаться с преподавателем</DialogTitle>
-            <DialogDescription>
-              Отправьте сообщение преподавателю {selectedTeacher?.profiles?.full_name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Тема сообщения</Label>
-              <Input
-                id="subject"
-                value={contactSubject}
-                onChange={(e) => setContactSubject(e.target.value)}
-                placeholder="Укажите тему сообщения"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="message">Сообщение</Label>
-              <Textarea
-                id="message"
-                rows={4}
-                value={contactMessage}
-                onChange={(e) => setContactMessage(e.target.value)}
-                placeholder="Напишите ваше сообщение преподавателю..."
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setIsContactModalOpen(false)}>
-              Отмена
-            </Button>
-            <Button onClick={handleSendMessage} className="gap-2">
-              <Send className="h-4 w-4" />
-              Отправить
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
