@@ -1,6 +1,6 @@
 
 import React, { useState, ChangeEvent } from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, RotateCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [showSecondConfirm, setShowSecondConfirm] = useState(false);
   const [croppingImageUrl, setCroppingImageUrl] = useState<string>('');
   const inputRef = React.useRef<HTMLInputElement>(null);
   
@@ -81,9 +82,19 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     setShowCropDialog(false);
     
     console.log("Photo cropped and ready:", croppedFile.name, croppedFile.size);
+    
+    toast({
+      title: "Фото обновлено",
+      description: "Изменения сохранены в профиле",
+    });
   };
   
-  const handleRemoveImage = () => {
+  const handleFirstRemoveConfirm = () => {
+    setShowRemoveConfirm(false);
+    setShowSecondConfirm(true);
+  };
+  
+  const handleFinalRemoveConfirm = () => {
     // Clear all states completely
     setImageUrl('');
     setCroppingImageUrl('');
@@ -95,7 +106,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     
     // Notify parent component with null to indicate no image
     onImageChange(null);
-    setShowRemoveConfirm(false);
+    setShowSecondConfirm(false);
     
     console.log("Photo removed completely");
     
@@ -159,7 +170,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         </Button>
       )}
       
-      {/* Image cropping dialog */}
+      {/* Enhanced Image cropping dialog with rotation, drag, and zoom */}
       <CropDialog
         isOpen={showCropDialog}
         onClose={() => setShowCropDialog(false)}
@@ -167,11 +178,24 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         onCrop={handleCropComplete}
       />
       
-      {/* Confirmation dialog for removing photo */}
+      {/* First confirmation dialog for removing photo */}
       <RemovePhotoDialog
         isOpen={showRemoveConfirm}
         onClose={() => setShowRemoveConfirm(false)}
-        onConfirm={handleRemoveImage}
+        onConfirm={handleFirstRemoveConfirm}
+        title="Удалить фотографию?"
+        description="Вы уверены, что хотите удалить фотографию профиля?"
+        confirmText="Удалить"
+      />
+      
+      {/* Second confirmation dialog */}
+      <RemovePhotoDialog
+        isOpen={showSecondConfirm}
+        onClose={() => setShowSecondConfirm(false)}
+        onConfirm={handleFinalRemoveConfirm}
+        title="Подтвердите удаление"
+        description="Это действие нельзя отменить. Фотография будет удалена навсегда."
+        confirmText="Да, удалить навсегда"
       />
     </div>
   );

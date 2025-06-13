@@ -1,7 +1,8 @@
 
 import React, { useRef, useState, useCallback } from 'react';
-import { Move, RotateCcw, RotateCw } from 'lucide-react';
+import { Move, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './ui/button';
+import { Slider } from './ui/slider';
 import {
   Dialog,
   DialogContent,
@@ -80,13 +81,23 @@ const CropDialog: React.FC<CropDialogProps> = ({
     setIsDragging(false);
   }, []);
 
-  // Handle rotation
-  const handleRotation = useCallback((direction: 'cw' | 'ccw') => {
-    setImageRotation(prev => {
-      const increment = 90;
-      const newRotation = direction === 'cw' ? prev + increment : prev - increment;
-      return newRotation % 360;
-    });
+  // Handle rotation (90 degrees at a time)
+  const handleRotation = useCallback(() => {
+    setImageRotation(prev => (prev + 90) % 360);
+  }, []);
+
+  // Handle zoom controls
+  const handleZoomIn = useCallback(() => {
+    setImageScale(prev => Math.min(3, prev + 0.2));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setImageScale(prev => Math.max(0.5, prev - 0.2));
+  }, []);
+
+  // Handle scale slider change
+  const handleScaleChange = useCallback((value: number[]) => {
+    setImageScale(value[0]);
   }, []);
 
   // Function to crop and save the image
@@ -164,7 +175,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Настройка фотографии профиля</DialogTitle>
         </DialogHeader>
@@ -201,25 +212,49 @@ const CropDialog: React.FC<CropDialogProps> = ({
           
           <div className="text-sm text-muted-foreground text-center">
             <Move className="h-4 w-4 inline mr-1" />
-            Перетащите изображение для позиционирования • Прокрутите для масштабирования
+            Перетащите • Прокрутите для масштабирования
           </div>
           
-          <div className="flex gap-2 justify-center">
+          {/* Zoom Slider */}
+          <div className="w-full max-w-[250px] space-y-2">
+            <label className="text-sm font-medium">Масштаб: {Math.round(imageScale * 100)}%</label>
+            <Slider
+              value={[imageScale]}
+              onValueChange={handleScaleChange}
+              min={0.5}
+              max={3}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Control buttons */}
+          <div className="flex gap-2 justify-center flex-wrap">
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => handleRotation('ccw')}
+              onClick={handleZoomOut}
+              disabled={imageScale <= 0.5}
             >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Влево
+              <ZoomOut className="h-4 w-4 mr-1" />
+              Уменьшить
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => handleRotation('cw')}
+              onClick={handleZoomIn}
+              disabled={imageScale >= 3}
+            >
+              <ZoomIn className="h-4 w-4 mr-1" />
+              Увеличить
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRotation}
             >
               <RotateCw className="h-4 w-4 mr-1" />
-              Вправо
+              Повернуть
             </Button>
           </div>
           
@@ -242,7 +277,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
             type="button" 
             onClick={handleCropImage}
           >
-            Применить
+            Сохранить изменения
           </Button>
         </DialogFooter>
       </DialogContent>

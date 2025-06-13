@@ -15,26 +15,32 @@ interface RemovePhotoDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  title?: string;
+  description?: string;
+  confirmText?: string;
 }
 
 const RemovePhotoDialog: React.FC<RemovePhotoDialogProps> = ({
   isOpen,
   onClose,
-  onConfirm
+  onConfirm,
+  title = "Удалить фотографию?",
+  description = "Вы уверены, что хотите удалить фотографию профиля? Это действие нельзя отменить.",
+  confirmText = "Удалить"
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Удалить фотографию?</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Вы уверены, что хотите удалить фотографию профиля? Это действие нельзя отменить.
+            {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Отмена</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm}>
-            Удалить
+            {confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
