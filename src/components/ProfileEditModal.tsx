@@ -346,7 +346,7 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             )}
           </Button>
         </DialogFooter>
-      </div>
+      </DialogContent>
     </Dialog>
   );
 };
