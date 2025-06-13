@@ -123,18 +123,24 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   return (
     <div className="flex flex-col items-center">
       <div 
-        className={`relative ${sizeClasses[size]} cursor-pointer rounded-full`}
+        className={`relative ${sizeClasses[size]} cursor-pointer rounded-full overflow-hidden border-2 border-gray-200`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={() => inputRef.current?.click()}
       >
-        <Avatar className={`${sizeClasses[size]}`}>
-          {imageUrl ? (
-            <AvatarImage src={imageUrl} alt="Profile" />
-          ) : (
-            <AvatarFallback>{getInitials()}</AvatarFallback>
-          )}
-        </Avatar>
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-lg font-semibold text-gray-400">{getInitials()}</div>
+            </div>
+          </div>
+        )}
         
         {/* Camera overlay centered in the middle */}
         <div 
@@ -170,7 +176,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         </Button>
       )}
       
-      {/* Enhanced Image cropping dialog with rotation, drag, and zoom */}
+      {/* Enhanced Image cropping dialog with circular crop area */}
       <CropDialog
         isOpen={showCropDialog}
         onClose={() => setShowCropDialog(false)}
