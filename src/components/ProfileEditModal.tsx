@@ -19,6 +19,7 @@ export interface ProfileData {
   location: string;
   bio: string;
   photoUrl: string;
+  additionalSpecialization?: string;
 }
 
 interface ProfileEditModalProps {
@@ -155,9 +156,9 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           <div className="space-y-2">
             <Label>Фото профиля</Label>
             <EnhancedAvatarUploader
-              currentImageUrl={formData.photoUrl}
-              onImageUploaded={handleAvatarUploaded}
-              onImageRemoved={handleAvatarRemoved}
+              currentAvatarUrl={formData.photoUrl}
+              onAvatarUploaded={handleAvatarUploaded}
+              onAvatarRemoved={handleAvatarRemoved}
               className="mx-auto"
             />
           </div>
