@@ -1,7 +1,8 @@
-
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { teachersData } from '@/data/mockData';
 import { 
   Card, 
@@ -28,10 +29,15 @@ import {
   Eye
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 const TeacherProfilePage: React.FC = () => {
   const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
   
   // Find teacher by ID
   const teacherId = Number(id);
@@ -48,6 +54,47 @@ const TeacherProfilePage: React.FC = () => {
       </div>
     );
   }
+  
+  const handleStartChat = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему для отправки сообщений",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!profile || profile.role !== 'school') {
+      toast({
+        title: "Доступ ограничен",
+        description: "Только школы могут связаться с учителями",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create a mock teacher user ID based on teacher ID
+      const teacherUserId = `teacher_${teacher.id}`;
+      const chatRoomId = await createChatRoom(teacherUserId);
+      
+      toast({
+        title: "Чат создан",
+        description: "Переходим к общению с учителем",
+      });
+      
+      navigate(`/messages/${chatRoomId}`);
+    } catch (error: any) {
+      console.error('Failed to start chat:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось создать чат",
+        variant: "destructive",
+      });
+    }
+  };
   
   const getInitials = (name: string) => {
     return name
@@ -86,7 +133,7 @@ const TeacherProfilePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 md:self-start">
-                  <Button>
+                  <Button onClick={handleStartChat}>
                     <MessageSquare className="h-4 w-4 mr-2" />
                     {t('button.message')}
                   </Button>

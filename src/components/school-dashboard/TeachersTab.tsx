@@ -1,12 +1,62 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, MessageSquare, Search } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 const TeachersTab = () => {
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
+
+  const handleStartChat = async (teacherId: number) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему для отправки сообщений",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!profile || profile.role !== 'school') {
+      toast({
+        title: "Доступ ограничен",
+        description: "Только школы могут связаться с учителями",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create a mock teacher user ID based on teacher ID
+      const teacherUserId = `teacher_${teacherId}`;
+      const chatRoomId = await createChatRoom(teacherUserId);
+      
+      toast({
+        title: "Чат создан",
+        description: "Переходим к общению с учителем",
+      });
+      
+      navigate(`/messages/${chatRoomId}`);
+    } catch (error: any) {
+      console.error('Failed to start chat:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось создать чат",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -38,7 +88,7 @@ const TeachersTab = () => {
               подготовка к олимпиадам и ОРТ.
             </p>
             <div className="flex gap-2">
-              <Button size="sm">
+              <Button size="sm" onClick={() => handleStartChat(1)}>
                 <MessageSquare className="h-4 w-4 mr-1" />
                 Связаться
               </Button>
@@ -70,7 +120,7 @@ const TeachersTab = () => {
               экзаменам и олимпиадам, применяю интерактивные методики обучения.
             </p>
             <div className="flex gap-2">
-              <Button size="sm">
+              <Button size="sm" onClick={() => handleStartChat(2)}>
                 <MessageSquare className="h-4 w-4 mr-1" />
                 Связаться
               </Button>

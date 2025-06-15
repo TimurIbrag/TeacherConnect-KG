@@ -1,12 +1,15 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Navigation } from 'lucide-react';
+import { MapPin, Star, Eye, Navigation, MessageSquare } from 'lucide-react';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 interface TeacherCardProps {
   id: number;
@@ -32,6 +35,10 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
   distance,
 }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
   
   const getInitials = (name: string) => {
     return name
@@ -39,6 +46,50 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       .map(n => n[0])
       .join('')
       .toUpperCase();
+  };
+
+  const handleStartChat = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему для отправки сообщений",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!profile || profile.role !== 'school') {
+      toast({
+        title: "Доступ ограничен",
+        description: "Только школы могут связаться с учителями",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create a mock teacher user ID based on teacher ID
+      const teacherUserId = `teacher_${id}`;
+      const chatRoomId = await createChatRoom(teacherUserId);
+      
+      toast({
+        title: "Чат создан",
+        description: "Переходим к общению с учителем",
+      });
+      
+      navigate(`/messages/${chatRoomId}`);
+    } catch (error: any) {
+      console.error('Failed to start chat:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось создать чат",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -81,9 +132,15 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
             <span className="text-sm text-muted-foreground">{views}</span>
           </div>
         </div>
-        <Link to={`/teachers/${id}`}>
-          <Button size="sm">{t('teachers.viewProfile')}</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleStartChat}>
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Связаться
+          </Button>
+          <Link to={`/teachers/${id}`}>
+            <Button size="sm">{t('teachers.viewProfile')}</Button>
+          </Link>
+        </div>
       </CardFooter>
     </Card>
   );
