@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Chrome } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -64,9 +63,13 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
       variant="outline" 
       onClick={handleGoogleLogin} 
       disabled={isLoading}
-      className="w-full"
+      className="w-full flex items-center justify-center gap-3"
     >
-      <Chrome className="mr-2 h-4 w-4" />
+      <img 
+        src="/lovable-uploads/8241047f-6dfa-408d-b884-1d4865709b9c.png" 
+        alt="Google" 
+        className="w-5 h-5"
+      />
       Войти через Google
     </Button>
   );

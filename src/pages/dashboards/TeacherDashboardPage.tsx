@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ const TeacherDashboardPage = () => {
   const { t } = useLanguage();
   const { user, profile, updateProfile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { teacherProfile, loading: profileLoading, updateTeacherProfile } = useTeacherProfile();
   const { data: applications = [], isLoading: applicationsLoading } = useTeacherApplications();
   const { data: messages = [], isLoading: messagesLoading } = useUserMessages();
@@ -214,6 +216,22 @@ const TeacherDashboardPage = () => {
   const clearDraft = () => {
     localStorage.removeItem('teacher_profile_draft');
     setHasUnsavedChanges(false);
+  };
+
+  // Handle action buttons
+  const handleSearchVacancies = () => {
+    navigate('/schools');
+  };
+
+  const handleMessages = () => {
+    navigate('/messages');
+  };
+
+  const handleCertificates = () => {
+    toast({
+      title: 'Скоро будет доступно',
+      description: 'Функция сертификатов находится в разработке. Следите за обновлениями!',
+    });
   };
 
   if (profile?.role !== 'teacher') {
@@ -455,15 +473,30 @@ const TeacherDashboardPage = () => {
                 <CardTitle className="text-lg">Действия</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  size="sm"
+                  onClick={handleSearchVacancies}
+                >
                   <Search className="mr-2 h-4 w-4" />
                   Искать вакансии
                 </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  size="sm"
+                  onClick={handleMessages}
+                >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Сообщения
                 </Button>
-                <Button variant="outline" className="w-full justify-start" size="sm">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  size="sm"
+                  onClick={handleCertificates}
+                >
                   <Award className="mr-2 h-4 w-4" />
                   Сертификаты
                 </Button>
@@ -542,7 +575,7 @@ const TeacherDashboardPage = () => {
                     <p className="text-muted-foreground mb-4">
                       У вас пока нет откликов на вакансии
                     </p>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleSearchVacancies}>
                       <Search className="h-4 w-4 mr-2" />
                       Найти вакансии
                     </Button>

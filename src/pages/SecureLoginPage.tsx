@@ -27,7 +27,7 @@ const SecureLoginPage: React.FC = () => {
             <Separator className="w-full" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-backgroun px-2 text-muted-foreground">
               Или войдите через email
             </span>
           </div>
