@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -109,6 +108,7 @@ const TeacherDashboardPage = () => {
         education: data.education,
         experience_years: parseInt(data.experience) || 0,
         location: data.location,
+        locationDetails: data.locationDetails,
         bio: data.bio
       });
 
@@ -120,6 +120,7 @@ const TeacherDashboardPage = () => {
           education: data.education,
           experience: data.experience,
           location: data.location,
+          locationDetails: data.locationDetails,
           bio: data.bio,
           schedule: data.schedule,
           photoUrl: data.photoUrl,
@@ -262,6 +263,7 @@ const TeacherDashboardPage = () => {
     experience: draft?.experience || teacherProfile?.experience_years?.toString() || '',
     schedule: draft?.schedule || 'full-time',
     location: draft?.location || teacherProfile?.location || '',
+    locationDetails: draft?.locationDetails || '',
     bio: draft?.bio || teacherProfile?.bio || '',
     photoUrl: draft?.photoUrl || profile?.avatar_url || ''
   };

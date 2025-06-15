@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
@@ -14,7 +13,43 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle } from 'lucide-react';
 
-// Get published teachers from localStorage
+// Predefined subjects list
+const TEACHER_SUBJECTS = [
+  'Русский язык',
+  'Русская литература',
+  'Кыргызский язык',
+  'Кыргызская литература',
+  'Английский язык',
+  'Немецкий язык',
+  'Турецкий язык',
+  'Китайский язык',
+  'Математика',
+  'Алгебра и геометрия',
+  'Физика',
+  'Химия',
+  'Биология',
+  'География',
+  'История',
+  'Общественные и духовные дисциплины',
+  'Человек и общество',
+  'Основы религиозной культуры',
+  'Информатика',
+  'Труд / Технология',
+  'ИЗО (изобразительное искусство)',
+  'Музыка',
+  'Физическая культура',
+  'Предмет по выбору'
+];
+
+// Predefined districts list
+const DISTRICTS = [
+  'Ленинский район',
+  'Первомайский район',
+  'Октябрьский район',
+  'Свердловский район'
+];
+
+// Get published teachers from localStorage (removed default profile)
 const getPublishedTeachers = () => {
   try {
     const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
@@ -65,17 +100,17 @@ const TeachersPage = () => {
   const publishedLocalTeachers = getPublishedTeachers();
   const allTeachers = [...(teachers || []), ...publishedLocalTeachers];
 
-  // Filter teachers based on search criteria
+  // Filter teachers based on search criteria with proper subject and district matching
   const filteredTeachers = allTeachers?.filter(teacher => {
     const matchesSearch = !searchTerm || 
       teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSubject = !subjectFilter || 
-      teacher.specialization?.toLowerCase().includes(subjectFilter.toLowerCase());
+      teacher.specialization?.includes(subjectFilter);
     
     const matchesLocation = !locationFilter || 
-      teacher.location?.toLowerCase().includes(locationFilter.toLowerCase());
+      teacher.location?.includes(locationFilter);
 
     return matchesSearch && matchesSubject && matchesLocation;
   });
@@ -88,22 +123,13 @@ const TeachersPage = () => {
       vacancy.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSubject = !subjectFilter || 
-      vacancy.subject?.toLowerCase().includes(subjectFilter.toLowerCase());
+      vacancy.subject?.includes(subjectFilter);
     
     const matchesLocation = !locationFilter || 
-      vacancy.location?.toLowerCase().includes(locationFilter.toLowerCase());
+      vacancy.location?.includes(locationFilter);
 
     return matchesSearch && matchesSubject && matchesLocation;
   });
-
-  // Get unique subjects and locations for filters
-  const teacherSubjects = [...new Set(allTeachers?.map(t => t.specialization).filter(Boolean))];
-  const vacancySubjects = [...new Set(teacherVacancies?.map(v => v.subject).filter(Boolean))];
-  const subjects = [...new Set([...teacherSubjects, ...vacancySubjects])];
-  
-  const teacherLocations = [...new Set(allTeachers?.map(t => t.location).filter(Boolean))];
-  const vacancyLocations = [...new Set(teacherVacancies?.map(v => v.location).filter(Boolean))];
-  const locations = [...new Set([...teacherLocations, ...vacancyLocations])];
 
   const isLoading = teachersLoading || vacanciesLoading;
 
@@ -221,8 +247,8 @@ const TeachersPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Все предметы</SelectItem>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject || ''}>{subject}</SelectItem>
+              {TEACHER_SUBJECTS.map((subject) => (
+                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -231,9 +257,9 @@ const TeachersPage = () => {
               <SelectValue placeholder="Местоположение" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Все города</SelectItem>
-              {locations.map((location) => (
-                <SelectItem key={location} value={location || ''}>{location}</SelectItem>
+              <SelectItem value="">Все районы</SelectItem>
+              {DISTRICTS.map((district) => (
+                <SelectItem key={district} value={district}>{district}</SelectItem>
               ))}
             </SelectContent>
           </Select>

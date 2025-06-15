@@ -17,6 +17,7 @@ export interface ProfileData {
   experience: string;
   schedule: string;
   location: string;
+  locationDetails?: string;
   bio: string;
   photoUrl: string;
   additionalSpecialization?: string;
@@ -56,6 +57,13 @@ const TEACHER_SUBJECTS = [
   'Музыка',
   'Физическая культура',
   'Предмет по выбору'
+];
+
+const DISTRICTS = [
+  'Ленинский район',
+  'Первомайский район',
+  'Октябрьский район',
+  'Свердловский район'
 ];
 
 const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
@@ -244,17 +252,40 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             <Label htmlFor="location">
               {userType === 'teacher' ? 'Предпочитаемые районы' : 'Местоположение'}
             </Label>
-            <Input
-              id="location"
+            <Select
               value={formData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder={
-                userType === 'teacher'
-                  ? "Например: Центр, Восток-5, Джал"
-                  : "Например: г. Бишкек, ул. Советская 123"
-              }
-            />
+              onValueChange={(value) => handleInputChange('location', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите район" />
+              </SelectTrigger>
+              <SelectContent>
+                {DISTRICTS.map((district) => (
+                  <SelectItem key={district} value={district}>
+                    {district}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Additional Location Details */}
+          {userType === 'teacher' && (
+            <div className="space-y-2">
+              <Label htmlFor="locationDetails">
+                Дополнительная информация о местоположении
+              </Label>
+              <Input
+                id="locationDetails"
+                value={formData.locationDetails || ''}
+                onChange={(e) => handleInputChange('locationDetails', e.target.value)}
+                placeholder="Например: рядом с метро, центр района..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Дополн.ая информация о предпочитаемом районе (не отображается в фильтрах)
+              </p>
+            </div>
+          )}
 
           {/* Bio */}
           <div className="space-y-2">
