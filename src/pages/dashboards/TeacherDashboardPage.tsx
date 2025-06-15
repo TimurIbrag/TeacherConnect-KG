@@ -102,13 +102,12 @@ const TeacherDashboardPage = () => {
         avatar_url: data.photoUrl
       });
 
-      // Update teacher profile
+      // Update teacher profile (without locationDetails as it's not in the schema)
       await updateTeacherProfile({
         specialization: data.specialization,
         education: data.education,
         experience_years: parseInt(data.experience) || 0,
         location: data.location,
-        locationDetails: data.locationDetails,
         bio: data.bio
       });
 
@@ -120,7 +119,7 @@ const TeacherDashboardPage = () => {
           education: data.education,
           experience: data.experience,
           location: data.location,
-          locationDetails: data.locationDetails,
+          locationDetails: data.locationDetails, // Keep this for localStorage only
           bio: data.bio,
           schedule: data.schedule,
           photoUrl: data.photoUrl,
