@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -39,7 +38,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setImagePosition({ x: 0, y: 0 });
-      setImageScale(0.3); // Start with smaller scale to show full image
+      setImageScale(0.15); // Start with very small scale to show full image
       setImageRotation(0);
       setIsDragging(false);
       setImageLoaded(false);
@@ -57,13 +56,12 @@ const CropDialog: React.FC<CropDialogProps> = ({
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
       
-      // Calculate scale to fit the entire image within the crop circle
-      // We want the larger dimension to fit within the circle
+      // Calculate scale to fit the entire image within the crop circle with significant margin
       const maxDimension = Math.max(imgWidth, imgHeight);
-      const initialScale = (containerSize * 0.6) / maxDimension; // 0.6 to leave some margin
+      const initialScale = (containerSize * 0.4) / maxDimension; // 0.4 to show full image with margin
       
-      // Ensure we don't start too small or too large
-      const clampedScale = Math.max(0.1, Math.min(initialScale, 0.8));
+      // Ensure we don't start too small or too large, but prioritize showing full image
+      const clampedScale = Math.max(0.05, Math.min(initialScale, 0.5));
       
       console.log('Image dimensions:', imgWidth, 'x', imgHeight);
       console.log('Calculated initial scale:', clampedScale);
@@ -244,7 +242,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
             <Slider
               value={[imageScale]}
               onValueChange={handleScaleChange}
-              min={0.1}
+              min={0.05}
               max={3}
               step={0.05}
               className="w-full"
@@ -257,7 +255,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
               variant="outline" 
               size="sm" 
               onClick={handleZoomOut}
-              disabled={imageScale <= 0.1}
+              disabled={imageScale <= 0.05}
             >
               <ZoomOut className="h-4 w-4 mr-1" />
               −
