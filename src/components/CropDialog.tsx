@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useCallback } from 'react';
-import { Move, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Move, RotateCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import {
@@ -35,38 +35,39 @@ const CropDialog: React.FC<CropDialogProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cropContainerRef = useRef<HTMLDivElement>(null);
 
-  // Reset state when dialog opens
+  // Reset state when dialog opens and ensure full image is visible initially
   React.useEffect(() => {
     if (isOpen) {
       setImagePosition({ x: 0, y: 0 });
-      setImageScale(1);
+      setImageScale(0.5); // Start with smaller scale to show full image
       setImageRotation(0);
       setIsDragging(false);
       setImageLoaded(false);
     }
   }, [isOpen]);
 
-  // Handle image load to ensure it's ready for manipulation
+  // Handle image load - show full image without auto-fitting
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     if (imageRef.current) {
-      // Auto-fit the image initially
+      // Start with a scale that likely shows the full image
+      // Users can then zoom in as needed
       const img = imageRef.current;
       const containerSize = 300;
       const imgAspect = img.naturalWidth / img.naturalHeight;
       
-      // Calculate initial scale to fit the image in the container
-      let initialScale = 1;
+      // Calculate a scale that shows most/all of the image
+      let initialScale;
       if (imgAspect > 1) {
-        // Landscape - fit by height
-        initialScale = containerSize / img.naturalHeight;
+        // Landscape - scale based on width
+        initialScale = Math.min(containerSize / img.naturalWidth, 0.8);
       } else {
-        // Portrait or square - fit by width
-        initialScale = containerSize / img.naturalWidth;
+        // Portrait - scale based on height  
+        initialScale = Math.min(containerSize / img.naturalHeight, 0.8);
       }
       
-      // Ensure minimum scale for visibility
-      setImageScale(Math.max(0.5, Math.min(initialScale, 2)));
+      // Ensure we start with a reasonable scale (not too small, not too large)
+      setImageScale(Math.max(0.2, Math.min(initialScale, 1)));
     }
   }, []);
 
@@ -77,7 +78,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
     
     setImageScale(prev => {
       const newScale = prev + delta;
-      return Math.max(0.3, Math.min(4, newScale));
+      return Math.max(0.1, Math.min(5, newScale));
     });
   }, []);
 
@@ -106,18 +107,18 @@ const CropDialog: React.FC<CropDialogProps> = ({
     setIsDragging(false);
   }, []);
 
-  // Handle rotation (90 degrees at a time)
-  const handleRotation = useCallback(() => {
+  // Handle rotation (90 degrees clockwise)
+  const handleRotateRight = useCallback(() => {
     setImageRotation(prev => (prev + 90) % 360);
   }, []);
 
-  // Handle zoom controls
+  // Handle zoom controls with bigger increments
   const handleZoomIn = useCallback(() => {
-    setImageScale(prev => Math.min(4, prev + 0.2));
+    setImageScale(prev => Math.min(5, prev + 0.3));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setImageScale(prev => Math.max(0.3, prev - 0.2));
+    setImageScale(prev => Math.max(0.1, prev - 0.3));
   }, []);
 
   // Handle scale slider change
@@ -125,7 +126,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
     setImageScale(value[0]);
   }, []);
 
-  // Function to crop and save the image as circular
+  // Function to crop and save the image as circular with user's exact adjustments
   const handleCropImage = useCallback(() => {
     if (!imageRef.current || !canvasRef.current || !imageLoaded) return;
 
@@ -178,7 +179,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
     // Restore context
     ctx.restore();
     
-    // Convert canvas to blob and create file
+    // Convert canvas to blob and create file with higher quality
     canvas.toBlob((blob) => {
       if (blob) {
         const croppedFile = new File([blob], "profile_photo.jpg", {
@@ -186,7 +187,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
         });
         onCrop(croppedFile);
       }
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.95); // Higher quality
   }, [imagePosition, imageScale, imageRotation, onCrop, imageLoaded]);
 
   return (
@@ -233,7 +234,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
           
           <div className="text-sm text-muted-foreground text-center">
             <Move className="h-4 w-4 inline mr-1" />
-            Перетащите фото • Прокрутите для масштабирования
+            Кликните и перетащите • Прокрутите для масштабирования
           </div>
           
           {/* Zoom Slider */}
@@ -242,40 +243,40 @@ const CropDialog: React.FC<CropDialogProps> = ({
             <Slider
               value={[imageScale]}
               onValueChange={handleScaleChange}
-              min={0.3}
-              max={4}
+              min={0.1}
+              max={5}
               step={0.1}
               className="w-full"
             />
           </div>
           
-          {/* Control buttons */}
+          {/* Enhanced control buttons */}
           <div className="flex gap-2 justify-center flex-wrap">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleZoomOut}
-              disabled={imageScale <= 0.3}
+              disabled={imageScale <= 0.1}
             >
               <ZoomOut className="h-4 w-4 mr-1" />
-              Уменьшить
+              −
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleZoomIn}
-              disabled={imageScale >= 4}
+              disabled={imageScale >= 5}
             >
               <ZoomIn className="h-4 w-4 mr-1" />
-              Увеличить
+              +
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={handleRotation}
+              onClick={handleRotateRight}
             >
               <RotateCw className="h-4 w-4 mr-1" />
-              Повернуть
+              Повернуть ↻
             </Button>
           </div>
           

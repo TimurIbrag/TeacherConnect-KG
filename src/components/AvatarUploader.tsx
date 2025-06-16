@@ -1,8 +1,7 @@
 
 import React, { useState, ChangeEvent } from 'react';
-import { Camera, X, RotateCw } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import CropDialog from './CropDialog';
 import RemovePhotoDialog from './RemovePhotoDialog';
@@ -55,9 +54,15 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     }
     
     try {
+      // Show the full original image for editing
       const dataUrl = await readFileAsDataURL(file);
       setCroppingImageUrl(dataUrl);
       setShowCropDialog(true);
+      
+      toast({
+        title: "Фото загружено",
+        description: "Теперь настройте позицию и масштаб фотографии",
+      });
     } catch (error) {
       toast({
         title: "Ошибка загрузки",
@@ -68,7 +73,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
   };
   
   const handleCropComplete = (croppedFile: File) => {
-    // Create a temporary URL for preview
+    // Create a preview URL from the cropped file
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result && typeof event.target.result === 'string') {
@@ -77,15 +82,15 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
     };
     reader.readAsDataURL(croppedFile);
     
-    // Notify parent component with the cropped file
+    // Notify parent component with the final cropped file
     onImageChange(croppedFile);
     setShowCropDialog(false);
     
-    console.log("Photo cropped and ready:", croppedFile.name, croppedFile.size);
+    console.log("Photo edited and saved:", croppedFile.name, croppedFile.size);
     
     toast({
-      title: "Фото обновлено",
-      description: "Изменения сохранены в профиле",
+      title: "Фото сохранено",
+      description: "Отредактированное фото применено к профилю",
     });
   };
   
@@ -154,7 +159,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         <input 
           ref={inputRef}
           type="file" 
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif"
           className="hidden"
           onChange={handleImageChange}
         />
@@ -176,7 +181,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({
         </Button>
       )}
       
-      {/* Enhanced Image cropping dialog with circular crop area */}
+      {/* Enhanced Image editing dialog */}
       <CropDialog
         isOpen={showCropDialog}
         onClose={() => setShowCropDialog(false)}
