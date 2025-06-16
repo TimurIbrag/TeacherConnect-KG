@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -46,7 +45,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
     }
   }, [isOpen]);
 
-  // Handle image load - calculate proper initial scale to show full image
+  // Handle image load - show full image at a reasonable default size
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     if (imageRef.current) {
@@ -60,19 +59,29 @@ const CropDialog: React.FC<CropDialogProps> = ({
       console.log('Image natural dimensions:', imgWidth, 'x', imgHeight);
       console.log('Container size:', containerSize);
       
-      // Calculate scale to fit the ENTIRE image within the crop circle
-      // We want the larger dimension to fit completely within the circle with some padding
+      // Calculate scale to show the full image at a reasonable size
+      // We want the image to be large enough to see clearly but still fit in the crop area
       const maxDimension = Math.max(imgWidth, imgHeight);
       
-      // Use 80% of container size to ensure the full image fits with margin
-      const targetSize = containerSize * 0.8;
-      const initialScale = targetSize / maxDimension;
+      // Use a more generous scaling approach - aim for the image to fill most of the container
+      // but still be fully visible. For very large images, we'll scale them down appropriately.
+      let initialScale;
+      
+      if (maxDimension <= containerSize) {
+        // Small images: show at actual size or slightly larger
+        initialScale = 1;
+      } else if (maxDimension <= containerSize * 2) {
+        // Medium images: scale to fit nicely
+        initialScale = containerSize * 0.9 / maxDimension;
+      } else {
+        // Large images: scale to show full image but at reasonable size
+        initialScale = containerSize * 1.2 / maxDimension;
+      }
       
       console.log('Max dimension:', maxDimension);
-      console.log('Target size:', targetSize);
       console.log('Calculated initial scale:', initialScale);
       
-      // Set the calculated scale - no clamping to allow very small images to be fully visible
+      // Set the calculated scale
       setImageScale(initialScale);
     }
   }, []);
