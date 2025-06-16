@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -38,7 +39,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setImagePosition({ x: 0, y: 0 });
-      setImageScale(0.15); // Start with very small scale to show full image
+      setImageScale(1); // Start with scale 1, will be adjusted in handleImageLoad
       setImageRotation(0);
       setIsDragging(false);
       setImageLoaded(false);
@@ -56,17 +57,23 @@ const CropDialog: React.FC<CropDialogProps> = ({
       const imgWidth = img.naturalWidth;
       const imgHeight = img.naturalHeight;
       
-      // Calculate scale to fit the entire image within the crop circle with significant margin
+      console.log('Image natural dimensions:', imgWidth, 'x', imgHeight);
+      console.log('Container size:', containerSize);
+      
+      // Calculate scale to fit the ENTIRE image within the crop circle
+      // We want the larger dimension to fit completely within the circle with some padding
       const maxDimension = Math.max(imgWidth, imgHeight);
-      const initialScale = (containerSize * 0.4) / maxDimension; // 0.4 to show full image with margin
       
-      // Ensure we don't start too small or too large, but prioritize showing full image
-      const clampedScale = Math.max(0.05, Math.min(initialScale, 0.5));
+      // Use 80% of container size to ensure the full image fits with margin
+      const targetSize = containerSize * 0.8;
+      const initialScale = targetSize / maxDimension;
       
-      console.log('Image dimensions:', imgWidth, 'x', imgHeight);
-      console.log('Calculated initial scale:', clampedScale);
+      console.log('Max dimension:', maxDimension);
+      console.log('Target size:', targetSize);
+      console.log('Calculated initial scale:', initialScale);
       
-      setImageScale(clampedScale);
+      // Set the calculated scale - no clamping to allow very small images to be fully visible
+      setImageScale(initialScale);
     }
   }, []);
 
@@ -77,7 +84,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
     
     setImageScale(prev => {
       const newScale = prev + delta;
-      return Math.max(0.1, Math.min(5, newScale));
+      return Math.max(0.01, Math.min(5, newScale)); // Allow very small zoom
     });
   }, []);
 
@@ -117,7 +124,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setImageScale(prev => Math.max(0.1, prev - 0.2));
+    setImageScale(prev => Math.max(0.01, prev - 0.2)); // Allow very small zoom
   }, []);
 
   // Handle scale slider change
@@ -242,9 +249,9 @@ const CropDialog: React.FC<CropDialogProps> = ({
             <Slider
               value={[imageScale]}
               onValueChange={handleScaleChange}
-              min={0.05}
+              min={0.01}
               max={3}
-              step={0.05}
+              step={0.01}
               className="w-full"
             />
           </div>
@@ -255,7 +262,7 @@ const CropDialog: React.FC<CropDialogProps> = ({
               variant="outline" 
               size="sm" 
               onClick={handleZoomOut}
-              disabled={imageScale <= 0.05}
+              disabled={imageScale <= 0.01}
             >
               <ZoomOut className="h-4 w-4 mr-1" />
               −
