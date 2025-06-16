@@ -11,7 +11,7 @@ interface JobCardProps {
   title: string;
   schedule: string;
   salary: string;
-  requirements: string;
+  requirements: string[];
   additionalInfo?: string;
   schoolName: string;
   schoolId: number;
@@ -57,7 +57,11 @@ const JobCard: React.FC<JobCardProps> = ({
             <FileText className="w-4 h-4 text-primary mt-1" />
             <div>
               <p className="font-medium">Требования:</p>
-              <p className="text-sm">{requirements}</p>
+              <ul className="text-sm list-disc list-inside">
+                {requirements.map((req, index) => (
+                  <li key={index}>{req}</li>
+                ))}
+              </ul>
             </div>
           </div>
           
