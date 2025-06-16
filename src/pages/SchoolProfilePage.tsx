@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -188,7 +189,7 @@ const SchoolProfilePage: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-medium mb-3">Инфраструктура</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
-                      {school.facilities.map((facility, index) => (
+                      {school.facilities && school.facilities.map((facility, index) => (
                         <div key={index} className="flex items-center gap-2 p-2 rounded-md border">
                           <Check className="h-4 w-4 text-primary" />
                           <span>{facility}</span>
