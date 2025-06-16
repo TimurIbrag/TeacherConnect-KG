@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Save, X } from 'lucide-react';
-import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
+import AvatarUploader from '@/components/AvatarUploader';
 
 export interface ProfileData {
   name: string;
@@ -139,12 +139,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   };
 
-  const handleAvatarUploaded = (url: string) => {
-    handleInputChange('photoUrl', url);
-  };
-
-  const handleAvatarRemoved = () => {
-    handleInputChange('photoUrl', '');
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      // Create a preview URL from the file
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result && typeof event.target.result === 'string') {
+          handleInputChange('photoUrl', event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      handleInputChange('photoUrl', '');
+    }
   };
 
   return (
@@ -163,12 +170,13 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
           {/* Photo Upload Section */}
           <div className="space-y-2">
             <Label>Фото профиля</Label>
-            <EnhancedAvatarUploader
-              currentAvatarUrl={formData.photoUrl}
-              onAvatarUploaded={handleAvatarUploaded}
-              onAvatarRemoved={handleAvatarRemoved}
-              className="mx-auto"
-            />
+            <div className="flex justify-center">
+              <AvatarUploader
+                initialImageUrl={formData.photoUrl}
+                onImageChange={handleImageChange}
+                size="lg"
+              />
+            </div>
           </div>
 
           {/* Name */}
