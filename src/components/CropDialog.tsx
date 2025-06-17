@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -38,14 +39,14 @@ const CropDialog: React.FC<CropDialogProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setImagePosition({ x: 0, y: 0 });
-      setImageScale(1); // Start with scale 1, will be adjusted in handleImageLoad
+      setImageScale(1);
       setImageRotation(0);
       setIsDragging(false);
       setImageLoaded(false);
     }
   }, [isOpen]);
 
-  // Handle image load - show full image at a reasonable default size
+  // Handle image load - show full image fitting within the crop circle
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
     if (imageRef.current) {
@@ -59,26 +60,15 @@ const CropDialog: React.FC<CropDialogProps> = ({
       console.log('Image natural dimensions:', imgWidth, 'x', imgHeight);
       console.log('Container size:', containerSize);
       
-      // Calculate scale to show the full image at a reasonable size
-      // We want the image to be large enough to see clearly but still fit in the crop area
-      const maxDimension = Math.max(imgWidth, imgHeight);
+      // Calculate scale to fit the entire image within the crop circle
+      // We want to show the full image, so we scale based on the larger dimension
+      const scaleX = containerSize / imgWidth;
+      const scaleY = containerSize / imgHeight;
       
-      // Use a more generous scaling approach - aim for the image to fill most of the container
-      // but still be fully visible. For very large images, we'll scale them down appropriately.
-      let initialScale;
+      // Use the smaller scale to ensure the entire image fits
+      const initialScale = Math.min(scaleX, scaleY) * 0.8; // 0.8 for some padding
       
-      if (maxDimension <= containerSize) {
-        // Small images: show at actual size or slightly larger
-        initialScale = 1;
-      } else if (maxDimension <= containerSize * 2) {
-        // Medium images: scale to fit nicely
-        initialScale = containerSize * 0.9 / maxDimension;
-      } else {
-        // Large images: scale to show full image but at reasonable size
-        initialScale = containerSize * 1.2 / maxDimension;
-      }
-      
-      console.log('Max dimension:', maxDimension);
+      console.log('Scale X:', scaleX, 'Scale Y:', scaleY);
       console.log('Calculated initial scale:', initialScale);
       
       // Set the calculated scale
@@ -227,14 +217,12 @@ const CropDialog: React.FC<CropDialogProps> = ({
               alt="Crop preview" 
               className="absolute select-none pointer-events-auto"
               style={{
-                transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale}) rotate(${imageRotation}deg)`,
+                transform: `translate(calc(-50% + ${imagePosition.x}px), calc(-50% + ${imagePosition.y}px)) scale(${imageScale}) rotate(${imageRotation}deg)`,
                 transformOrigin: 'center center',
                 maxWidth: 'none',
                 maxHeight: 'none',
                 left: '50%',
-                top: '50%',
-                marginLeft: '-50%',
-                marginTop: '-50%'
+                top: '50%'
               }}
               onMouseDown={handleMouseDown}
               onLoad={handleImageLoad}
