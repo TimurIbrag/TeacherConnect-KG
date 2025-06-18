@@ -106,7 +106,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       category: formData.get('category') as string,
       about: formData.get('about') as string,
       website: formData.get('website') as string,
-      infrastructure: schoolData.infrastructure, // We'll handle this separately
+      infrastructure: schoolData.infrastructure,
       locationVerified: schoolData.locationVerified,
       coordinates: schoolData.coordinates
     };
@@ -149,6 +149,38 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
   const handleProfileVisibilityChange = (checked: boolean) => {
     setIsProfilePublic(checked);
     localStorage.setItem('schoolProfilePublic', JSON.stringify(checked));
+    
+    // Add school to published profiles list
+    if (checked && isProfileComplete) {
+      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      const schoolProfile = {
+        id: Date.now(), // Generate a unique ID
+        name: schoolData.name,
+        photo: profilePhoto || '/placeholder.svg',
+        address: schoolData.address,
+        type: schoolData.type,
+        specialization: schoolData.category,
+        openPositions: JSON.parse(localStorage.getItem('schoolVacancies') || '[]').filter((v: any) => v.status === 'active'),
+        ratings: 4.5, // Default rating
+        views: stats.profileViews,
+        housing: false, // Can be extended later
+        locationVerified: schoolData.locationVerified,
+        about: schoolData.about,
+        website: schoolData.website,
+        facilities: schoolData.infrastructure,
+        applications: stats.applications
+      };
+      
+      // Remove any existing profile for this school and add the new one
+      const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
+      updatedSchools.push(schoolProfile);
+      localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
+    } else if (!checked) {
+      // Remove school from published profiles
+      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
+      localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
+    }
     
     toast({
       title: checked ? "Профиль опубликован" : "Профиль скрыт",
@@ -304,15 +336,16 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
+              {/* Rectangular school photo */}
+              <div className="w-32 h-20 rounded-lg overflow-hidden border-2 border-muted-foreground/20">
                 {profilePhoto ? (
-                  <AvatarImage src={profilePhoto} alt={schoolData.name} />
+                  <img src={profilePhoto} alt={schoolData.name} className="w-full h-full object-cover" />
                 ) : (
-                  <AvatarFallback className="bg-muted">
-                    <Building className="h-10 w-10 text-muted-foreground" />
-                  </AvatarFallback>
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Building className="h-8 w-8 text-muted-foreground" />
+                  </div>
                 )}
-              </Avatar>
+              </div>
               <div>
                 <h3 className="text-lg font-medium">{schoolData.name || "Название школы не указано"}</h3>
                 {schoolData.address && (
@@ -459,11 +492,37 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
           
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div className="flex justify-center mb-4">
-              <AvatarUploader
-                initialImageUrl={profilePhoto || ''}
-                onImageChange={handleProfilePhotoChange}
-                size="lg"
-              />
+              <div className="space-y-2">
+                <Label>Главное фото школы</Label>
+                <div className="w-48 h-32 rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 relative">
+                  {profilePhoto ? (
+                    <>
+                      <img src={profilePhoto} alt="School" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setProfilePhoto(null)}
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      >
+                        ×
+                      </button>
+                    </>
+                  ) : (
+                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50">
+                      <Building className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground text-center px-2">Добавить фото школы</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleProfilePhotoChange(file);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
             </div>
             
             <div className="space-y-2">
