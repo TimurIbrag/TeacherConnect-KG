@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -103,7 +102,7 @@ const Footer: React.FC = () => {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                info@teacherconnect.kg
+                teacherconnectkg@gmail.com
               </p>
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Phone className="h-4 w-4" />
