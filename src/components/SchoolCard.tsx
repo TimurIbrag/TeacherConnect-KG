@@ -20,6 +20,7 @@ interface SchoolCardProps {
   housing?: boolean;
   distance?: number;
   locationVerified?: boolean;
+  city?: string;
 }
 
 const SchoolCard: React.FC<SchoolCardProps> = ({
@@ -35,6 +36,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   housing,
   distance,
   locationVerified = Math.random() > 0.3, // Mock verification status
+  city,
 }) => {
   const { t } = useLanguage();
 
@@ -63,6 +65,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         <div className="flex flex-wrap gap-2 mt-1">
           <Badge variant="outline">{type}</Badge>
           <Badge variant="secondary">{specialization}</Badge>
+          {city && <Badge variant="outline" className="text-xs">{city}</Badge>}
         </div>
         <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">

@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import AvatarUploader from '@/components/AvatarUploader';
@@ -31,6 +32,7 @@ const emptySchoolData = {
   address: '',
   type: 'Государственная',
   category: 'Общеобразовательная',
+  city: 'Бишкек',
   about: '',
   website: '',
   infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая'],
@@ -65,6 +67,42 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     const savedStats = localStorage.getItem('schoolProfileStats');
     return savedStats ? JSON.parse(savedStats) : emptyStats;
   });
+
+  const schoolTypes = [
+    'Государственная',
+    'Частная', 
+    'Международная',
+    'Специализированная'
+  ];
+
+  const cities = [
+    'Бишкек',
+    'Ош',
+    'Джалал-Абад',
+    'Каракол',
+    'Токмок',
+    'Кара-Балта',
+    'Балыкчы',
+    'Кызыл-Кия',
+    'Баткен',
+    'Нарын',
+    'Талас',
+    'Кант',
+    'Таш-Кумыр',
+    'Кочкор-Ата',
+    'Исфана',
+    'Сулюкта',
+    'Ноокат',
+    'Чолпон-Ата',
+    'Ат-Башы',
+    'Токтогул',
+    'Ала-Бука',
+    'Кемин',
+    'Таш-Короо',
+    'Уч-Коргон',
+    'Ак-Суу',
+    'Шопоков'
+  ];
 
   // Load profile photo and visibility setting from localStorage on component mount
   useEffect(() => {
@@ -104,6 +142,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       address: formData.get('address') as string,
       type: formData.get('type') as string,
       category: formData.get('category') as string,
+      city: formData.get('city') as string,
       about: formData.get('about') as string,
       website: formData.get('website') as string,
       infrastructure: schoolData.infrastructure,
@@ -159,6 +198,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
         photo: profilePhoto || '/placeholder.svg',
         address: schoolData.address,
         type: schoolData.type,
+        city: schoolData.city,
         specialization: schoolData.category,
         openPositions: JSON.parse(localStorage.getItem('schoolVacancies') || '[]').filter((v: any) => v.status === 'active'),
         ratings: 4.5, // Default rating
@@ -371,6 +411,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
                     )}
                   </div>
                 )}
+                {schoolData.city && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Город: {schoolData.city}
+                  </p>
+                )}
                 {schoolData.website && (
                   <a 
                     href={schoolData.website} 
@@ -535,10 +580,33 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
               <Input id="address" name="address" defaultValue={schoolData.address} required />
             </div>
             
+            <div className="space-y-2">
+              <Label htmlFor="city">Город</Label>
+              <Select name="city" defaultValue={schoolData.city}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите город" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="type">Тип школы</Label>
-                <Input id="type" name="type" defaultValue={schoolData.type} required />
+                <Select name="type" defaultValue={schoolData.type}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите тип школы" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schoolTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">

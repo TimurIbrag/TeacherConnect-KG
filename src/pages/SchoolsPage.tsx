@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, MapPin, Filter } from 'lucide-react';
+import { Search, MapPin, Filter, Building } from 'lucide-react';
 import SchoolCard from '@/components/SchoolCard';
 import { schoolsData } from '@/data/mockData';
 import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
@@ -17,6 +17,7 @@ const SchoolsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [publishedSchools, setPublishedSchools] = useState<any[]>([]);
 
   // Load published schools from localStorage
@@ -61,7 +62,8 @@ const SchoolsPage: React.FC = () => {
       ratings: 4.0,
       views: 0,
       housing: false,
-      locationVerified: false
+      locationVerified: false,
+      city: school.city || 'Бишкек' // Default city
     }))
   ];
 
@@ -79,13 +81,43 @@ const SchoolsPage: React.FC = () => {
     'Специализированная'
   ];
 
+  const cities = [
+    'Бишкек',
+    'Ош',
+    'Джалал-Абад',
+    'Каракол',
+    'Токмок',
+    'Кара-Балта',
+    'Балыкчы',
+    'Кызыл-Кия',
+    'Баткен',
+    'Нарын',
+    'Талас',
+    'Кант',
+    'Таш-Кумыр',
+    'Кочкор-Ата',
+    'Исфана',
+    'Сулюкта',
+    'Ноокат',
+    'Чолпон-Ата',
+    'Ат-Башы',
+    'Токтогул',
+    'Ала-Бука',
+    'Кемин',
+    'Таш-Короо',
+    'Уч-Коргон',
+    'Ак-Суу',
+    'Шопоков'
+  ];
+
   const filteredSchools = allSchools.filter(school => {
     const matchesSearch = school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          school.address.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDistrict = !selectedDistrict || school.address.includes(selectedDistrict);
     const matchesType = !selectedType || school.type === selectedType;
+    const matchesCity = !selectedCity || school.city === selectedCity || school.address.includes(selectedCity);
     
-    return matchesSearch && matchesDistrict && matchesType;
+    return matchesSearch && matchesDistrict && matchesType && matchesCity;
   });
 
   if (isLoading) {
@@ -123,6 +155,21 @@ const SchoolsPage: React.FC = () => {
           />
         </div>
         
+        <Select value={selectedCity} onValueChange={setSelectedCity}>
+          <SelectTrigger className="w-full md:w-48">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <SelectValue placeholder="Город" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Все города</SelectItem>
+            {cities.map(city => (
+              <SelectItem key={city} value={city}>{city}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
         <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
@@ -141,7 +188,7 @@ const SchoolsPage: React.FC = () => {
         <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
+              <Building className="h-4 w-4" />
               <SelectValue placeholder="Тип школы" />
             </div>
           </SelectTrigger>
@@ -155,8 +202,16 @@ const SchoolsPage: React.FC = () => {
       </div>
 
       {/* Active Filters */}
-      {(selectedDistrict || selectedType) && (
+      {(selectedDistrict || selectedType || selectedCity) && (
         <div className="flex flex-wrap gap-2 mb-6">
+          {selectedCity && (
+            <Badge variant="secondary" className="gap-1">
+              {selectedCity}
+              <button onClick={() => setSelectedCity('')} className="ml-1 hover:text-destructive">
+                ×
+              </button>
+            </Badge>
+          )}
           {selectedDistrict && (
             <Badge variant="secondary" className="gap-1">
               {selectedDistrict}
@@ -195,6 +250,7 @@ const SchoolsPage: React.FC = () => {
               setSearchTerm('');
               setSelectedDistrict('');
               setSelectedType('');
+              setSelectedCity('');
             }}
           >
             Сбросить фильтры
