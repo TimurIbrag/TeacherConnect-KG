@@ -149,19 +149,19 @@ const SchoolProfilePage: React.FC = () => {
     applications: 0,
     city: supabaseSchool.address?.split(',')[0] || 'Бишкек'
   } : {
-    id: school.id,
-    name: school.name,
-    photo: school.photo,
-    address: school.address,
-    type: school.type,
-    specialization: school.specialization,
-    ratings: school.ratings,
-    views: school.views,
-    housing: school.housing,
-    about: school.about,
-    facilities: school.facilities,
-    applications: school.applications,
-    city: school.address?.split(',')[0] || 'Бишкек'
+    id: mockSchool!.id,
+    name: mockSchool!.name,
+    photo: mockSchool!.photo,
+    address: mockSchool!.address,
+    type: mockSchool!.type,
+    specialization: mockSchool!.specialization,
+    ratings: mockSchool!.ratings,
+    views: mockSchool!.views,
+    housing: mockSchool!.housing,
+    about: mockSchool!.about,
+    facilities: mockSchool!.facilities,
+    applications: mockSchool!.applications,
+    city: mockSchool!.address?.split(',')[0] || 'Бишкек'
   };
   
   return (
