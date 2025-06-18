@@ -103,10 +103,12 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       <CardContent className="p-0">
         <div className="p-4">
           <div className="flex items-center gap-4">
+            {/* Main Avatar */}
             <Avatar className="h-16 w-16">
               <AvatarImage src={photo} alt={name} />
               <AvatarFallback>{getInitials(name)}</AvatarFallback>
             </Avatar>
+            
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
@@ -126,7 +128,8 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
                     )}
                   </div>
                 </div>
-                {/* Teacher's profile picture in top right corner */}
+                
+                {/* Top-right corner avatar */}
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={photo} alt={name} />
                   <AvatarFallback>{getInitials(name)}</AvatarFallback>

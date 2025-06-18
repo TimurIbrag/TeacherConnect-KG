@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
@@ -11,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle } from 'lucide-react';
+import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle, User } from 'lucide-react';
 
 // Predefined subjects list
 const TEACHER_SUBJECTS = [
@@ -49,7 +50,7 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
-// Get published teachers from localStorage (removed default profile)
+// Get published teachers from localStorage (only if actually published)
 const getPublishedTeachers = () => {
   try {
     const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
@@ -60,22 +61,25 @@ const getPublishedTeachers = () => {
       const currentUser = localStorage.getItem('user');
       const userData = currentUser ? JSON.parse(currentUser) : null;
       
-      return [{
-        id: 'local-teacher',
-        user_id: userData?.email || 'local-teacher-id',
-        profiles: {
-          full_name: profile.fullName,
-          avatar_url: profile.photoUrl
-        },
-        specialization: profile.specialization,
-        bio: profile.bio,
-        experience_years: parseInt(profile.experience) || 0,
-        location: profile.location,
-        education: profile.education,
-        skills: profile.skills || [],
-        languages: profile.languages || [],
-        verification_status: 'verified' as const
-      }];
+      // Only return if profile has meaningful data
+      if (profile.fullName && profile.specialization) {
+        return [{
+          id: 'local-teacher',
+          user_id: userData?.email || 'local-teacher-id',
+          profiles: {
+            full_name: profile.fullName,
+            avatar_url: profile.photoUrl
+          },
+          specialization: profile.specialization,
+          bio: profile.bio,
+          experience_years: parseInt(profile.experience) || 0,
+          location: profile.location,
+          education: profile.education,
+          skills: profile.skills || [],
+          languages: profile.languages || [],
+          verification_status: 'verified' as const
+        }];
+      }
     }
   } catch (error) {
     console.error('Error loading published teacher:', error);
@@ -100,7 +104,7 @@ const TeachersPage = () => {
   const publishedLocalTeachers = getPublishedTeachers();
   const allTeachers = [...(teachers || []), ...publishedLocalTeachers];
 
-  // Filter teachers based on search criteria with proper subject and district matching
+  // Filter teachers based on search criteria
   const filteredTeachers = allTeachers?.filter(teacher => {
     const matchesSearch = !searchTerm || 
       teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -161,6 +165,24 @@ const TeachersPage = () => {
     
     // Navigate to messages page with the specific chat room
     navigate(`/messages/${chatRoomId}`);
+  };
+
+  // Handle view teacher profile
+  const handleViewProfile = (teacher: any) => {
+    // For local teachers, we can navigate to a generic teacher profile
+    // For Supabase teachers, navigate to their specific profile
+    const teacherId = teacher.id === 'local-teacher' ? 1 : teacher.id;
+    navigate(`/teachers/${teacherId}`);
+  };
+
+  // Get teacher initials for avatar fallback
+  const getInitials = (name: string) => {
+    if (!name) return 'T';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
   };
 
   if (isLoading) {
@@ -296,102 +318,123 @@ const TeachersPage = () => {
             {filteredTeachers.map((teacher) => (
               <Card 
                 key={teacher.id} 
-                className="hover:shadow-lg transition-shadow"
+                className="hover:shadow-lg transition-shadow overflow-hidden"
               >
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {teacher.profiles?.full_name?.charAt(0) || 'T'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {teacher.profiles?.full_name || 'Имя не указано'}
-                      </CardTitle>
-                      <CardDescription>
-                        {teacher.specialization || 'Специализация не указана'}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {teacher.bio || 'Описание отсутствует'}
-                  </p>
-                  
-                  <div className="space-y-2">
-                    {teacher.experience_years && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Star className="h-4 w-4" />
-                        {teacher.experience_years} лет опыта
-                      </div>
-                    )}
-                    
-                    {teacher.location && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <MapPin className="h-4 w-4" />
-                        {teacher.location}
-                      </div>
-                    )}
-                    
-                    {teacher.education && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <BookOpen className="h-4 w-4" />
-                        {teacher.education}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Skills */}
-                  {teacher.skills && teacher.skills.length > 0 && (
-                    <div className="mt-4">
-                      <div className="flex flex-wrap gap-1">
-                        {teacher.skills.slice(0, 3).map((skill, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                        {teacher.skills.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{teacher.skills.length - 3}
-                          </Badge>
-                        )}
+                <CardContent className="p-0">
+                  <div className="p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Main Avatar */}
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {getInitials(teacher.profiles?.full_name || '')}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-lg font-medium">
+                              {teacher.profiles?.full_name || 'Имя не указано'}
+                            </h3>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              <Badge variant="secondary">
+                                {teacher.specialization || 'Специализация не указана'}
+                              </Badge>
+                              {teacher.experience_years && (
+                                <span className="text-sm text-muted-foreground">
+                                  {teacher.experience_years} лет опыта
+                                </span>
+                              )}
+                            </div>
+                            {teacher.location && (
+                              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                                <MapPin className="w-3 h-3" />
+                                <span>{teacher.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Top-right corner avatar */}
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
+                            <AvatarFallback>
+                              {getInitials(teacher.profiles?.full_name || '')}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                       </div>
                     </div>
-                  )}
 
-                  {/* Languages */}
-                  {teacher.languages && teacher.languages.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500">
-                        Языки: {teacher.languages.slice(0, 2).join(', ')}
-                        {teacher.languages.length > 2 && ` +${teacher.languages.length - 2}`}
+                    {/* Bio */}
+                    {teacher.bio && (
+                      <p className="text-gray-600 mt-4 line-clamp-3">
+                        {teacher.bio}
                       </p>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Verification Status */}
-                  <div className="mt-4 flex justify-between items-center">
-                    <Badge 
-                      variant={teacher.verification_status === 'verified' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {teacher.verification_status === 'verified' ? 'Подтвержден' : 'На проверке'}
-                    </Badge>
+                    {/* Skills */}
+                    {teacher.skills && teacher.skills.length > 0 && (
+                      <div className="mt-4">
+                        <div className="flex flex-wrap gap-1">
+                          {teacher.skills.slice(0, 3).map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {teacher.skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{teacher.skills.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Contact Button */}
-                    <Button
-                      size="sm"
-                      onClick={() => handleContactTeacher(teacher)}
-                      className="gap-2"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      Связаться
-                    </Button>
+                    {/* Languages */}
+                    {teacher.languages && teacher.languages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500">
+                          Языки: {teacher.languages.slice(0, 2).join(', ')}
+                          {teacher.languages.length > 2 && ` +${teacher.languages.length - 2}`}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
+
+                {/* Footer with stats and buttons */}
+                <div className="flex justify-between items-center border-t p-4 bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1" title="Rating">
+                      <Star className="w-4 h-4 text-accent fill-accent" />
+                      <span className="text-sm">5.0</span>
+                    </div>
+                    <div className="flex items-center gap-1" title="Profile views">
+                      <span className="text-sm text-muted-foreground">
+                        {teacher.verification_status === 'verified' ? 'Подтвержден' : 'На проверке'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleContactTeacher(teacher)}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-1" />
+                      Связаться
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewProfile(teacher)}
+                    >
+                      <User className="h-4 w-4 mr-1" />
+                      Профиль
+                    </Button>
+                  </div>
+                </div>
               </Card>
             ))}
           </div>
@@ -401,7 +444,7 @@ const TeachersPage = () => {
               Преподаватели не найдены
             </p>
             <p className="text-gray-400">
-              Попробуйте изменить параметры поиска
+              Попробуйте изменить параметры поиска или опубликуйте свой профиль
             </p>
           </div>
         )

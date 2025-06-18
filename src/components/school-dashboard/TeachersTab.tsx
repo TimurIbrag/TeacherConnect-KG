@@ -61,6 +61,14 @@ const TeachersTab = () => {
     navigate(`/teachers/${teacherId}`);
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -72,82 +80,120 @@ const TeachersTab = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-start justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback>РК</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-medium">Кенжеев Ринат</h3>
-                    <p className="text-xs text-muted-foreground">Учитель физики • 10 лет опыта</p>
-                  </div>
-                </div>
-                {/* Teacher's profile picture in top right corner */}
-                <Avatar className="h-10 w-10">
+        <Card className="overflow-hidden hover:shadow-md transition-shadow">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex items-center gap-4">
+                {/* Main Avatar */}
+                <Avatar className="h-16 w-16">
                   <AvatarFallback>РК</AvatarFallback>
                 </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Кенжеев Ринат</h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <Badge variant="secondary">Учитель физики</Badge>
+                        <span className="text-sm text-muted-foreground">10 лет опыта</span>
+                      </div>
+                    </div>
+                    
+                    {/* Top-right corner avatar */}
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback>РК</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
               </div>
+
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Badge variant="outline">Высшее образование</Badge>
+                <Badge variant="secondary">Кандидат наук</Badge>
+              </div>
+              
+              <p className="text-sm mt-3 line-clamp-2">
+                Преподаватель физики с большим стажем. Умею заинтересовать учеников предметом, 
+                подготовка к олимпиадам и ОРТ.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge variant="outline">Высшее образование</Badge>
-              <Badge variant="secondary">Кандидат наук</Badge>
-            </div>
-            <p className="text-sm mb-3 line-clamp-2">
-              Преподаватель физики с большим стажем. Умею заинтересовать учеников предметом, 
-              подготовка к олимпиадам и ОРТ.
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => handleStartChat(1)}>
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Связаться
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleViewProfile(1)}>
-                <User className="h-4 w-4 mr-1" />
-                Профиль
-              </Button>
+
+            {/* Footer with buttons */}
+            <div className="flex justify-between items-center border-t p-4 bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm">5.0</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleStartChat(1)}>
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Связаться
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleViewProfile(1)}>
+                  <User className="h-4 w-4 mr-1" />
+                  Профиль
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-start justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback>АИ</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-medium">Абдыкадырова Индира</h3>
-                    <p className="text-xs text-muted-foreground">Учитель истории • 8 лет опыта</p>
-                  </div>
-                </div>
-                {/* Teacher's profile picture in top right corner */}
-                <Avatar className="h-10 w-10">
+        <Card className="overflow-hidden hover:shadow-md transition-shadow">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex items-center gap-4">
+                {/* Main Avatar */}
+                <Avatar className="h-16 w-16">
                   <AvatarFallback>АИ</AvatarFallback>
                 </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium">Абдыкадырова Индира</h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <Badge variant="secondary">Учитель истории</Badge>
+                        <span className="text-sm text-muted-foreground">8 лет опыта</span>
+                      </div>
+                    </div>
+                    
+                    {/* Top-right corner avatar */}
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback>АИ</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
               </div>
+
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Badge variant="outline">Высшее образование</Badge>
+                <Badge variant="secondary">Магистр</Badge>
+              </div>
+              
+              <p className="text-sm mt-3 line-clamp-2">
+                Преподаватель истории и обществознания. Специализируюсь на подготовке к выпускным 
+                экзаменам и олимпиадам, применяю интерактивные методики обучения.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge variant="outline">Высшее образование</Badge>
-              <Badge variant="secondary">Магистр</Badge>
-            </div>
-            <p className="text-sm mb-3 line-clamp-2">
-              Преподаватель истории и обществознания. Специализируюсь на подготовке к выпускным 
-              экзаменам и олимпиадам, применяю интерактивные методики обучения.
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => handleStartChat(2)}>
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Связаться
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleViewProfile(2)}>
-                <User className="h-4 w-4 mr-1" />
-                Профиль
-              </Button>
+
+            {/* Footer with buttons */}
+            <div className="flex justify-between items-center border-t p-4 bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm">4.9</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => handleStartChat(2)}>
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Связаться
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleViewProfile(2)}>
+                  <User className="h-4 w-4 mr-1" />
+                  Профиль
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
