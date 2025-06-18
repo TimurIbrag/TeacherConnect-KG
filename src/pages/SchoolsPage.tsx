@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { useSupabaseData } from '@/hooks/useSupabaseData';
+import { useSchools } from '@/hooks/useSupabaseData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
 
 const SchoolsPage: React.FC = () => {
   const { t } = useLanguage();
-  const { data: supabaseSchools = [], isLoading } = useSupabaseData.useSchools();
+  const { data: supabaseSchools = [], isLoading } = useSchools();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedType, setSelectedType] = useState('');
