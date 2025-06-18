@@ -10,6 +10,8 @@ import { Search, MapPin, Filter, Building } from 'lucide-react';
 import SchoolCard from '@/components/SchoolCard';
 import { schoolsData } from '@/data/mockData';
 import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const SchoolsPage: React.FC = () => {
   const { t } = useLanguage();
@@ -19,6 +21,24 @@ const SchoolsPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [publishedSchools, setPublishedSchools] = useState<any[]>([]);
+
+  // Get all vacancies to count them per school
+  const { data: allVacancies = [] } = useQuery({
+    queryKey: ['all-active-vacancies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vacancies')
+        .select('school_id')
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error fetching vacancies:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+  });
 
   // Load published schools from localStorage
   useEffect(() => {
@@ -49,22 +69,35 @@ const SchoolsPage: React.FC = () => {
 
   // Combine mock data with published schools and Supabase data
   const allSchools = [
-    ...schoolsData,
-    ...publishedSchools,
-    ...supabaseSchools.map((school: any) => ({
-      id: school.id,
-      name: school.school_name || school.profiles?.full_name || 'School',
-      photo: '/placeholder.svg',
-      address: school.address || 'Address not provided',
-      type: school.school_type || 'Public',
-      specialization: school.description || 'General Education',
-      openPositions: [], // Would need to fetch actual vacancies
-      ratings: 4.0,
-      views: 0,
-      housing: false,
-      locationVerified: false,
-      city: school.city || 'Бишкек' // Default city
-    }))
+    ...schoolsData.map(school => ({
+      ...school,
+      openPositions: [], // Remove mock vacancies
+    })),
+    ...publishedSchools.map(school => ({
+      ...school,
+      openPositions: [], // Remove mock vacancies
+    })),
+    ...supabaseSchools.map((school: any) => {
+      const vacancyCount = allVacancies.filter(v => v.school_id === school.id).length;
+      
+      return {
+        id: school.id,
+        name: school.school_name || school.profiles?.full_name || 'School',
+        photo: school.photo_urls?.[0] || '/placeholder.svg',
+        address: school.address || 'Address not provided',
+        type: school.school_type || 'Государственная',
+        specialization: school.description || 'General Education',
+        openPositions: Array.from({ length: vacancyCount }, (_, i) => ({
+          id: i,
+          title: `Vacancy ${i + 1}`,
+        })),
+        ratings: 4.0,
+        views: 0,
+        housing: school.housing_provided || false,
+        locationVerified: school.location_verified || false,
+        city: school.city || 'Бишкек'
+      };
+    })
   ];
 
   const districts = [

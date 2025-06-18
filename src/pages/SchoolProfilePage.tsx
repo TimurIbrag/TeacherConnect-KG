@@ -4,6 +4,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { schoolsData } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+import { useSchool } from '@/hooks/useSupabaseData';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Card, 
   CardContent,
@@ -22,10 +25,12 @@ import {
   Building,
   Eye,
   Home,
-  Check
+  Check,
+  DollarSign,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import JobCard from '@/components/JobCard';
 import LocationMap from '@/components/LocationMap';
 
 const SchoolProfilePage: React.FC = () => {
@@ -33,26 +38,71 @@ const SchoolProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   
+  // Try to get school from Supabase first, then fallback to mock data
+  const { data: supabaseSchool, isLoading: isLoadingSupabase } = useSchool(id || '');
+  
+  // Get vacancies for this school
+  const { data: vacancies = [], isLoading: isLoadingVacancies } = useQuery({
+    queryKey: ['school-vacancies-public', id],
+    queryFn: async () => {
+      if (!id) return [];
+      
+      const { data, error } = await supabase
+        .from('vacancies')
+        .select(`
+          *,
+          school_profiles (
+            school_name,
+            address
+          )
+        `)
+        .eq('school_id', id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching vacancies:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
   const schoolId = Number(id);
-  const school = schoolsData.find(s => s.id === schoolId);
+  const mockSchool = schoolsData.find(s => s.id === schoolId);
   
-  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
+  // Use Supabase school if available, otherwise use mock data
+  const school = supabaseSchool || mockSchool;
   
-  const handleApplyToJob = (jobId: number) => {
-    if (appliedJobs.includes(jobId)) {
-      toast({
-        title: "Вы уже откликнулись на эту вакансию",
-        description: "Вы получите уведомление, когда школа рассмотрит вашу заявку",
-      });
-      return;
-    }
-    
-    setAppliedJobs([...appliedJobs, jobId]);
+  const handleApplyToVacancy = (vacancyId: string) => {
     toast({
       title: "Заявка отправлена!",
       description: "Ваш отклик на вакансию успешно отправлен",
     });
   };
+
+  const formatSalary = (min?: number, max?: number) => {
+    if (!min && !max) return 'Зарплата по договоренности';
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} сом`;
+    if (min) return `от ${min.toLocaleString()} сом`;
+    if (max) return `до ${max.toLocaleString()} сом`;
+    return 'Не указана';
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+  
+  if (isLoadingSupabase && !mockSchool) {
+    return (
+      <div className="container py-16 text-center">
+        <h1 className="text-2xl font-bold mb-4">Загрузка...</h1>
+      </div>
+    );
+  }
   
   if (!school) {
     return (
@@ -65,6 +115,22 @@ const SchoolProfilePage: React.FC = () => {
       </div>
     );
   }
+
+  // For Supabase schools, create a compatible format
+  const displaySchool = supabaseSchool ? {
+    id: supabaseSchool.id,
+    name: supabaseSchool.school_name || 'Школа',
+    photo: '/placeholder.svg',
+    address: supabaseSchool.address || 'Адрес не указан',
+    type: supabaseSchool.school_type || 'Государственная',
+    specialization: supabaseSchool.description || 'Общее образование',
+    ratings: 4.5,
+    views: 150,
+    housing: supabaseSchool.housing_provided || false,
+    about: supabaseSchool.description || 'Описание школы',
+    facilities: supabaseSchool.facilities || [],
+    applications: 0
+  } : school;
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -73,11 +139,11 @@ const SchoolProfilePage: React.FC = () => {
           <Card>
             <div className="relative h-48 w-full">
               <img 
-                src={school.photo} 
-                alt={school.name} 
+                src={displaySchool.photo} 
+                alt={displaySchool.name} 
                 className="h-full w-full object-cover rounded-t-lg" 
               />
-              {school.housing && (
+              {displaySchool.housing && (
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-accent text-white">
                     <Home className="h-3 w-3 mr-1" />
@@ -89,17 +155,17 @@ const SchoolProfilePage: React.FC = () => {
             <CardHeader>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <CardTitle className="text-2xl">{school.name}</CardTitle>
+                  <CardTitle className="text-2xl">{displaySchool.name}</CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-1">
                     <MapPin className="h-4 w-4" />
-                    <span>{school.address}</span>
+                    <span>{displaySchool.address}</span>
                   </CardDescription>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="outline">{school.type}</Badge>
-                    <Badge variant="secondary">{school.specialization}</Badge>
+                    <Badge variant="outline">{displaySchool.type}</Badge>
+                    <Badge variant="secondary">{displaySchool.specialization}</Badge>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                      <span>{school.ratings}</span>
+                      <span>{displaySchool.ratings}</span>
                     </div>
                   </div>
                 </div>
@@ -118,7 +184,7 @@ const SchoolProfilePage: React.FC = () => {
                   <TabsTrigger value="vacancies">
                     Вакансии
                     <Badge className="ml-2 bg-primary text-primary-foreground" variant="default">
-                      {school.openPositions.length}
+                      {vacancies.length}
                     </Badge>
                   </TabsTrigger>
                   <TabsTrigger value="facilities">Инфраструктура</TabsTrigger>
@@ -127,7 +193,7 @@ const SchoolProfilePage: React.FC = () => {
                 <TabsContent value="about" className="space-y-6">
                   <div>
                     <h3 className="text-lg font-medium mb-2">О школе</h3>
-                    <p className="text-muted-foreground">{school.about}</p>
+                    <p className="text-muted-foreground">{displaySchool.about}</p>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,7 +201,7 @@ const SchoolProfilePage: React.FC = () => {
                       <h3 className="text-lg font-medium mb-3">Тип</h3>
                       <div className="flex items-start gap-2">
                         <Building className="h-5 w-5 text-primary mt-0.5" />
-                        <span>{school.type}</span>
+                        <span>{displaySchool.type}</span>
                       </div>
                     </div>
                     
@@ -143,53 +209,129 @@ const SchoolProfilePage: React.FC = () => {
                       <h3 className="text-lg font-medium mb-3">Специализация</h3>
                       <div className="flex items-start gap-2">
                         <Briefcase className="h-5 w-5 text-primary mt-0.5" />
-                        <span>{school.specialization}</span>
+                        <span>{displaySchool.specialization}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div>
                     <h3 className="text-lg font-medium mb-3">Местоположение</h3>
-                    <LocationMap address={school.address} />
+                    <LocationMap address={displaySchool.address} />
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="vacancies" className="space-y-6">
                   <div>
                     <h3 className="text-lg font-medium mb-4">Открытые вакансии</h3>
-                    <div className="space-y-4">
-                      {school.openPositions.map((job) => (
-                        <JobCard
-                          key={job.id}
-                          id={job.id}
-                          title={job.title}
-                          schedule={job.schedule}
-                          salary={job.salary}
-                          requirements={job.requirements}
-                          additionalInfo={job.additionalInfo}
-                          schoolName={school.name}
-                          schoolId={school.id}
-                          onApply={() => handleApplyToJob(job.id)}
-                        />
-                      ))}
-                    </div>
+                    {isLoadingVacancies ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Загрузка вакансий...</p>
+                      </div>
+                    ) : vacancies.length > 0 ? (
+                      <div className="space-y-4">
+                        {vacancies.map((vacancy) => (
+                          <Card key={vacancy.id} className="hover:shadow-md transition-shadow">
+                            <CardHeader>
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <CardTitle className="text-lg">{vacancy.title}</CardTitle>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {displaySchool.name}
+                                  </p>
+                                </div>
+                                <Badge className="bg-primary text-primary-foreground">
+                                  {vacancy.employment_type === 'full-time' ? 'Полный день' : 
+                                   vacancy.employment_type === 'part-time' ? 'Частичная занятость' :
+                                   vacancy.employment_type === 'contract' ? 'Контракт' : 'Временная'}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            
+                            <CardContent className="space-y-4">
+                              {vacancy.description && (
+                                <p className="text-sm text-gray-600">{vacancy.description}</p>
+                              )}
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                  <span>{formatSalary(vacancy.salary_min, vacancy.salary_max)}</span>
+                                </div>
+                                
+                                {vacancy.location && (
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <span>{vacancy.location}</span>
+                                  </div>
+                                )}
+                                
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <span>{vacancy.employment_type === 'full-time' ? 'Полный день' : 
+                                         vacancy.employment_type === 'part-time' ? 'Частичная занятость' :
+                                         vacancy.employment_type === 'contract' ? 'Контракт' : 'Временная'}</span>
+                                </div>
+                                
+                                {vacancy.application_deadline && (
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <span>До {formatDate(vacancy.application_deadline)}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {vacancy.requirements && vacancy.requirements.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium text-sm mb-2">Требования:</h4>
+                                  <ul className="text-sm list-disc list-inside space-y-1">
+                                    {vacancy.requirements.map((req, index) => (
+                                      <li key={index}>{req}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {vacancy.benefits && vacancy.benefits.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium text-sm mb-2">Дополнительно:</h4>
+                                  <div className="flex flex-wrap gap-1">
+                                    {vacancy.benefits.map((benefit, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs">
+                                        {benefit}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                            
+                            <CardFooter className="flex justify-between items-center border-t pt-4">
+                              <Button size="sm" variant="outline" asChild>
+                                <Link to={`/schools/${id}`}>Подробнее о школе</Link>
+                              </Button>
+                              <Button size="sm" onClick={() => handleApplyToVacancy(vacancy.id)}>
+                                Откликнуться
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <h3 className="text-lg font-medium mb-2">Нет открытых вакансий</h3>
+                        <p className="text-muted-foreground">
+                          В настоящее время школа не разместила открытых вакансий.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  
-                  {school.openPositions.length === 0 && (
-                    <div className="text-center py-8">
-                      <h3 className="text-lg font-medium mb-2">Нет открытых вакансий</h3>
-                      <p className="text-muted-foreground">
-                        В настоящее время школа не разместила открытых вакансий.
-                      </p>
-                    </div>
-                  )}
                 </TabsContent>
                 
                 <TabsContent value="facilities" className="space-y-6">
                   <div>
                     <h3 className="text-lg font-medium mb-3">Инфраструктура</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
-                      {school.facilities && school.facilities.map((facility, index) => (
+                      {displaySchool.facilities && displaySchool.facilities.map((facility, index) => (
                         <div key={index} className="flex items-center gap-2 p-2 rounded-md border">
                           <Check className="h-4 w-4 text-primary" />
                           <span>{facility}</span>
@@ -198,7 +340,7 @@ const SchoolProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {school.housing && (
+                  {displaySchool.housing && (
                     <div>
                       <h3 className="text-lg font-medium mb-3">Дополнительные преимущества</h3>
                       <div className="flex items-center gap-2 p-3 rounded-md border border-accent/30 bg-accent/5">
@@ -223,22 +365,22 @@ const SchoolProfilePage: React.FC = () => {
                 <span className="text-muted-foreground">Просмотры профиля:</span>
                 <div className="flex items-center">
                   <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
-                  <span className="font-medium">{school.views}</span>
+                  <span className="font-medium">{displaySchool.views}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Количество вакансий:</span>
-                <span className="font-medium">{school.openPositions.length}</span>
+                <span className="font-medium">{vacancies.length}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Откликов получено:</span>
-                <span className="font-medium">{school.applications}</span>
+                <span className="font-medium">{displaySchool.applications || 0}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Рейтинг:</span>
                 <div className="flex items-center">
                   <Star className="h-4 w-4 mr-1 text-accent fill-accent" />
-                  <span className="font-medium">{school.ratings}</span>
+                  <span className="font-medium">{displaySchool.ratings}</span>
                 </div>
               </div>
             </CardContent>
@@ -251,7 +393,7 @@ const SchoolProfilePage: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {schoolsData
-                  .filter(s => s.id !== schoolId && s.type === school.type)
+                  .filter(s => s.id !== schoolId && s.type === displaySchool.type)
                   .slice(0, 3)
                   .map(similarSchool => (
                     <div key={similarSchool.id} className="flex flex-col gap-2">
