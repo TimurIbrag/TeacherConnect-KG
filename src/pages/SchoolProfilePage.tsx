@@ -33,6 +33,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LocationMap from '@/components/LocationMap';
 
+// Unified interface for displaying school data
+interface DisplaySchool {
+  id: string | number;
+  name: string;
+  photo: string;
+  address: string;
+  type: string;
+  specialization: string;
+  ratings: number;
+  views: number;
+  housing: boolean;
+  about: string;
+  facilities: string[];
+  applications: number;
+  city?: string;
+}
+
 const SchoolProfilePage: React.FC = () => {
   const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
@@ -116,11 +133,11 @@ const SchoolProfilePage: React.FC = () => {
     );
   }
 
-  // For Supabase schools, create a compatible format
-  const displaySchool = supabaseSchool ? {
+  // Convert school data to unified display format
+  const displaySchool: DisplaySchool = supabaseSchool ? {
     id: supabaseSchool.id,
     name: supabaseSchool.school_name || 'Школа',
-    photo: '/placeholder.svg',
+    photo: supabaseSchool.photo_urls?.[0] || '/placeholder.svg',
     address: supabaseSchool.address || 'Адрес не указан',
     type: supabaseSchool.school_type || 'Государственная',
     specialization: supabaseSchool.description || 'Общее образование',
@@ -129,8 +146,23 @@ const SchoolProfilePage: React.FC = () => {
     housing: supabaseSchool.housing_provided || false,
     about: supabaseSchool.description || 'Описание школы',
     facilities: supabaseSchool.facilities || [],
-    applications: 0
-  } : school;
+    applications: 0,
+    city: supabaseSchool.address?.split(',')[0] || 'Бишкек'
+  } : {
+    id: school.id,
+    name: school.name,
+    photo: school.photo,
+    address: school.address,
+    type: school.type,
+    specialization: school.specialization,
+    ratings: school.ratings,
+    views: school.views,
+    housing: school.housing,
+    about: school.about,
+    facilities: school.facilities,
+    applications: school.applications,
+    city: school.address?.split(',')[0] || 'Бишкек'
+  };
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
