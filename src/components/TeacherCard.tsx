@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Navigation, MessageSquare } from 'lucide-react';
+import { MapPin, Star, Eye, Navigation, MessageSquare, User } from 'lucide-react';
 import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 interface TeacherCardProps {
@@ -92,6 +92,12 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
     }
   };
 
+  const handleViewProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/teachers/${id}`);
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-0">
@@ -101,21 +107,30 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
               <AvatarImage src={photo} alt={name} />
               <AvatarFallback>{getInitials(name)}</AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="text-lg font-medium">{name}</h3>
-              <div className="flex flex-wrap gap-2 mt-1">
-                <Badge variant="secondary">{specialization}</Badge>
-                <span className="text-sm text-muted-foreground">{experience}</span>
-              </div>
-              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                <MapPin className="w-3 h-3" />
-                <span>{location}</span>
-                {distance !== undefined && (
-                  <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
-                    <Navigation className="w-3 h-3" />
-                    {distance} км
-                  </Badge>
-                )}
+            <div className="flex-1">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">{name}</h3>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="secondary">{specialization}</Badge>
+                    <span className="text-sm text-muted-foreground">{experience}</span>
+                  </div>
+                  <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    <span>{location}</span>
+                    {distance !== undefined && (
+                      <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
+                        <Navigation className="w-3 h-3" />
+                        {distance} км
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {/* Teacher's profile picture in top right corner */}
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={photo} alt={name} />
+                  <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                </Avatar>
               </div>
             </div>
           </div>
@@ -137,9 +152,10 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
             <MessageSquare className="h-4 w-4 mr-1" />
             Связаться
           </Button>
-          <Link to={`/teachers/${id}`}>
-            <Button size="sm">{t('teachers.viewProfile')}</Button>
-          </Link>
+          <Button variant="outline" size="sm" onClick={handleViewProfile}>
+            <User className="h-4 w-4 mr-1" />
+            Профиль
+          </Button>
         </div>
       </CardFooter>
     </Card>
