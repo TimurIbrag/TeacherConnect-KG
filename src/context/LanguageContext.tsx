@@ -26,6 +26,7 @@ const translations = {
     'nav.login': 'Войти',
     'nav.register': 'Регистрация',
     'nav.logout': 'Выйти',
+    'nav.about': 'О нас',
     
     // Common
     'common.save': 'Сохранить',
@@ -124,6 +125,8 @@ const translations = {
     'auth.userType': 'Тип пользователя',
     'auth.teacher': 'Учитель',
     'auth.school': 'Школа',
+    'auth.email': 'Email',
+    'auth.submit': 'Войти',
     
     // Dashboard
     'dashboard.profile': 'Профиль',
@@ -169,6 +172,7 @@ const translations = {
     'nav.login': 'Login',
     'nav.register': 'Register',
     'nav.logout': 'Logout',
+    'nav.about': 'About',
     
     // Common
     'common.save': 'Save',
@@ -267,6 +271,8 @@ const translations = {
     'auth.userType': 'User Type',
     'auth.teacher': 'Teacher',
     'auth.school': 'School',
+    'auth.email': 'Email',
+    'auth.submit': 'Login',
     
     // Dashboard
     'dashboard.profile': 'Profile',
@@ -312,6 +318,7 @@ const translations = {
     'nav.login': 'Кирүү',
     'nav.register': 'Катталуу',
     'nav.logout': 'Чыгуу',
+    'nav.about': 'Биз жөнүндө',
     
     // Common
     'common.save': 'Сактоо',
@@ -410,6 +417,8 @@ const translations = {
     'auth.userType': 'Колдонуучу түрү',
     'auth.teacher': 'Мугалим',
     'auth.school': 'Мектеп',
+    'auth.email': 'Электрондук почта',
+    'auth.submit': 'Кирүү',
     
     // Dashboard
     'dashboard.profile': 'Профиль',
