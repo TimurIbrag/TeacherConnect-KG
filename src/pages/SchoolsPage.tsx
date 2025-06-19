@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSchools } from '@/hooks/useSupabaseData';
@@ -84,9 +83,10 @@ const SchoolsPage: React.FC = () => {
 
   // Combine mock data with published schools and Supabase data
   const allSchools = [
-    // Mock schools (original seed data)
+    // Mock schools (original seed data) - add city property
     ...schoolsData.map(school => ({
       ...school,
+      city: 'Бишкек', // Add default city for mock schools
       openPositions: [], // Remove mock vacancies
     })),
     // Published schools from dashboard (localStorage)
@@ -96,7 +96,7 @@ const SchoolsPage: React.FC = () => {
       photo: school.photo,
       address: school.address,
       type: school.type,
-      city: school.city,
+      city: school.city || 'Бишкек', // Ensure city is always present
       specialization: school.specialization,
       openPositions: school.openPositions || [],
       ratings: school.ratings || 4.5,
