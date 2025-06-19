@@ -40,43 +40,72 @@ const SchoolsPage: React.FC = () => {
     },
   });
 
-  // Load published schools from localStorage
+  // Load published schools from localStorage and listen for changes
   useEffect(() => {
     const loadPublishedSchools = () => {
-      const published = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-      setPublishedSchools(published);
+      try {
+        const published = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+        console.log('Loaded published schools:', published);
+        setPublishedSchools(published);
+      } catch (error) {
+        console.error('Error loading published schools:', error);
+        setPublishedSchools([]);
+      }
     };
 
+    // Initial load
     loadPublishedSchools();
     
     // Listen for storage changes to update when schools are published/unpublished
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'publishedSchools') {
+        console.log('Storage changed for publishedSchools');
         loadPublishedSchools();
       }
     };
 
+    // Listen for custom events triggered by the dashboard
+    const handleCustomStorageChange = () => {
+      loadPublishedSchools();
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storage', handleCustomStorageChange);
     
-    // Also listen for direct changes in the same window
-    const intervalId = setInterval(loadPublishedSchools, 1000);
+    // Also poll for changes every 2 seconds to ensure we catch updates
+    const intervalId = setInterval(loadPublishedSchools, 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storage', handleCustomStorageChange);
       clearInterval(intervalId);
     };
   }, []);
 
   // Combine mock data with published schools and Supabase data
   const allSchools = [
+    // Mock schools (original seed data)
     ...schoolsData.map(school => ({
       ...school,
       openPositions: [], // Remove mock vacancies
     })),
+    // Published schools from dashboard (localStorage)
     ...publishedSchools.map(school => ({
-      ...school,
-      openPositions: [], // Remove mock vacancies
+      id: school.id,
+      name: school.name,
+      photo: school.photo,
+      address: school.address,
+      type: school.type,
+      city: school.city,
+      specialization: school.specialization,
+      openPositions: school.openPositions || [],
+      ratings: school.ratings || 4.5,
+      views: school.views || 0,
+      housing: school.housing || false,
+      locationVerified: school.locationVerified || false,
+      distance: school.distance
     })),
+    // Supabase schools
     ...supabaseSchools.map((school: any) => {
       const vacancyCount = allVacancies.filter(v => v.school_id === school.id).length;
       

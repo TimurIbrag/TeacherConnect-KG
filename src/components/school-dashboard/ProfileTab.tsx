@@ -131,6 +131,35 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     localStorage.setItem('schoolProfileStats', JSON.stringify(updatedStats));
   }, [isProfilePublic]);
   
+  // Function to create a school profile object for publishing
+  const createPublishedSchoolProfile = () => {
+    const currentVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
+    const activeVacancies = currentVacancies.filter((v: any) => v.status === 'active');
+    
+    return {
+      id: Date.now(), // Generate a unique ID based on timestamp
+      name: schoolData.name,
+      photo: profilePhoto || '/placeholder.svg',
+      address: schoolData.address,
+      type: schoolData.type,
+      city: schoolData.city,
+      specialization: schoolData.category,
+      openPositions: activeVacancies.map((v: any, index: number) => ({
+        id: index,
+        title: v.title || 'Вакансия',
+      })),
+      ratings: 4.5, // Default rating
+      views: Math.floor(Math.random() * 200) + 50, // Random views between 50-250
+      housing: false, // Can be extended later
+      locationVerified: schoolData.locationVerified,
+      about: schoolData.about,
+      website: schoolData.website,
+      facilities: schoolData.infrastructure,
+      applications: stats.applications,
+      distance: undefined // Will be calculated if needed
+    };
+  };
+  
   // Handler for updating profile data
   const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -157,6 +186,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     // Save photo separately
     if (profilePhoto) {
       localStorage.setItem('schoolProfilePhoto', profilePhoto);
+    }
+    
+    // Update published profile if it's currently public
+    if (isProfilePublic) {
+      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
+      const newProfile = createPublishedSchoolProfile();
+      updatedSchools.push(newProfile);
+      localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
     }
     
     setEditMode(false);
@@ -192,34 +230,31 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     // Add school to published profiles list
     if (checked && isProfileComplete) {
       const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-      const schoolProfile = {
-        id: Date.now(), // Generate a unique ID
-        name: schoolData.name,
-        photo: profilePhoto || '/placeholder.svg',
-        address: schoolData.address,
-        type: schoolData.type,
-        city: schoolData.city,
-        specialization: schoolData.category,
-        openPositions: JSON.parse(localStorage.getItem('schoolVacancies') || '[]').filter((v: any) => v.status === 'active'),
-        ratings: 4.5, // Default rating
-        views: stats.profileViews,
-        housing: false, // Can be extended later
-        locationVerified: schoolData.locationVerified,
-        about: schoolData.about,
-        website: schoolData.website,
-        facilities: schoolData.infrastructure,
-        applications: stats.applications
-      };
+      const schoolProfile = createPublishedSchoolProfile();
       
       // Remove any existing profile for this school and add the new one
       const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
       updatedSchools.push(schoolProfile);
       localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
+      
+      // Trigger a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'publishedSchools',
+        newValue: JSON.stringify(updatedSchools),
+        oldValue: JSON.stringify(publishedSchools)
+      }));
     } else if (!checked) {
       // Remove school from published profiles
       const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
       const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
       localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
+      
+      // Trigger a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'publishedSchools',
+        newValue: JSON.stringify(updatedSchools),
+        oldValue: JSON.stringify(publishedSchools)
+      }));
     }
     
     toast({

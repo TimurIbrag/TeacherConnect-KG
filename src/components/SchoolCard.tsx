@@ -61,7 +61,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         </div>
       </div>
       <CardContent className="p-4">
-        <h3 className="text-lg font-medium">{name}</h3>
+        <h3 className="text-lg font-medium mb-2">{name}</h3>
         <div className="flex flex-wrap gap-2 mt-1">
           <Badge variant="outline">{type}</Badge>
           <Badge variant="secondary">{specialization}</Badge>
@@ -70,9 +70,9 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            <span>{address}</span>
+            <span className="truncate">{address}</span>
             {locationVerified && (
-              <CheckCircle className="w-3 h-3 text-green-600" />
+              <CheckCircle className="w-3 h-3 text-green-600 ml-1" />
             )}
           </div>
           {distance !== undefined && (
@@ -103,7 +103,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
           </div>
         </div>
         <Link to={`/schools/${id}`}>
-          <Button size="sm">{t('schools.viewJobs')}</Button>
+          <Button size="sm">Смотреть профиль</Button>
         </Link>
       </CardFooter>
     </Card>
