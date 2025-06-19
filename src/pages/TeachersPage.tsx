@@ -100,9 +100,19 @@ const TeachersPage = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
 
-  // Combine Supabase teachers with published local teachers
+  // Combine Supabase teachers with published local teachers (no duplicates)
   const publishedLocalTeachers = getPublishedTeachers();
-  const allTeachers = [...(teachers || []), ...publishedLocalTeachers];
+  const supabaseTeachers = teachers || [];
+  
+  // Remove duplicates by checking if local teacher already exists in Supabase
+  const allTeachers = [
+    ...supabaseTeachers,
+    ...publishedLocalTeachers.filter(localTeacher => 
+      !supabaseTeachers.some(supabaseTeacher => 
+        supabaseTeacher.profiles?.full_name === localTeacher.profiles?.full_name
+      )
+    )
+  ];
 
   // Filter teachers based on search criteria
   const filteredTeachers = allTeachers?.filter(teacher => {
@@ -169,9 +179,8 @@ const TeachersPage = () => {
 
   // Handle view teacher profile
   const handleViewProfile = (teacher: any) => {
-    // For local teachers, we can navigate to a generic teacher profile
-    // For Supabase teachers, navigate to their specific profile
-    const teacherId = teacher.id === 'local-teacher' ? 1 : teacher.id;
+    // Navigate to the teacher profile with the correct ID
+    const teacherId = teacher.id;
     navigate(`/teachers/${teacherId}`);
   };
 

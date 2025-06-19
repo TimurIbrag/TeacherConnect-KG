@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTeacher } from '@/hooks/useSupabaseData';
 import { teachersData } from '@/data/mockData';
 import { 
   Card, 
@@ -39,9 +41,78 @@ const TeacherProfilePage: React.FC = () => {
   const { toast } = useToast();
   const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
   
-  // Find teacher by ID
-  const teacherId = Number(id);
-  const teacher = teachersData.find(t => t.id === teacherId);
+  const teacherId = id || '';
+  
+  // Try to get teacher from Supabase first
+  const { data: supabaseTeacher, isLoading: isLoadingSupabase } = useTeacher(teacherId);
+  
+  // Get published teacher from localStorage
+  const getPublishedTeacher = () => {
+    try {
+      const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
+      const profileData = localStorage.getItem('teacherProfileData');
+      
+      if (isPublished && profileData && teacherId === 'local-teacher') {
+        const profile = JSON.parse(profileData);
+        const currentUser = localStorage.getItem('user');
+        const userData = currentUser ? JSON.parse(currentUser) : null;
+        
+        return {
+          id: 'local-teacher',
+          name: profile.fullName,
+          photo: profile.photoUrl || '/placeholder.svg',
+          specialization: profile.specialization,
+          experience: profile.experience + ' лет',
+          location: profile.location,
+          ratings: 5.0,
+          views: 0,
+          about: profile.bio,
+          education: profile.education,
+          languages: profile.languages || ['Кыргызский', 'Русский'],
+          achievements: 'Опубликованный профиль',
+          preferredSchedule: 'Полный день',
+          desiredSalary: '25,000 - 30,000 сом',
+          preferredDistricts: [profile.location || 'Бишкек'],
+          applications: 0,
+        };
+      }
+    } catch (error) {
+      console.error('Error loading published teacher:', error);
+    }
+    return null;
+  };
+  
+  // Try to get from mock data as fallback
+  const mockTeacher = teachersData.find(t => t.id === Number(teacherId));
+  
+  // Determine which teacher data to use
+  const teacher = supabaseTeacher ? {
+    id: supabaseTeacher.id,
+    name: supabaseTeacher.profiles?.full_name || 'Учитель',
+    photo: supabaseTeacher.profiles?.avatar_url || '/placeholder.svg',
+    specialization: supabaseTeacher.specialization || 'Специализация не указана',
+    experience: `${supabaseTeacher.experience_years || 0} лет`,
+    location: supabaseTeacher.location || 'Местоположение не указано',
+    ratings: 5.0,
+    views: 0,
+    about: supabaseTeacher.bio || 'Информация о себе не указана',
+    education: supabaseTeacher.education || 'Образование не указано',
+    languages: supabaseTeacher.languages || ['Кыргызский', 'Русский'],
+    achievements: 'Верифицированный преподаватель',
+    preferredSchedule: 'Полный день',
+    desiredSalary: '25,000 - 30,000 сом',
+    preferredDistricts: [supabaseTeacher.location || 'Бишкек'],
+    applications: 0,
+  } : getPublishedTeacher() || mockTeacher;
+  
+  if (isLoadingSupabase) {
+    return (
+      <div className="container py-16 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Загрузка профиля...</p>
+      </div>
+    );
+  }
   
   if (!teacher) {
     return (
@@ -76,8 +147,7 @@ const TeacherProfilePage: React.FC = () => {
     }
 
     try {
-      // Create a mock teacher user ID based on teacher ID
-      const teacherUserId = `teacher_${teacher.id}`;
+      const teacherUserId = typeof teacher.id === 'string' ? teacher.id : `teacher_${teacher.id}`;
       const chatRoomId = await createChatRoom(teacherUserId);
       
       toast({
@@ -190,7 +260,7 @@ const TeacherProfilePage: React.FC = () => {
                       <span>{teacher.experience}</span>
                     </div>
                     <p className="text-muted-foreground">
-                      Подробная информация о опыте работы будет отображаться здесь после заполнения профиля.
+                      {teacher.about}
                     </p>
                   </div>
                 </TabsContent>
@@ -273,7 +343,7 @@ const TeacherProfilePage: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {teachersData
-                  .filter(t => t.id !== teacherId && t.specialization === teacher.specialization)
+                  .filter(t => t.id !== Number(teacherId) && t.specialization === teacher.specialization)
                   .slice(0, 3)
                   .map(similarTeacher => (
                     <div key={similarTeacher.id} className="flex items-center gap-3">

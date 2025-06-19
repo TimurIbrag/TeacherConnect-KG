@@ -1,13 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
-import { validateSecureInput, checkSecureRateLimit } from '@/lib/securityValidation';
-import { useToast } from '@/hooks/use-toast';
 
 interface SecureMessageInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -17,116 +15,85 @@ const SecureMessageInput: React.FC<SecureMessageInputProps> = ({
   disabled = false,
   placeholder = "Напишите сообщение..."
 }) => {
-  const [messageText, setMessageText] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
-  const { toast } = useToast();
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSendMessage = async () => {
-    if (disabled || isValidating) return;
+  const sanitizeInput = (input: string): string => {
+    // Basic XSS prevention - remove script tags and limit length
+    return input
+      .replace(/<script[^>]*>.*?<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .slice(0, 5000); // Max 5000 characters
+  };
+
+  const handleSend = async () => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage || disabled || isSending) return;
+
+    // Sanitize the message before sending
+    const sanitizedMessage = sanitizeInput(trimmedMessage);
     
-    setIsValidating(true);
+    if (sanitizedMessage.length === 0) {
+      console.warn('Message was empty after sanitization');
+      return;
+    }
+
+    setIsSending(true);
     
     try {
-      // Rate limiting check
-      const rateLimitResult = checkSecureRateLimit('message_send', {
-        windowMs: 60 * 1000, // 1 minute window
-        maxAttempts: 10, // 10 messages per minute
-        blockDurationMs: 5 * 60 * 1000 // 5 minute block
-      });
+      await onSendMessage(sanitizedMessage);
+      setMessage('');
       
-      if (!rateLimitResult.allowed) {
-        const blockTimeRemaining = rateLimitResult.blockedUntil 
-          ? Math.ceil((rateLimitResult.blockedUntil - Date.now()) / 1000)
-          : 0;
-          
-        toast({
-          title: "Превышен лимит отправки",
-          description: `Слишком много сообщений. Попробуйте через ${blockTimeRemaining} секунд.`,
-          variant: "destructive",
-        });
-        return;
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
       }
-      
-      // Input validation
-      const validation = validateSecureInput(messageText, 5000);
-      
-      if (!validation.isValid) {
-        toast({
-          title: "Ошибка валидации",
-          description: validation.error || "Сообщение содержит недопустимые данные",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (validation.sanitized.trim().length === 0) {
-        toast({
-          title: "Пустое сообщение",
-          description: "Введите текст сообщения",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Send the sanitized message
-      await onSendMessage(validation.sanitized);
-      setMessageText('');
-      
-    } catch (error: any) {
-      console.error('Secure message send error:', error);
-      toast({
-        title: "Ошибка отправки",
-        description: error.message || "Не удалось отправить сообщение",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('Failed to send message:', error);
     } finally {
-      setIsValidating(false);
+      setIsSending(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSend();
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
-    
-    // Basic real-time validation
-    if (value.length > 5000) {
-      toast({
-        title: "Превышена длина",
-        description: "Максимальная длина сообщения 5000 символов",
-        variant: "destructive",
-      });
-      return;
+    setMessage(value);
+
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
-    
-    setMessageText(value);
   };
 
   return (
-    <div className="flex gap-2">
-      <Input
-        value={messageText}
-        onChange={handleInputChange}
+    <div className="flex gap-2 items-end">
+      <Textarea
+        ref={textareaRef}
+        value={message}
+        onChange={handleInput}
         onKeyPress={handleKeyPress}
         placeholder={placeholder}
-        className="flex-1"
-        disabled={disabled || isValidating}
-        maxLength={5000}
+        disabled={disabled || isSending}
+        className="min-h-[40px] max-h-[120px] resize-none"
+        rows={1}
       />
-      <Button 
-        onClick={handleSendMessage} 
-        disabled={disabled || isValidating || !messageText.trim()}
+      <Button
+        onClick={handleSend}
+        disabled={!message.trim() || disabled || isSending}
+        size="sm"
+        className="shrink-0"
       >
-        {isValidating ? (
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-        ) : (
-          <Send className="h-4 w-4" />
-        )}
+        <Send className="h-4 w-4" />
       </Button>
     </div>
   );

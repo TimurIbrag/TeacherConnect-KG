@@ -110,6 +110,7 @@ export const schoolsData: School[] = [
     about: "Ведущая гимназия города с математическим уклоном.",
     facilities: ["Современные лаборатории", "Спортивный зал", "Библиотека"],
     applications: 23,
+    city: "Бишкек", // Add city property
   },
   {
     id: 2,
@@ -134,6 +135,7 @@ export const schoolsData: School[] = [
     about: "Частный лицей с углубленным изучением иностранных языков.",
     facilities: ["Языковая лаборатория", "Мультимедийные классы", "Кафетерий"],
     applications: 17,
+    city: "Бишкек", // Add city property
   },
 ];
 
@@ -158,6 +160,7 @@ export const mockSchools: School[] = [
     about: "Обычная средняя школа",
     facilities: ["Библиотека", "Спортзал"],
     applications: 5,
+    city: "Бишкек", // Add city property
   },
 ];
 
