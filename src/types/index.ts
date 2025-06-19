@@ -47,6 +47,7 @@ export interface School {
   about: string;
   facilities: string[];
   applications: number;
+  city: string;
 }
 
 export interface JobPosition {
