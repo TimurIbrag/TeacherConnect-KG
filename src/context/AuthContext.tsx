@@ -90,16 +90,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 100);
   };
 
+  const getAllStorageValues = () => {
+    console.log('🔍 COMPLETE STORAGE DEBUG:');
+    console.log('Current URL:', window.location.href);
+    console.log('URL Search:', window.location.search);
+    console.log('URL Hash:', window.location.hash);
+    
+    // Check all possible storage keys
+    const possibleKeys = [
+      'oauth_user_type',
+      'pendingUserType', 
+      'registration_user_type',
+      'intended_user_type',
+      'pendingOAuthFlow',
+      'userType',
+      'type',
+      'user_type'
+    ];
+    
+    console.log('LocalStorage contents:');
+    possibleKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value) console.log(`  ${key}: ${value}`);
+    });
+    
+    console.log('SessionStorage contents:');
+    possibleKeys.forEach(key => {
+      const value = sessionStorage.getItem(key);
+      if (value) console.log(`  ${key}: ${value}`);
+    });
+    
+    // Check URL parameters comprehensively
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('URL Parameters:');
+    urlParams.forEach((value, key) => {
+      console.log(`  ${key}: ${value}`);
+    });
+    
+    // Check hash parameters
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const hashParams = new URLSearchParams(hash);
+      console.log('Hash Parameters:');
+      hashParams.forEach((value, key) => {
+        console.log(`  ${key}: ${value}`);
+      });
+    }
+  };
+
   const extractUserTypeFromUrl = (): 'teacher' | 'school' | null => {
+    getAllStorageValues();
+    
     // Check current URL parameters with comprehensive detection
     const urlParams = new URLSearchParams(window.location.search);
     
     // Check all possible parameter names
-    const userTypeParams = ['userType', 'type', 'user_type'];
+    const userTypeParams = ['userType', 'type', 'user_type', 'role'];
     
     for (const param of userTypeParams) {
       const value = urlParams.get(param);
-      console.log(`URL parameter ${param}:`, value);
+      console.log(`🔍 URL parameter ${param}:`, value);
       
       if (value === 'teacher' || value === 'school') {
         console.log('✅ User type determined from URL parameter:', value);
@@ -113,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hashParams = new URLSearchParams(hash);
       for (const param of userTypeParams) {
         const value = hashParams.get(param);
-        console.log(`Hash parameter ${param}:`, value);
+        console.log(`🔍 Hash parameter ${param}:`, value);
         
         if (value === 'teacher' || value === 'school') {
           console.log('✅ User type determined from hash parameter:', value);
@@ -127,20 +177,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const determineUserTypeFromStorage = (): 'teacher' | 'school' | null => {
-    console.log('🔍 Starting user type determination...');
+    console.log('🔍 ENHANCED USER TYPE DETERMINATION...');
     
     // Step 1: Check URL parameters first (most reliable for OAuth redirects)
     const urlUserType = extractUserTypeFromUrl();
     if (urlUserType) {
       console.log('✅ User type determined from URL:', urlUserType);
-      // Store in both for persistence
+      // Store in both for persistence with enhanced keys
       localStorage.setItem('oauth_user_type', urlUserType);
+      localStorage.setItem('confirmed_user_type', urlUserType);
       sessionStorage.setItem('oauth_user_type', urlUserType);
+      sessionStorage.setItem('confirmed_user_type', urlUserType);
       return urlUserType;
     }
 
-    // Step 2: Check storage with improved key names
+    // Step 2: Check storage with improved key priority
     const storageKeys = [
+      'confirmed_user_type', // New higher priority key
       'oauth_user_type',
       'pendingUserType', 
       'registration_user_type',
@@ -150,10 +203,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check sessionStorage first (more session-specific)
     for (const key of storageKeys) {
       const value = sessionStorage.getItem(key);
-      console.log(`SessionStorage ${key}:`, value);
+      console.log(`🔍 SessionStorage ${key}:`, value);
       
       if (value === 'teacher' || value === 'school') {
         console.log('✅ User type determined from sessionStorage:', value);
+        // Promote to confirmed_user_type
+        localStorage.setItem('confirmed_user_type', value);
+        sessionStorage.setItem('confirmed_user_type', value);
         return value;
       }
     }
@@ -161,24 +217,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check localStorage as fallback
     for (const key of storageKeys) {
       const value = localStorage.getItem(key);
-      console.log(`LocalStorage ${key}:`, value);
+      console.log(`🔍 LocalStorage ${key}:`, value);
       
       if (value === 'teacher' || value === 'school') {
         console.log('✅ User type determined from localStorage:', value);
+        // Promote to confirmed_user_type
+        localStorage.setItem('confirmed_user_type', value);
+        sessionStorage.setItem('confirmed_user_type', value);
         return value;
       }
     }
-    
-    // Step 3: Check OAuth flow type for debugging
-    const oauthFlow = localStorage.getItem('pendingOAuthFlow') || sessionStorage.getItem('pendingOAuthFlow');
-    console.log('OAuth flow type:', oauthFlow);
     
     console.log('❌ Could not determine user type from any source');
     return null;
   };
 
   const cleanupStorageKeys = () => {
-    // Clean up all possible storage keys
+    // Clean up all possible storage keys except confirmed ones
     const keysToClean = [
       'oauth_user_type',
       'pendingUserType',
@@ -192,7 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionStorage.removeItem(key);
     });
     
-    console.log('🧹 Cleaned up storage keys');
+    console.log('🧹 Cleaned up temporary storage keys');
   };
 
   useEffect(() => {
@@ -206,6 +261,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
+          console.log('🚀 PROCESSING SIGN IN EVENT');
+          getAllStorageValues(); // Full debug output
+          
           // Handle new user creation or existing user login
           setTimeout(async () => {
             try {
@@ -223,7 +281,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 // Get user type with enhanced detection
                 const userType = determineUserTypeFromStorage();
-                console.log('🎯 Determined user type for new profile:', userType);
+                console.log('🎯 FINAL DETERMINED USER TYPE:', userType);
                 
                 if (!userType) {
                   console.log('❓ No user type determined, showing selection modal');
@@ -232,8 +290,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   return;
                 }
                 
-                // Clean up storage after successful determination
-                cleanupStorageKeys();
+                console.log('📝 Creating profile with role:', userType);
                 
                 const { data: newProfile, error: profileError } = await supabase
                   .from('profiles')
@@ -255,6 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 } else {
                   console.log('✅ Profile created successfully with role:', newProfile.role);
                   setProfile(newProfile);
+                  // Clean up only after successful profile creation
+                  cleanupStorageKeys();
                 }
               } else {
                 // Check if existing profile has a role set
@@ -307,6 +366,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null);
     // Clean up any pending user type data
     cleanupStorageKeys();
+    // Also clean up confirmed user type on logout
+    localStorage.removeItem('confirmed_user_type');
+    sessionStorage.removeItem('confirmed_user_type');
   };
 
   const value = {

@@ -24,30 +24,40 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       console.log('🔵 Google OAuth registration button clicked');
       console.log('🎯 User type for registration:', userType);
       
-      // Store the user type in multiple places with enhanced persistence
+      // ENHANCED storage with multiple redundant keys and timestamps
+      const timestamp = Date.now().toString();
       const storageData = {
+        // Primary keys
+        confirmed_user_type: userType,
         oauth_user_type: userType,
+        
+        // Legacy compatibility keys
         pendingUserType: userType,
         pendingOAuthFlow: 'registration',
         registration_user_type: userType,
         intended_user_type: userType,
-        timestamp: Date.now().toString()
+        
+        // Additional verification
+        user_type_source: 'registration_oauth',
+        user_type_timestamp: timestamp,
+        oauth_provider: 'google',
+        flow_type: 'registration'
       };
       
-      // Store in both localStorage and sessionStorage
+      // Store in BOTH localStorage and sessionStorage with ALL keys
       Object.entries(storageData).forEach(([key, value]) => {
         localStorage.setItem(key, value);
         sessionStorage.setItem(key, value);
+        console.log(`💾 Stored ${key}: ${value}`);
       });
       
-      console.log('💾 Enhanced storage - stored user type:', userType);
-      console.log('💾 Storage keys set:', Object.keys(storageData));
+      console.log('💾 COMPLETE storage setup completed for userType:', userType);
       
       const baseUrl = window.location.origin;
       
-      // Enhanced redirect URL with multiple parameter formats
-      const redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&flow=registration&oauth=google`;
-      console.log('🔗 Enhanced registration redirect URL:', redirectUrl);
+      // TRIPLE-REDUNDANT redirect URL with multiple formats
+      const redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=registration&oauth=google&provider=google&timestamp=${timestamp}`;
+      console.log('🔗 ENHANCED registration redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -56,11 +66,15 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            // Triple redundancy in query params
             userType: userType,
             type: userType,
             user_type: userType,
+            role: userType,
             flow: 'registration',
-            oauth: 'google'
+            oauth: 'google',
+            provider: 'google',
+            timestamp: timestamp
           }
         }
       });

@@ -17,44 +17,61 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       console.log('🔵 Google OAuth login button clicked');
       console.log('🎯 User type for OAuth:', userType);
       
-      // Enhanced storage for login flow
+      // Enhanced storage for login flow with redundant keys
       if (userType) {
+        const timestamp = Date.now().toString();
         const storageData = {
+          // Primary keys
+          confirmed_user_type: userType,
           oauth_user_type: userType,
+          
+          // Legacy compatibility
           pendingUserType: userType,
           pendingOAuthFlow: 'login',
           intended_user_type: userType,
-          timestamp: Date.now().toString()
+          
+          // Additional verification
+          user_type_source: 'login_oauth',
+          user_type_timestamp: timestamp,
+          oauth_provider: 'google',
+          flow_type: 'login'
         };
         
         // Store in both localStorage and sessionStorage
         Object.entries(storageData).forEach(([key, value]) => {
           localStorage.setItem(key, value);
           sessionStorage.setItem(key, value);
+          console.log(`💾 Login storage ${key}: ${value}`);
         });
         
         console.log('💾 Enhanced storage - stored user type for login:', userType);
       }
       
-      // Create enhanced redirect URL with multiple parameter formats
+      // Create enhanced redirect URL with comprehensive parameters
       const baseUrl = window.location.origin;
-      const redirectUrl = userType 
-        ? `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&flow=login&oauth=google`
-        : `${baseUrl}/?flow=login&oauth=google`;
+      const timestamp = Date.now().toString();
       
-      console.log('🔗 Enhanced OAuth redirect URL:', redirectUrl);
+      const redirectUrl = userType 
+        ? `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}`
+        : `${baseUrl}/?flow=login&oauth=google&provider=google&timestamp=${timestamp}`;
+      
+      console.log('🔗 Enhanced OAuth login redirect URL:', redirectUrl);
       
       const queryParams: Record<string, string> = {
         access_type: 'offline',
-        prompt: 'consent'
+        prompt: 'consent',
+        timestamp: timestamp
       };
       
       if (userType) {
+        // Triple redundancy in query parameters
         queryParams.userType = userType;
         queryParams.type = userType;
         queryParams.user_type = userType;
+        queryParams.role = userType;
         queryParams.flow = 'login';
         queryParams.oauth = 'google';
+        queryParams.provider = 'google';
       }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
