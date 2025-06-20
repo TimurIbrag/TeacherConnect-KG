@@ -8,17 +8,31 @@ import { isValidUrl } from '@/lib/security';
 
 interface SecureGoogleLoginButtonProps {
   isLoading: boolean;
+  userType?: 'teacher' | 'school';
 }
 
-const SecureGoogleLoginButton: React.FC<SecureGoogleLoginButtonProps> = ({ isLoading }) => {
+const SecureGoogleLoginButton: React.FC<SecureGoogleLoginButtonProps> = ({ 
+  isLoading, 
+  userType 
+}) => {
   const { toast } = useToast();
 
   const handleGoogleLogin = async () => {
     try {
       console.log('Google OAuth button clicked');
+      console.log('User type:', userType);
+      
+      // Store user type if provided
+      if (userType) {
+        localStorage.setItem('pendingUserType', userType);
+        sessionStorage.setItem('pendingUserType', userType);
+        console.log('Stored user type in localStorage:', userType);
+      }
       
       // Validate redirect URL
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = userType 
+        ? `${window.location.origin}/?userType=${userType}`
+        : `${window.location.origin}/`;
       
       if (!isValidUrl(redirectUrl)) {
         throw new Error('Invalid redirect URL');
@@ -31,6 +45,7 @@ const SecureGoogleLoginButton: React.FC<SecureGoogleLoginButtonProps> = ({ isLoa
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            ...(userType ? { userType } : {})
           },
         }
       });

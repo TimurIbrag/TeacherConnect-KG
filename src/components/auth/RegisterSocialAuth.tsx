@@ -23,8 +23,6 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
     try {
       console.log('Google OAuth registration button clicked');
       console.log('User type:', userType);
-      console.log('Current URL:', window.location.href);
-      console.log('Origin:', window.location.origin);
       
       // Store the user type in localStorage so we can use it after redirect
       localStorage.setItem('pendingUserType', userType);
@@ -35,7 +33,7 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       sessionStorage.setItem('pendingUserType', userType);
       sessionStorage.setItem('pendingOAuthFlow', 'registration');
       
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/?userType=${userType}`;
       console.log('Redirect URL that will be used:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -69,7 +67,6 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       console.log('OAuth registration initiated successfully, should redirect to Google...');
     } catch (error: any) {
       console.error('Unexpected error during Google registration:', error);
-      console.error('Error stack:', error.stack);
       
       toast({
         title: "Ошибка",
@@ -88,7 +85,7 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       className="w-full"
     >
       <Chrome className="mr-2 h-4 w-4" />
-      Зарегистрироваться через Google
+      Зарегистрироваться через Google как {userType === 'teacher' ? 'учитель' : 'школа'}
     </Button>
   );
 };

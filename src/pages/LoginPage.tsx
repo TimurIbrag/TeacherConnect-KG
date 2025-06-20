@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
@@ -16,11 +16,18 @@ const LoginPage: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Get user type from URL params if provided
+  const userTypeFromUrl = searchParams.get('type');
+  const userType = (userTypeFromUrl === 'school' || userTypeFromUrl === 'teacher') 
+    ? userTypeFromUrl as 'teacher' | 'school'
+    : undefined;
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +61,14 @@ const LoginPage: React.FC = () => {
       description="Войдите в аккаунт для доступа к платформе"
       footerText="Еще нет аккаунта?"
       footerLinkText={t('nav.register')}
-      footerLinkPath="/register"
+      footerLinkPath={userType ? `/register?type=${userType}` : "/register"}
     >
       <div className="grid gap-4">
         <AuthError message={error} />
         
         <GoogleLoginButton 
-          isLoading={isLoading} 
+          isLoading={isLoading}
+          userType={userType}
         />
         
         <div className="relative">

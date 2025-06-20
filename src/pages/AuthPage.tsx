@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -40,13 +39,20 @@ const AuthPage = () => {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
+      // Store the user type for OAuth flow
+      localStorage.setItem('pendingUserType', userType);
+      sessionStorage.setItem('pendingUserType', userType);
+      
+      const redirectUrl = `${window.location.origin}/?userType=${userType}`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            userType: userType,
           },
         },
       });
@@ -69,11 +75,14 @@ const AuthPage = () => {
     setIsLoading(true);
 
     try {
+      // Store user type for profile creation
+      localStorage.setItem('pendingUserType', userType);
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/?userType=${userType}`,
           data: {
             full_name: fullName,
             role: userType,
@@ -221,6 +230,26 @@ const AuthPage = () => {
               </TabsList>
 
               <div className="mt-4 space-y-4">
+                {/* User Type Selection for OAuth */}
+                {authMode === 'signup' && (
+                  <div className="space-y-2">
+                    <Label>Тип аккаунта</Label>
+                    <RadioGroup
+                      value={userType}
+                      onValueChange={(value) => setUserType(value as 'teacher' | 'school')}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="teacher" id="teacher-auth" />
+                        <Label htmlFor="teacher-auth">Преподаватель</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="school" id="school-auth" />
+                        <Label htmlFor="school-auth">Школа</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
+
                 {/* Google OAuth Button */}
                 <Button 
                   variant="outline" 
@@ -229,7 +258,10 @@ const AuthPage = () => {
                   className="w-full"
                 >
                   <Chrome className="mr-2 h-4 w-4" />
-                  {authMode === 'signin' ? 'Войти через Google' : 'Регистрация через Google'}
+                  {authMode === 'signin' 
+                    ? 'Войти через Google' 
+                    : `Регистрация через Google как ${userType === 'teacher' ? 'учитель' : 'школа'}`
+                  }
                 </Button>
 
                 <div className="relative">
@@ -287,22 +319,6 @@ const AuthPage = () => {
               <TabsContent value="signup" className="space-y-4 mt-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Тип аккаунта</Label>
-                    <RadioGroup
-                      value={userType}
-                      onValueChange={(value) => setUserType(value as 'teacher' | 'school')}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="teacher" id="teacher" />
-                        <Label htmlFor="teacher">Преподаватель</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="school" id="school" />
-                        <Label htmlFor="school">Школа</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="fullName">
                       {userType === 'teacher' ? 'Полное имя' : 'Название школы'}
                     </Label>
@@ -337,7 +353,7 @@ const AuthPage = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Зарегистрироваться
+                    Зарегистрироваться как {userType === 'teacher' ? 'учитель' : 'школа'}
                   </Button>
                 </form>
               </TabsContent>

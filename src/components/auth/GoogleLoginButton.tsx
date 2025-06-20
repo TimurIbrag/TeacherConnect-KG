@@ -16,20 +16,22 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
     try {
       console.log('Google OAuth button clicked');
       console.log('User type:', userType);
-      console.log('Current URL:', window.location.href);
-      console.log('Origin:', window.location.origin);
       
       // Store user type if provided
       if (userType) {
         localStorage.setItem('pendingUserType', userType);
         sessionStorage.setItem('pendingUserType', userType);
+        console.log('Stored user type in localStorage:', userType);
       }
       
       // Mark this as a login flow
       localStorage.setItem('pendingOAuthFlow', 'login');
       sessionStorage.setItem('pendingOAuthFlow', 'login');
       
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = userType 
+        ? `${window.location.origin}/?userType=${userType}`
+        : `${window.location.origin}/`;
+      
       console.log('Redirect URL that will be used:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -61,7 +63,6 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       
     } catch (error: any) {
       console.error('Unexpected error during Google auth:', error);
-      console.error('Error stack:', error.stack);
       
       toast({
         title: "Ошибка входа",

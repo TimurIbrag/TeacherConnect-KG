@@ -90,7 +90,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 100);
   };
 
+  const getUserTypeFromUrl = (): 'teacher' | 'school' | null => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userType = urlParams.get('userType');
+    if (userType === 'teacher' || userType === 'school') {
+      return userType;
+    }
+    return null;
+  };
+
   const determineUserTypeFromStorage = (): 'teacher' | 'school' => {
+    // Check URL first (for OAuth redirects)
+    const urlUserType = getUserTypeFromUrl();
+    if (urlUserType) {
+      return urlUserType;
+    }
+
     // Try to get user type from various storage sources
     const pendingUserType = localStorage.getItem('pendingUserType') || 
                            sessionStorage.getItem('pendingUserType');
@@ -129,8 +144,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (!existingProfile) {
                 console.log('Creating new profile for user');
                 
-                // Get user type from storage
+                // Get user type from storage or URL
                 const userType = determineUserTypeFromStorage();
+                console.log('Determined user type:', userType);
                 
                 // Clean up storage
                 localStorage.removeItem('pendingUserType');
