@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -16,6 +15,7 @@ const VacanciesTab = () => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [duplicateVacancy, setDuplicateVacancy] = useState<any>(null);
 
   console.log('VacanciesTab render - user:', user?.id, 'profile:', profile?.role);
 
@@ -156,6 +156,12 @@ const VacanciesTab = () => {
     });
   };
 
+  const handleDuplicateVacancy = (vacancy: any) => {
+    console.log('Duplicate vacancy clicked for:', vacancy);
+    setDuplicateVacancy(vacancy);
+    setCreateDialogOpen(true);
+  };
+
   const handleDeleteVacancy = (id: string) => {
     console.log('Delete vacancy clicked for id:', id);
     deleteVacancyMutation.mutate(id);
@@ -180,7 +186,15 @@ const VacanciesTab = () => {
 
   const handleCreateButtonClick = () => {
     console.log('Create button clicked, opening dialog');
+    setDuplicateVacancy(null);
     setCreateDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setCreateDialogOpen(open);
+    if (!open) {
+      setDuplicateVacancy(null);
+    }
   };
 
   if (profile?.role !== 'school') {
@@ -234,6 +248,7 @@ const VacanciesTab = () => {
               vacancy={vacancy}
               onEdit={handleEditVacancy}
               onDelete={() => handleDeleteVacancy(vacancy.id)}
+              onDuplicate={handleDuplicateVacancy}
               onToggleStatus={() => handleToggleVacancyStatus(vacancy.id, vacancy.is_active)}
               onViewApplications={() => handleViewApplications(vacancy.id)}
               isLoading={deleteVacancyMutation.isPending || updateVacancyMutation.isPending}
@@ -244,9 +259,10 @@ const VacanciesTab = () => {
 
       <CreateVacancyDialog
         open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+        onOpenChange={handleDialogClose}
         onVacancyCreated={handleVacancyCreated}
         isCreating={createVacancyMutation.isPending}
+        duplicateVacancy={duplicateVacancy}
       />
     </div>
   );

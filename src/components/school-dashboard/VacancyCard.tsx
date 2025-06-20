@@ -6,14 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Edit, 
   Trash2, 
-  Eye, 
+  Users,
+  Copy,
   MapPin, 
   Calendar, 
   DollarSign,
-  Users,
   Clock,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  GraduationCap,
+  User,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 interface VacancyCardProps {
@@ -21,13 +25,21 @@ interface VacancyCardProps {
     id: string;
     title: string;
     description?: string;
+    vacancy_type?: string;
+    subject?: string;
+    education_level?: string;
+    employment_type?: string;
     location?: string;
     salary_min?: number;
     salary_max?: number;
-    employment_type?: string;
+    salary_currency?: string;
     application_deadline?: string;
     is_active?: boolean;
     created_at?: string;
+    contact_name?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    experience_required?: number;
     requirements?: string[];
     benefits?: string[];
     school_profiles?: {
@@ -37,6 +49,7 @@ interface VacancyCardProps {
   };
   onEdit: (vacancy: any) => void;
   onDelete: () => void;
+  onDuplicate?: (vacancy: any) => void;
   onToggleStatus?: () => void;
   onViewApplications: () => void;
   isLoading?: boolean;
@@ -46,15 +59,56 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
   vacancy,
   onEdit,
   onDelete,
+  onDuplicate,
   onToggleStatus,
   onViewApplications,
   isLoading = false,
 }) => {
-  const formatSalary = (min?: number, max?: number) => {
+  const getVacancyTypeLabel = (type?: string) => {
+    const types = {
+      teacher: 'Учитель',
+      tutor: 'Репетитор',
+      assistant: 'Ассистент',
+      coordinator: 'Координатор',
+      other: 'Другое'
+    };
+    return types[type as keyof typeof types] || type || 'Учитель';
+  };
+
+  const getEducationLevelLabel = (level?: string) => {
+    const levels = {
+      bachelor: 'Бакалавр',
+      master: 'Магистр',
+      any: 'Не важно'
+    };
+    return levels[level as keyof typeof levels] || 'Не указано';
+  };
+
+  const getEmploymentTypeLabel = (type?: string) => {
+    const types = {
+      'full-time': 'Полный день',
+      'part-time': 'Частичная занятость',
+      'online': 'Онлайн',
+      'flexible': 'Гибкий график'
+    };
+    return types[type as keyof typeof types] || type || 'Полный день';
+  };
+
+  const getCurrencySymbol = (currency?: string) => {
+    const symbols = {
+      rub: '₽',
+      usd: '$',
+      eur: '€'
+    };
+    return symbols[currency as keyof typeof symbols] || '₽';
+  };
+
+  const formatSalary = (min?: number, max?: number, currency?: string) => {
+    const symbol = getCurrencySymbol(currency);
     if (!min && !max) return 'Зарплата по договоренности';
-    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ₽`;
-    if (min) return `от ${min.toLocaleString()} ₽`;
-    if (max) return `до ${max.toLocaleString()} ₽`;
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ${symbol}`;
+    if (min) return `от ${min.toLocaleString()} ${symbol}`;
+    if (max) return `до ${max.toLocaleString()} ${symbol}`;
     return 'Не указана';
   };
 
@@ -67,11 +121,15 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
     <Card className={`${vacancy.is_active ? 'border-green-200' : 'border-gray-200 opacity-75'}`}>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
+          <div className="flex-1">
             <CardTitle className="text-lg">{vacancy.title}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {vacancy.school_profiles?.school_name}
             </p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type)}</Badge>
+              {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={vacancy.is_active ? 'default' : 'secondary'}>
@@ -113,15 +171,18 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
           
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span>{formatSalary(vacancy.salary_min, vacancy.salary_max)}</span>
+            <span>{formatSalary(vacancy.salary_min, vacancy.salary_max, vacancy.salary_currency)}</span>
           </div>
           
-          {vacancy.employment_type && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{vacancy.employment_type}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span>{getEmploymentTypeLabel(vacancy.employment_type)}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <span>{getEducationLevelLabel(vacancy.education_level)}</span>
+          </div>
           
           {vacancy.application_deadline && (
             <div className="flex items-center gap-2">
@@ -130,6 +191,33 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
             </div>
           )}
         </div>
+
+        {/* Контактная информация */}
+        {(vacancy.contact_name || vacancy.contact_phone || vacancy.contact_email) && (
+          <div className="border-t pt-3">
+            <h4 className="font-medium text-sm mb-2">Контакты:</h4>
+            <div className="space-y-1 text-sm">
+              {vacancy.contact_name && (
+                <div className="flex items-center gap-2">
+                  <User className="h-3 w-3 text-muted-foreground" />
+                  <span>{vacancy.contact_name}</span>
+                </div>
+              )}
+              {vacancy.contact_phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-3 w-3 text-muted-foreground" />
+                  <span>{vacancy.contact_phone}</span>
+                </div>
+              )}
+              {vacancy.contact_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-3 w-3 text-muted-foreground" />
+                  <span>{vacancy.contact_email}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {vacancy.requirements && vacancy.requirements.length > 0 && (
           <div>
@@ -182,6 +270,18 @@ const VacancyCard: React.FC<VacancyCardProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
+          {onDuplicate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDuplicate(vacancy)}
+              disabled={isLoading}
+              title="Дублировать вакансию"
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              Копировать
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

@@ -1,325 +1,516 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { vacancySchema } from '@/lib/validation';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus } from 'lucide-react';
+import { Copy, Eye, Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/context/LanguageContext';
+import VacancyPreviewDialog from './VacancyPreviewDialog';
 
 interface CreateVacancyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVacancyCreated: (vacancy: any) => void;
-  isCreating?: boolean;
+  isCreating: boolean;
+  duplicateVacancy?: any;
 }
 
 const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   open,
   onOpenChange,
   onVacancyCreated,
-  isCreating = false,
+  isCreating,
+  duplicateVacancy
 }) => {
   const { toast } = useToast();
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    subject: '',
-    location: '',
-    salary_min: '',
-    salary_max: '',
-    employment_type: 'full-time',
-    experience_required: '',
-    application_deadline: '',
-    housing_provided: false,
-  });
-
-  const [requirements, setRequirements] = useState<string[]>([]);
-  const [benefits, setBenefits] = useState<string[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newBenefit, setNewBenefit] = useState('');
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const form = useForm({
+    resolver: zodResolver(vacancySchema),
+    defaultValues: {
+      title: duplicateVacancy?.title || '',
+      vacancy_type: duplicateVacancy?.vacancy_type || 'teacher',
+      subject: duplicateVacancy?.subject || '',
+      education_level: duplicateVacancy?.education_level || 'any',
+      employment_type: duplicateVacancy?.employment_type || 'full-time',
+      location: duplicateVacancy?.location || '',
+      salary_min: duplicateVacancy?.salary_min || undefined,
+      salary_max: duplicateVacancy?.salary_max || undefined,
+      salary_currency: duplicateVacancy?.salary_currency || 'rub',
+      description: duplicateVacancy?.description || '',
+      contact_name: duplicateVacancy?.contact_name || '',
+      contact_phone: duplicateVacancy?.contact_phone || '',
+      contact_email: duplicateVacancy?.contact_email || '',
+      experience_required: duplicateVacancy?.experience_required || 0,
+      requirements: duplicateVacancy?.requirements || [],
+      benefits: duplicateVacancy?.benefits || [],
+    },
+  });
+
+  const requirements = form.watch('requirements') || [];
+  const benefits = form.watch('benefits') || [];
 
   const addRequirement = () => {
-    if (newRequirement.trim() && !requirements.includes(newRequirement.trim())) {
-      setRequirements(prev => [...prev, newRequirement.trim()]);
+    if (newRequirement.trim()) {
+      form.setValue('requirements', [...requirements, newRequirement.trim()]);
       setNewRequirement('');
     }
   };
 
   const removeRequirement = (index: number) => {
-    setRequirements(prev => prev.filter((_, i) => i !== index));
+    form.setValue('requirements', requirements.filter((_, i) => i !== index));
   };
 
   const addBenefit = () => {
-    if (newBenefit.trim() && !benefits.includes(newBenefit.trim())) {
-      setBenefits(prev => [...prev, newBenefit.trim()]);
+    if (newBenefit.trim()) {
+      form.setValue('benefits', [...benefits, newBenefit.trim()]);
       setNewBenefit('');
     }
   };
 
   const removeBenefit = (index: number) => {
-    setBenefits(prev => prev.filter((_, i) => i !== index));
+    form.setValue('benefits', benefits.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      toast({
-        title: t('common.error'),
-        description: t('vacancy.titleRequired'),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const vacancyData = {
-      ...formData,
-      salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
-      salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
-      experience_required: formData.experience_required ? parseInt(formData.experience_required) : null,
-      application_deadline: formData.application_deadline || null,
-      requirements: requirements.length > 0 ? requirements : null,
-      benefits: benefits.length > 0 ? benefits : null,
-      is_active: true,
-    };
-
-    onVacancyCreated(vacancyData);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      subject: '',
-      location: '',
-      salary_min: '',
-      salary_max: '',
-      employment_type: 'full-time',
-      experience_required: '',
-      application_deadline: '',
-      housing_provided: false,
+  const handlePreview = () => {
+    form.trigger().then((isValid) => {
+      if (isValid) {
+        setPreviewOpen(true);
+      } else {
+        toast({
+          title: 'Проверьте форму',
+          description: 'Пожалуйста, исправьте ошибки в форме перед предварительным просмотром',
+          variant: 'destructive',
+        });
+      }
     });
-    setRequirements([]);
-    setBenefits([]);
-    setNewRequirement('');
-    setNewBenefit('');
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !isCreating) {
-      resetForm();
-    }
-    onOpenChange(newOpen);
+  const onSubmit = (data: any) => {
+    console.log('Form submitted with data:', data);
+    onVacancyCreated(data);
+  };
+
+  const handlePublishFromPreview = () => {
+    const data = form.getValues();
+    setPreviewOpen(false);
+    onVacancyCreated(data);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('vacancy.createNew')}</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">{t('vacancy.title')} *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Например: Учитель математики"
-                required
-              />
-            </div>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {duplicateVacancy && <Copy className="h-5 w-5" />}
+              {duplicateVacancy ? 'Дублировать вакансию' : 'Создать новую вакансию'}
+            </DialogTitle>
+          </DialogHeader>
 
-            <div>
-              <Label htmlFor="subject">{t('vacancy.subject')}</Label>
-              <Input
-                id="subject"
-                value={formData.subject}
-                onChange={(e) => handleInputChange('subject', e.target.value)}
-                placeholder="Например: Математика"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">{t('vacancy.description')}</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Подробное описание вакансии, обязанностей и условий работы"
-                rows={4}
-              />
-            </div>
-          </div>
-
-          {/* Employment Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="employment_type">{t('vacancy.employment')}</Label>
-              <Select
-                value={formData.employment_type}
-                onValueChange={(value) => handleInputChange('employment_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full-time">{t('employment.fullTime')}</SelectItem>
-                  <SelectItem value="part-time">{t('employment.partTime')}</SelectItem>
-                  <SelectItem value="contract">{t('employment.contract')}</SelectItem>
-                  <SelectItem value="temporary">{t('employment.temporary')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="location">{t('vacancy.location')}</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="Город или регион"
-              />
-            </div>
-          </div>
-
-          {/* Salary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="salary_min">{t('vacancy.salaryFrom')} (сом)</Label>
-              <Input
-                id="salary_min"
-                type="number"
-                value={formData.salary_min}
-                onChange={(e) => handleInputChange('salary_min', e.target.value)}
-                placeholder="25000"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="salary_max">{t('vacancy.salaryTo')} (сом)</Label>
-              <Input
-                id="salary_max"
-                type="number"
-                value={formData.salary_max}
-                onChange={(e) => handleInputChange('salary_max', e.target.value)}
-                placeholder="40000"
-              />
-            </div>
-          </div>
-
-          {/* Experience and Deadline */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="experience_required">{t('vacancy.experience')} (лет)</Label>
-              <Input
-                id="experience_required"
-                type="number"
-                value={formData.experience_required}
-                onChange={(e) => handleInputChange('experience_required', e.target.value)}
-                placeholder="3"
-                min="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="application_deadline">{t('vacancy.deadline')}</Label>
-              <Input
-                id="application_deadline"
-                type="date"
-                value={formData.application_deadline}
-                onChange={(e) => handleInputChange('application_deadline', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Requirements */}
-          <div>
-            <Label>{t('vacancy.requirements')}</Label>
-            <div className="flex gap-2 mt-2">
-              <Input
-                value={newRequirement}
-                onChange={(e) => setNewRequirement(e.target.value)}
-                placeholder="Добавить требование"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
-              />
-              <Button type="button" onClick={addRequirement} size="sm">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {requirements.map((req, index) => (
-                <Badge key={index} variant="outline" className="flex items-center gap-1">
-                  {req}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeRequirement(index)}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Основная информация */}
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2">Основная информация</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Название вакансии *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Например: Учитель математики" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </Badge>
-              ))}
-            </div>
-          </div>
 
-          {/* Benefits */}
-          <div>
-            <Label>{t('vacancy.benefits')}</Label>
-            <div className="flex gap-2 mt-2">
-              <Input
-                value={newBenefit}
-                onChange={(e) => setNewBenefit(e.target.value)}
-                placeholder="Добавить преимущество"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addBenefit())}
-              />
-              <Button type="button" onClick={addBenefit} size="sm">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {benefits.map((benefit, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                  {benefit}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeBenefit(index)}
+                  <FormField
+                    control={form.control}
+                    name="vacancy_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Тип вакансии *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите тип вакансии" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="teacher">Учитель</SelectItem>
+                            <SelectItem value="tutor">Репетитор</SelectItem>
+                            <SelectItem value="assistant">Ассистент</SelectItem>
+                            <SelectItem value="coordinator">Координатор</SelectItem>
+                            <SelectItem value="other">Другое</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </Badge>
-              ))}
-            </div>
-          </div>
 
-          {/* Submit Buttons */}
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={isCreating}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={isCreating}>
-              {isCreating ? t('vacancy.creating') : t('vacancy.createNew')}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Предмет / Специализация *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Например: Математика, Физика" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="education_level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Требуемый уровень образования *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите уровень" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="any">Не важно</SelectItem>
+                            <SelectItem value="bachelor">Бакалавр</SelectItem>
+                            <SelectItem value="master">Магистр</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Условия работы */}
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2">Условия работы</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="employment_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>График работы *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите график" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="full-time">Полный день</SelectItem>
+                            <SelectItem value="part-time">Частичная занятость</SelectItem>
+                            <SelectItem value="online">Онлайн</SelectItem>
+                            <SelectItem value="flexible">Гибкий график</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Город / Локация *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Например: Москва, Санкт-Петербург" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <Label>Зарплата (по желанию)</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="salary_min"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                placeholder="От"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="salary_max"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                placeholder="До"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="salary_currency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="rub">Рубли (₽)</SelectItem>
+                              <SelectItem value="usd">Доллары ($)</SelectItem>
+                              <SelectItem value="eur">Евро (€)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="experience_required"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Требуемый опыт (лет)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={field.value || 0}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            min="0"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Описание */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Описание вакансии</h3>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Полное описание вакансии *</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          rows={6}
+                          placeholder="Опишите обязанности, условия работы, требования к кандидату..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Требования и преимущества */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2">Требования</h3>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newRequirement}
+                        onChange={(e) => setNewRequirement(e.target.value)}
+                        placeholder="Добавить требование"
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+                      />
+                      <Button type="button" onClick={addRequirement} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {requirements.map((req: string, index: number) => (
+                        <Badge key={index} variant="outline" className="flex items-center gap-1">
+                          {req}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => removeRequirement(index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium text-lg border-b pb-2">Преимущества</h3>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newBenefit}
+                        onChange={(e) => setNewBenefit(e.target.value)}
+                        placeholder="Добавить преимущество"
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addBenefit())}
+                      />
+                      <Button type="button" onClick={addBenefit} size="sm">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {benefits.map((benefit: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                          {benefit}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => removeBenefit(index)}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Контактная информация */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Контактная информация</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="contact_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Контактное лицо *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Имя Фамилия" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contact_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Телефон *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="+7 (XXX) XXX-XX-XX" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contact_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="contact@school.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Кнопки действий */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePreview}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Предварительный просмотр
+                </Button>
+                <Button type="submit" disabled={isCreating}>
+                  {isCreating ? 'Создаем...' : 'Опубликовать вакансию'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <VacancyPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        vacancyData={form.getValues()}
+        onConfirmPublish={handlePublishFromPreview}
+        isPublishing={isCreating}
+      />
+    </>
   );
 };
 

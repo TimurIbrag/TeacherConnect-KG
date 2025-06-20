@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Base validation schemas
@@ -87,21 +86,38 @@ export const vacancySchema = z.object({
   title: z.string()
     .min(5, 'Название должно содержать минимум 5 символов')
     .max(150, 'Название слишком длинное'),
-  description: z.string()
-    .max(2000, 'Описание слишком длинное')
-    .optional(),
+  vacancy_type: z.enum(['teacher', 'tutor', 'assistant', 'coordinator', 'other'], {
+    errorMap: () => ({ message: 'Выберите тип вакансии' }),
+  }),
   subject: z.string()
-    .max(100, 'Предмет слишком длинный')
-    .optional(),
+    .min(1, 'Укажите предмет или специализацию')
+    .max(100, 'Предмет слишком длинный'),
+  education_level: z.enum(['bachelor', 'master', 'any'], {
+    errorMap: () => ({ message: 'Выберите требуемый уровень образования' }),
+  }),
+  employment_type: z.enum(['full-time', 'part-time', 'online', 'flexible'], {
+    errorMap: () => ({ message: 'Выберите график работы' }),
+  }),
   location: z.string()
-    .max(100, 'Местоположение слишком длинное')
-    .optional(),
+    .min(1, 'Укажите город или локацию')
+    .max(100, 'Местоположение слишком длинное'),
   salary_min: z.number()
     .min(0, 'Минимальная зарплата не может быть отрицательной')
     .optional(),
   salary_max: z.number()
     .min(0, 'Максимальная зарплата не может быть отрицательной')
     .optional(),
+  salary_currency: z.enum(['rub', 'usd', 'eur']).default('rub'),
+  description: z.string()
+    .min(50, 'Описание должно содержать минимум 50 символов')
+    .max(2000, 'Описание слишком длинное'),
+  contact_name: z.string()
+    .min(2, 'Имя контактного лица обязательно')
+    .max(100, 'Имя слишком длинное'),
+  contact_phone: phoneSchema.refine(val => val && val.length > 0, {
+    message: 'Телефон обязателен'
+  }),
+  contact_email: emailSchema,
   experience_required: z.number()
     .min(0, 'Требуемый опыт не может быть отрицательным')
     .max(50, 'Неверное количество лет опыта')
