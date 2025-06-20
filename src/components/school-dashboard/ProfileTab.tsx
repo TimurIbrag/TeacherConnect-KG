@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock, CheckCircle, Home } from 'lucide-react';
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock, CheckCircle } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -443,29 +443,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5" />
-              Предоставление жилья
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">С жильем</p>
-                <p className="text-sm text-muted-foreground">
-                  Указывает, предоставляет ли школа жилье для учителей
-                </p>
-              </div>
-              <Switch
-                checked={schoolData.housing}
-                onCheckedChange={handleHousingToggle}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
             <div className="flex gap-2">
@@ -799,6 +776,25 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Housing switcher - moved here */}
+            <div className="space-y-2">
+              <Label>Предоставление жилья</Label>
+              <div className="border rounded-md p-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">С жильем</p>
+                    <p className="text-sm text-muted-foreground">
+                      Указывает, предоставляет ли школа жилье для учителей
+                    </p>
+                  </div>
+                  <Switch
+                    checked={schoolData.housing}
+                    onCheckedChange={handleHousingToggle}
+                  />
                 </div>
               </div>
             </div>
