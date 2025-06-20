@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock, CheckCircle } from 'lucide-react';
+import { Building, Edit, Eye, FilePlus, MapPin, MessageSquare, Search, Plus, X, Globe, Lock, CheckCircle, Home } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -37,7 +37,8 @@ const emptySchoolData = {
   website: '',
   infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая'],
   locationVerified: false,
-  coordinates: null as { lat: number; lng: number } | null
+  coordinates: null as { lat: number; lng: number } | null,
+  housing: false
 };
 
 // Initial empty stats
@@ -150,7 +151,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       })),
       ratings: 4.5, // Default rating
       views: Math.floor(Math.random() * 200) + 50, // Random views between 50-250
-      housing: false, // Can be extended later
+      housing: schoolData.housing, // Use the housing setting from profile
       locationVerified: schoolData.locationVerified,
       about: schoolData.about,
       website: schoolData.website,
@@ -166,6 +167,13 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     setIsUpdating(true);
     
     const formData = new FormData(e.currentTarget);
+    let websiteUrl = formData.get('website') as string;
+    
+    // Process website URL to add https:// if needed
+    if (websiteUrl && !websiteUrl.match(/^https?:\/\//)) {
+      websiteUrl = 'https://' + websiteUrl;
+    }
+    
     const updatedData = {
       name: formData.get('name') as string,
       address: formData.get('address') as string,
@@ -173,10 +181,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
       category: formData.get('category') as string,
       city: formData.get('city') as string,
       about: formData.get('about') as string,
-      website: formData.get('website') as string,
+      website: websiteUrl,
       infrastructure: schoolData.infrastructure,
       locationVerified: schoolData.locationVerified,
-      coordinates: schoolData.coordinates
+      coordinates: schoolData.coordinates,
+      housing: schoolData.housing
     };
     
     // Save to localStorage and update state
@@ -400,6 +409,29 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
         </Card>
 
         <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              Предоставление жилья
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">С жильем</p>
+                <p className="text-sm text-muted-foreground">
+                  Указывает, предоставляет ли школа жилье для учителей
+                </p>
+              </div>
+              <Switch
+                checked={schoolData.housing}
+                onCheckedChange={handleHousingToggle}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Профиль школы</CardTitle>
             <div className="flex gap-2">
@@ -412,13 +444,32 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
               {/* Rectangular school photo */}
-              <div className="w-32 h-20 rounded-lg overflow-hidden border-2 border-muted-foreground/20">
+              <div className="w-32 h-20 rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 relative">
                 {profilePhoto ? (
-                  <img src={profilePhoto} alt={schoolData.name} className="w-full h-full object-cover" />
+                  <>
+                    <img src={profilePhoto} alt={schoolData.name} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setProfilePhoto(null)}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </>
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <Building className="h-8 w-8 text-muted-foreground" />
-                  </div>
+                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50">
+                    <Building className="h-6 w-6 text-muted-foreground mb-1" />
+                    <span className="text-xs text-muted-foreground text-center px-2">Добавить фото школы</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleProfilePhotoChange(file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
                 )}
               </div>
               <div>
@@ -468,6 +519,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
               <div className="flex flex-wrap gap-2">
                 {schoolData.type && <Badge variant="outline">{schoolData.type}</Badge>}
                 {schoolData.category && <Badge variant="secondary">{schoolData.category}</Badge>}
+                {schoolData.housing && (
+                  <Badge variant="default" className="bg-blue-100 text-blue-800">
+                    С жильем
+                  </Badge>
+                )}
               </div>
             )}
             
@@ -655,10 +711,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
               <Input 
                 id="website" 
                 name="website" 
-                type="url" 
-                placeholder="https://school-example.kg"
+                placeholder="school-example.kg или www.school.com или https://school.edu.kg"
                 defaultValue={schoolData.website} 
               />
+              <p className="text-xs text-muted-foreground">
+                Можно вводить адрес с www., без https:// или полный URL
+              </p>
             </div>
             
             <div className="space-y-2">

@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Briefcase, Navigation, CheckCircle } from 'lucide-react';
+import { MapPin, Star, Eye, Briefcase, Navigation, CheckCircle, Home } from 'lucide-react';
 
 interface SchoolCardProps {
   id: number;
@@ -50,7 +50,10 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         />
         <div className="absolute top-2 right-2 flex gap-2">
           {housing && (
-            <Badge className="bg-accent text-white">Жилье</Badge>
+            <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
+              <Home className="w-3 h-3" />
+              С жильем
+            </Badge>
           )}
           {locationVerified && (
             <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
@@ -102,7 +105,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
             <span className="text-sm text-muted-foreground">{views}</span>
           </div>
         </div>
-        <Link to={`/schools/${id}`}>
+        <Link to={`/school-profile/${id}`}>
           <Button size="sm">Смотреть профиль</Button>
         </Link>
       </CardFooter>

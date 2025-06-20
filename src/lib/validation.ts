@@ -11,6 +11,25 @@ export const phoneSchema = z.string()
   .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Неверный формат телефона')
   .optional();
 
+// Flexible website URL validation that accepts various formats
+export const websiteUrlSchema = z.string()
+  .transform((val) => {
+    // Remove leading/trailing whitespace
+    val = val.trim();
+    
+    // If empty, return empty string
+    if (!val) return '';
+    
+    // If it doesn't start with http:// or https://, add https://
+    if (!val.match(/^https?:\/\//)) {
+      val = 'https://' + val;
+    }
+    
+    return val;
+  })
+  .pipe(z.string().url('Неверный формат URL').optional())
+  .optional();
+
 // Profile validation schemas
 export const profileUpdateSchema = z.object({
   full_name: z.string()
@@ -52,9 +71,7 @@ export const schoolProfileSchema = z.object({
   address: z.string()
     .max(200, 'Адрес слишком длинный')
     .optional(),
-  website_url: z.string()
-    .url('Неверный URL сайта')
-    .optional(),
+  website_url: websiteUrlSchema,
   founded_year: z.number()
     .min(1800, 'Неверный год основания')
     .max(new Date().getFullYear(), 'Год основания не может быть в будущем')

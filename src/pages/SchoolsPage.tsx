@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, MapPin, Filter, Building } from 'lucide-react';
+import { Search, MapPin, Filter, Building, Home } from 'lucide-react';
 import SchoolCard from '@/components/SchoolCard';
 import { schoolsData } from '@/data/mockData';
 import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
@@ -19,6 +19,7 @@ const SchoolsPage: React.FC = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+  const [selectedHousing, setSelectedHousing] = useState('');
   const [publishedSchools, setPublishedSchools] = useState<any[]>([]);
 
   // Get all vacancies to count them per school
@@ -178,8 +179,11 @@ const SchoolsPage: React.FC = () => {
     const matchesDistrict = !selectedDistrict || school.address.includes(selectedDistrict);
     const matchesType = !selectedType || school.type === selectedType;
     const matchesCity = !selectedCity || school.city === selectedCity || school.address.includes(selectedCity);
+    const matchesHousing = !selectedHousing || 
+      (selectedHousing === 'true' && school.housing) || 
+      (selectedHousing === 'false' && !school.housing);
     
-    return matchesSearch && matchesDistrict && matchesType && matchesCity;
+    return matchesSearch && matchesDistrict && matchesType && matchesCity && matchesHousing;
   });
 
   if (isLoading) {
@@ -261,10 +265,24 @@ const SchoolsPage: React.FC = () => {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={selectedHousing} onValueChange={setSelectedHousing}>
+          <SelectTrigger className="w-full md:w-48">
+            <div className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <SelectValue placeholder="Жилье" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Все варианты</SelectItem>
+            <SelectItem value="true">С жильем</SelectItem>
+            <SelectItem value="false">Без жилья</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Active Filters */}
-      {(selectedDistrict || selectedType || selectedCity) && (
+      {(selectedDistrict || selectedType || selectedCity || selectedHousing) && (
         <div className="flex flex-wrap gap-2 mb-6">
           {selectedCity && (
             <Badge variant="secondary" className="gap-1">
@@ -286,6 +304,14 @@ const SchoolsPage: React.FC = () => {
             <Badge variant="secondary" className="gap-1">
               {selectedType}
               <button onClick={() => setSelectedType('')} className="ml-1 hover:text-destructive">
+                ×
+              </button>
+            </Badge>
+          )}
+          {selectedHousing && (
+            <Badge variant="secondary" className="gap-1">
+              {selectedHousing === 'true' ? 'С жильем' : 'Без жилья'}
+              <button onClick={() => setSelectedHousing('')} className="ml-1 hover:text-destructive">
                 ×
               </button>
             </Badge>
@@ -313,6 +339,7 @@ const SchoolsPage: React.FC = () => {
               setSelectedDistrict('');
               setSelectedType('');
               setSelectedCity('');
+              setSelectedHousing('');
             }}
           >
             Сбросить фильтры
