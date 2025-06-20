@@ -17,14 +17,14 @@ const AuthPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const defaultUserType = searchParams.get('type') || 'teacher';
+  const defaultUserType = searchParams.get('type') || searchParams.get('userType') || 'teacher';
 
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [userType, setUserType] = useState<'teacher' | 'school'>(
-    defaultUserType === 'school' ? 'school' : 'teacher'
+    (defaultUserType === 'school' || defaultUserType === 'teacher') ? defaultUserType as 'teacher' | 'school' : 'teacher'
   );
   const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [resetEmailSent, setResetEmailSent] = useState(false);
@@ -39,11 +39,20 @@ const AuthPage = () => {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      // Store the user type for OAuth flow
+      console.log('Google auth initiated with user type:', userType);
+      
+      // Store the user type for OAuth flow with better reliability
       localStorage.setItem('pendingUserType', userType);
       sessionStorage.setItem('pendingUserType', userType);
       
-      const redirectUrl = `${window.location.origin}/?userType=${userType}`;
+      // Determine flow type
+      const flowType = authMode === 'signup' ? 'registration' : 'login';
+      localStorage.setItem('pendingOAuthFlow', flowType);
+      sessionStorage.setItem('pendingOAuthFlow', flowType);
+      
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=${flowType}`;
+      console.log('OAuth redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -53,6 +62,7 @@ const AuthPage = () => {
             access_type: 'offline',
             prompt: 'consent',
             userType: userType,
+            flow: flowType,
           },
         },
       });
@@ -75,14 +85,20 @@ const AuthPage = () => {
     setIsLoading(true);
 
     try {
+      console.log('Email signup with user type:', userType);
+      
       // Store user type for profile creation
       localStorage.setItem('pendingUserType', userType);
+      sessionStorage.setItem('pendingUserType', userType);
+      
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=registration`;
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/?userType=${userType}`,
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             role: userType,

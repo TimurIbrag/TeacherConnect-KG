@@ -90,32 +90,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 100);
   };
 
-  const getUserTypeFromUrl = (): 'teacher' | 'school' | null => {
+  const extractUserTypeFromUrl = (): 'teacher' | 'school' | null => {
+    // Check current URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const userType = urlParams.get('userType');
+    
+    console.log('URL userType parameter:', userType);
+    
     if (userType === 'teacher' || userType === 'school') {
       return userType;
     }
+    
+    // Also check for 'type' parameter as fallback
+    const typeParam = urlParams.get('type');
+    console.log('URL type parameter:', typeParam);
+    
+    if (typeParam === 'teacher' || typeParam === 'school') {
+      return typeParam;
+    }
+    
     return null;
   };
 
-  const determineUserTypeFromStorage = (): 'teacher' | 'school' => {
-    // Check URL first (for OAuth redirects)
-    const urlUserType = getUserTypeFromUrl();
+  const determineUserTypeFromStorage = (): 'teacher' | 'school' | null => {
+    // Step 1: Check URL parameters first (most reliable for OAuth redirects)
+    const urlUserType = extractUserTypeFromUrl();
     if (urlUserType) {
+      console.log('User type determined from URL:', urlUserType);
       return urlUserType;
     }
 
-    // Try to get user type from various storage sources
-    const pendingUserType = localStorage.getItem('pendingUserType') || 
-                           sessionStorage.getItem('pendingUserType');
+    // Step 2: Check localStorage and sessionStorage
+    const localStorageType = localStorage.getItem('pendingUserType');
+    const sessionStorageType = sessionStorage.getItem('pendingUserType');
     
-    if (pendingUserType === 'teacher' || pendingUserType === 'school') {
-      return pendingUserType;
+    console.log('LocalStorage pendingUserType:', localStorageType);
+    console.log('SessionStorage pendingUserType:', sessionStorageType);
+    
+    // Prefer sessionStorage as it's more session-specific
+    if (sessionStorageType === 'teacher' || sessionStorageType === 'school') {
+      console.log('User type determined from sessionStorage:', sessionStorageType);
+      return sessionStorageType;
     }
     
-    // Default to teacher if nothing is found
-    return 'teacher';
+    if (localStorageType === 'teacher' || localStorageType === 'school') {
+      console.log('User type determined from localStorage:', localStorageType);
+      return localStorageType;
+    }
+    
+    // Step 3: Check OAuth flow type
+    const oauthFlow = localStorage.getItem('pendingOAuthFlow') || sessionStorage.getItem('pendingOAuthFlow');
+    console.log('OAuth flow type:', oauthFlow);
+    
+    // If we can't determine user type, return null instead of defaulting
+    console.log('Could not determine user type from any source');
+    return null;
   };
 
   useEffect(() => {
@@ -146,9 +175,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 // Get user type from storage or URL
                 const userType = determineUserTypeFromStorage();
-                console.log('Determined user type:', userType);
+                console.log('Determined user type for new profile:', userType);
                 
-                // Clean up storage
+                if (!userType) {
+                  console.log('No user type determined, showing selection modal');
+                  setShowUserTypeModal(true);
+                  setLoading(false);
+                  return;
+                }
+                
+                // Clean up storage after successful determination
                 localStorage.removeItem('pendingUserType');
                 localStorage.removeItem('pendingOAuthFlow');
                 sessionStorage.removeItem('pendingUserType');
@@ -172,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   // If profile creation fails, show user type selection modal
                   setShowUserTypeModal(true);
                 } else {
-                  console.log('Profile created successfully:', newProfile);
+                  console.log('Profile created successfully with role:', newProfile.role);
                   setProfile(newProfile);
                 }
               } else {
@@ -180,6 +216,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!existingProfile.role) {
                   console.log('Existing profile without role, showing selection modal');
                   setShowUserTypeModal(true);
+                } else {
+                  console.log('Existing profile found with role:', existingProfile.role);
                 }
                 setProfile(existingProfile);
               }
@@ -187,18 +225,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.error('Error handling user authentication:', error);
               // Show user type selection modal as fallback
               setShowUserTypeModal(true);
+            } finally {
+              setLoading(false);
             }
           }, 100);
         } else if (session?.user) {
           // Existing user, just fetch profile
           setTimeout(() => {
             fetchProfile(session.user.id);
+            setLoading(false);
           }, 100);
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -209,8 +249,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

@@ -15,30 +15,36 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
   const handleGoogleLogin = async () => {
     try {
       console.log('Google OAuth button clicked');
-      console.log('User type:', userType);
+      console.log('User type for OAuth:', userType);
       
-      // Store user type if provided
+      // Store user type in multiple places for reliability
       if (userType) {
         localStorage.setItem('pendingUserType', userType);
         sessionStorage.setItem('pendingUserType', userType);
-        console.log('Stored user type in localStorage:', userType);
+        console.log('Stored user type in both localStorage and sessionStorage:', userType);
       }
       
       // Mark this as a login flow
       localStorage.setItem('pendingOAuthFlow', 'login');
       sessionStorage.setItem('pendingOAuthFlow', 'login');
       
+      // Create redirect URL with userType parameter
+      const baseUrl = window.location.origin;
       const redirectUrl = userType 
-        ? `${window.location.origin}/?userType=${userType}`
-        : `${window.location.origin}/`;
+        ? `${baseUrl}/?userType=${userType}`
+        : `${baseUrl}/`;
       
-      console.log('Redirect URL that will be used:', redirectUrl);
+      console.log('OAuth redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          queryParams: userType ? { userType } : undefined
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+            ...(userType ? { userType } : {})
+          }
         }
       });
 
@@ -59,7 +65,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         return;
       }
 
-      console.log('OAuth initiated successfully, should redirect to Google...');
+      console.log('OAuth initiated successfully, redirecting to Google...');
       
     } catch (error: any) {
       console.error('Unexpected error during Google auth:', error);
@@ -85,6 +91,11 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         className="w-5 h-5"
       />
       Войти через Google
+      {userType && (
+        <span className="text-xs text-muted-foreground ml-1">
+          как {userType === 'teacher' ? 'учитель' : 'школа'}
+        </span>
+      )}
     </Button>
   );
 };

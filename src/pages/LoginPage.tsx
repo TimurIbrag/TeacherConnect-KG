@@ -23,11 +23,13 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Get user type from URL params if provided
-  const userTypeFromUrl = searchParams.get('type');
+  // Get user type from URL params if provided - check both 'type' and 'userType'
+  const userTypeFromUrl = searchParams.get('type') || searchParams.get('userType');
   const userType = (userTypeFromUrl === 'school' || userTypeFromUrl === 'teacher') 
     ? userTypeFromUrl as 'teacher' | 'school'
     : undefined;
+
+  console.log('LoginPage - userType from URL:', userType);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

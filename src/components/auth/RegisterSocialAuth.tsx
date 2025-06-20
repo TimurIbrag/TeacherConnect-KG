@@ -22,26 +22,28 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
     setIsLoading(true);
     try {
       console.log('Google OAuth registration button clicked');
-      console.log('User type:', userType);
+      console.log('User type for registration:', userType);
       
-      // Store the user type in localStorage so we can use it after redirect
+      // Store the user type in multiple places for maximum reliability
       localStorage.setItem('pendingUserType', userType);
       localStorage.setItem('pendingOAuthFlow', 'registration');
-      console.log('Stored pendingUserType in localStorage:', userType);
-      
-      // Also store in sessionStorage as a backup
       sessionStorage.setItem('pendingUserType', userType);
       sessionStorage.setItem('pendingOAuthFlow', 'registration');
+      console.log('Stored user type for registration:', userType);
       
-      const redirectUrl = `${window.location.origin}/?userType=${userType}`;
-      console.log('Redirect URL that will be used:', redirectUrl);
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=registration`;
+      console.log('Registration redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
           queryParams: {
-            userType: userType // Pass user type in query params as well
+            access_type: 'offline',
+            prompt: 'consent',
+            userType: userType,
+            flow: 'registration'
           }
         }
       });
