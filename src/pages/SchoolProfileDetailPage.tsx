@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,60 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MapPin, Star, Eye, Briefcase, Globe, Home, CheckCircle, Building } from 'lucide-react';
 import { schoolsData } from '@/data/mockData';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const SchoolProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [school, setSchool] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Add query for school's active vacancies
+  const { data: schoolVacancies = [] } = useQuery({
+    queryKey: ['school-vacancies', id],
+    queryFn: async () => {
+      if (!id) return [];
+      
+      const { data, error } = await supabase
+        .from('vacancies')
+        .select('*')
+        .eq('school_id', id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching school vacancies:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
+  const getVacancyTypeLabel = (type: string) => {
+    const types = {
+      teacher: 'Учитель',
+      tutor: 'Репетитор',
+      assistant: 'Ассистент',
+      coordinator: 'Координатор',
+      other: 'Другое'
+    };
+    return types[type as keyof typeof types] || type;
+  };
+
+  const formatSalary = (vacancy: any) => {
+    const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
+    const symbols = { rub: '₽', usd: '$', eur: '€' };
+    const symbol = symbols[salary_currency as keyof typeof symbols] || '₽';
+    
+    if (!salary_min && !salary_max) return 'По договоренности';
+    if (salary_min && salary_max) return `${salary_min.toLocaleString()} - ${salary_max.toLocaleString()} ${symbol}`;
+    if (salary_min) return `от ${salary_min.toLocaleString()} ${symbol}`;
+    if (salary_max) return `до ${salary_max.toLocaleString()} ${symbol}`;
+    return 'Не указана';
+  };
 
   useEffect(() => {
     const loadSchoolData = () => {
@@ -151,6 +198,70 @@ const SchoolProfileDetailPage: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Add active vacancies section */}
+      {schoolVacancies.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5" />
+              Открытые вакансии ({schoolVacancies.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {schoolVacancies.map((vacancy) => (
+                <div key={vacancy.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-semibold text-lg">{vacancy.title}</h4>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type)}</Badge>
+                        {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-primary">
+                        {formatSalary(vacancy)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
+                    {vacancy.location && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <span>{vacancy.location}</span>
+                      </div>
+                    )}
+                    {vacancy.employment_type && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{vacancy.employment_type}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {vacancy.description && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {vacancy.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      Опубликовано: {new Date(vacancy.created_at).toLocaleDateString('ru-RU')}
+                    </span>
+                    <Button size="sm">
+                      Откликнуться
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">

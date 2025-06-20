@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,20 +31,19 @@ import SupportPage from "./pages/SupportPage";
 import FAQPage from "./pages/FAQPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
+import VacanciesPage from '@/pages/VacanciesPage';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+function App() {
+  return (
+    <BrowserRouter>
+      <QueryClient client={queryClient}>
         <AuthProvider>
           <LanguageProvider>
-            <div className="min-h-screen flex flex-col">
+            <div className="min-h-screen bg-background">
               <Navbar />
-              <main className="flex-1">
+              <main>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/home" element={<HomePage />} />
@@ -70,16 +68,18 @@ const App = () => (
                   <Route path="/faq" element={<FAQPage />} />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
                   <Route path="/terms" element={<TermsOfServicePage />} />
+                  <Route path="/vacancies" element={<VacanciesPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
               <Footer />
+              <Toaster />
             </div>
           </LanguageProvider>
         </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </QueryClient>
+    </BrowserRouter>
+  );
+}
 
 export default App;

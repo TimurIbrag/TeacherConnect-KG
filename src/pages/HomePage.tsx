@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,9 +16,13 @@ import {
   ArrowRight,
   Search
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user, profile } = useAuth();
   const { data: featuredVacancies, isLoading: vacanciesLoading } = useActiveVacancies(6);
   const { data: featuredTeachers, isLoading: teachersLoading } = useTeachers();
   const { data: featuredSchools, isLoading: schoolsLoading } = useSchools();
@@ -34,6 +37,14 @@ const HomePage = () => {
     if (min) return `от ${min.toLocaleString()} ₽`;
     if (max) return `до ${max.toLocaleString()} ₽`;
     return 'Не указана';
+  };
+
+  const handleAddVacancy = () => {
+    if (profile?.role === 'school') {
+      navigate('/dashboard/school');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
@@ -305,20 +316,20 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-16 bg-primary text-primary-foreground">
+        <div className="container px-4 mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Готовы начать свой путь в образовании?
+            {t('cta.title')}
           </h2>
-          <p className="text-xl mb-8 text-blue-100">
-            Присоединяйтесь к нашей платформе уже сегодня
+          <p className="text-xl mb-8 opacity-90">
+            {t('cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" asChild>
-              <Link to="/auth">Зарегистрироваться как преподаватель</Link>
+            <Button size="lg" variant="secondary" onClick={handleAddVacancy}>
+              Добавить вакансию
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600" asChild>
-              <Link to="/auth">Зарегистрироваться как школа</Link>
+            <Button size="lg" variant="outline" onClick={() => navigate('/vacancies')}>
+              Найти работу
             </Button>
           </div>
         </div>
