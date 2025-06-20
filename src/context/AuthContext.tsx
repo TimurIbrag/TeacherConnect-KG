@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import UserTypeSelectionModal from '@/components/auth/UserTypeSelectionModal';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -30,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -80,6 +83,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const handleUserTypeSelection = (userType: 'teacher' | 'school') => {
+    // Refresh profile after user type selection
+    setTimeout(() => {
+      refreshProfile();
+    }, 100);
+  };
+
+  const determineUserTypeFromStorage = (): 'teacher' | 'school' => {
+    // Try to get user type from various storage sources
+    const pendingUserType = localStorage.getItem('pendingUserType') || 
+                           sessionStorage.getItem('pendingUserType');
+    
+    if (pendingUserType === 'teacher' || pendingUserType === 'school') {
+      return pendingUserType;
+    }
+    
+    // Default to teacher if nothing is found
+    return 'teacher';
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -91,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
-          // Handle new user creation
+          // Handle new user creation or existing user login
           setTimeout(async () => {
             try {
               // Check if profile exists
@@ -106,9 +129,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (!existingProfile) {
                 console.log('Creating new profile for user');
                 
-                // Get user type from localStorage (set during registration)
-                const pendingUserType = localStorage.getItem('pendingUserType') || 'teacher';
-                localStorage.removeItem('pendingUserType'); // Clean up
+                // Get user type from storage
+                const userType = determineUserTypeFromStorage();
+                
+                // Clean up storage
+                localStorage.removeItem('pendingUserType');
+                localStorage.removeItem('pendingOAuthFlow');
+                sessionStorage.removeItem('pendingUserType');
+                sessionStorage.removeItem('pendingOAuthFlow');
                 
                 const { data: newProfile, error: profileError } = await supabase
                   .from('profiles')
@@ -118,22 +146,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     full_name: session.user.user_metadata?.full_name || 
                              session.user.user_metadata?.name || 
                              '',
-                    role: pendingUserType as 'teacher' | 'school' | 'admin',
+                    role: userType,
                   })
                   .select()
                   .single();
                   
                 if (profileError) {
                   console.error('Error creating profile:', profileError);
+                  // If profile creation fails, show user type selection modal
+                  setShowUserTypeModal(true);
                 } else {
                   console.log('Profile created successfully:', newProfile);
                   setProfile(newProfile);
                 }
               } else {
+                // Check if existing profile has a role set
+                if (!existingProfile.role) {
+                  console.log('Existing profile without role, showing selection modal');
+                  setShowUserTypeModal(true);
+                }
                 setProfile(existingProfile);
               }
             } catch (error) {
-              console.error('Error handling new user:', error);
+              console.error('Error handling user authentication:', error);
+              // Show user type selection modal as fallback
+              setShowUserTypeModal(true);
             }
           }, 100);
         } else if (session?.user) {
@@ -166,6 +203,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    // Clean up any pending user type data
+    localStorage.removeItem('pendingUserType');
+    localStorage.removeItem('pendingOAuthFlow');
+    sessionStorage.removeItem('pendingUserType');
+    sessionStorage.removeItem('pendingOAuthFlow');
   };
 
   const value = {
@@ -178,5 +220,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <UserTypeSelectionModal
+        isOpen={showUserTypeModal}
+        onClose={() => setShowUserTypeModal(false)}
+        onUserTypeSelected={handleUserTypeSelection}
+      />
+    </AuthContext.Provider>
+  );
 };

@@ -6,16 +6,28 @@ import { useToast } from '@/hooks/use-toast';
 
 interface GoogleLoginButtonProps {
   isLoading: boolean;
+  userType?: 'teacher' | 'school';
 }
 
-const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
+const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userType }) => {
   const { toast } = useToast();
 
   const handleGoogleLogin = async () => {
     try {
       console.log('Google OAuth button clicked');
+      console.log('User type:', userType);
       console.log('Current URL:', window.location.href);
       console.log('Origin:', window.location.origin);
+      
+      // Store user type if provided
+      if (userType) {
+        localStorage.setItem('pendingUserType', userType);
+        sessionStorage.setItem('pendingUserType', userType);
+      }
+      
+      // Mark this as a login flow
+      localStorage.setItem('pendingOAuthFlow', 'login');
+      sessionStorage.setItem('pendingOAuthFlow', 'login');
       
       const redirectUrl = `${window.location.origin}/`;
       console.log('Redirect URL that will be used:', redirectUrl);
@@ -23,7 +35,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          queryParams: userType ? { userType } : undefined
         }
       });
 

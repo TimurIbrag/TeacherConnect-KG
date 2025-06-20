@@ -28,7 +28,12 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       
       // Store the user type in localStorage so we can use it after redirect
       localStorage.setItem('pendingUserType', userType);
+      localStorage.setItem('pendingOAuthFlow', 'registration');
       console.log('Stored pendingUserType in localStorage:', userType);
+      
+      // Also store in sessionStorage as a backup
+      sessionStorage.setItem('pendingUserType', userType);
+      sessionStorage.setItem('pendingOAuthFlow', 'registration');
       
       const redirectUrl = `${window.location.origin}/`;
       console.log('Redirect URL that will be used:', redirectUrl);
@@ -36,7 +41,10 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          queryParams: {
+            userType: userType // Pass user type in query params as well
+          }
         }
       });
 

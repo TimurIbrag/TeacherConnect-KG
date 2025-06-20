@@ -10,7 +10,7 @@ export const useAuthRedirect = () => {
   useEffect(() => {
     if (loading) return;
 
-    if (user && profile) {
+    if (user && profile && profile.role) {
       // Check if user needs to complete profile setup
       const needsProfileSetup = !profile.full_name || 
         (profile.role === 'teacher' && !profile.phone) ||
