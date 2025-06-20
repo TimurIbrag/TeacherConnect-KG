@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,24 @@ import { schoolsData } from '@/data/mockData';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+// Extended vacancy type with new fields
+type ExtendedVacancy = {
+  id: string;
+  title: string;
+  description?: string;
+  vacancy_type?: string;
+  subject?: string;
+  education_level?: string;
+  employment_type?: string;
+  location?: string;
+  salary_min?: number;
+  salary_max?: number;
+  salary_currency?: string;
+  application_deadline?: string;
+  is_active?: boolean;
+  created_at: string;
+};
 
 const SchoolProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +51,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         return [];
       }
 
-      return data || [];
+      return (data || []) as ExtendedVacancy[];
     },
     enabled: !!id,
   });
@@ -50,7 +67,7 @@ const SchoolProfileDetailPage: React.FC = () => {
     return types[type as keyof typeof types] || type;
   };
 
-  const formatSalary = (vacancy: any) => {
+  const formatSalary = (vacancy: ExtendedVacancy) => {
     const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
     const symbols = { rub: '₽', usd: '$', eur: '€' };
     const symbol = symbols[salary_currency as keyof typeof symbols] || '₽';
@@ -362,7 +379,7 @@ const SchoolProfileDetailPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Активные вакансии:</span>
-                <span className="text-sm font-medium">{school.openPositions?.length || 0}</span>
+                <span className="text-sm font-medium">{schoolVacancies.length}</span>
               </div>
               {school.applications !== undefined && (
                 <div className="flex justify-between">

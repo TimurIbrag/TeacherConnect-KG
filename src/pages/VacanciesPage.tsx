@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MapPin, DollarSign, Clock, GraduationCap, Building2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/context/LanguageContext';
+
+// Extended vacancy type with new fields
+type ExtendedVacancy = {
+  id: string;
+  title: string;
+  description?: string;
+  vacancy_type?: string;
+  subject?: string;
+  education_level?: string;
+  employment_type?: string;
+  location?: string;
+  salary_min?: number;
+  salary_max?: number;
+  salary_currency?: string;
+  application_deadline?: string;
+  is_active?: boolean;
+  created_at: string;
+  requirements?: string[];
+  school_profiles?: {
+    school_name: string;
+    address?: string;
+    profiles?: {
+      full_name: string;
+    };
+  };
+};
 
 const VacanciesPage = () => {
   const { t } = useLanguage();
@@ -39,7 +64,7 @@ const VacanciesPage = () => {
         throw error;
       }
 
-      return data || [];
+      return (data || []) as ExtendedVacancy[];
     },
   });
 
@@ -82,7 +107,7 @@ const VacanciesPage = () => {
     return symbols[currency as keyof typeof symbols] || '₽';
   };
 
-  const formatSalary = (vacancy: any) => {
+  const formatSalary = (vacancy: ExtendedVacancy) => {
     const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
     const symbol = getCurrencySymbol(salary_currency);
     
@@ -212,7 +237,7 @@ const VacanciesPage = () => {
                   
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{getEmploymentTypeLabel(vacancy.employment_type)}</span>
+                    <span>{getEmploymentTypeLabel(vacancy.employment_type || 'full-time')}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
