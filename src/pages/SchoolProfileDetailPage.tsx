@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Star, Eye, Briefcase, Globe, Home, CheckCircle, Building } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Eye, Briefcase, Globe, Home, CheckCircle, Building, Clock } from 'lucide-react';
 import { schoolsData } from '@/data/mockData';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -189,7 +190,7 @@ const SchoolProfileDetailPage: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <Briefcase className="w-4 h-4 text-primary" />
                   <span className="text-primary font-medium">
-                    {school.openPositions?.length || 0} вакансий
+                    {schoolVacancies.length} вакансий
                   </span>
                 </div>
               </div>
@@ -215,7 +216,7 @@ const SchoolProfileDetailPage: React.FC = () => {
                     <div>
                       <h4 className="font-semibold text-lg">{vacancy.title}</h4>
                       <div className="flex gap-2 mt-1">
-                        <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type)}</Badge>
+                        <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type || 'teacher')}</Badge>
                         {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
                       </div>
                     </div>

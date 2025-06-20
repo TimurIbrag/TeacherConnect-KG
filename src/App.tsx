@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,7 +39,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <BrowserRouter>
-      <QueryClient client={queryClient}>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LanguageProvider>
             <div className="min-h-screen bg-background">
@@ -77,7 +78,7 @@ function App() {
             </div>
           </LanguageProvider>
         </AuthProvider>
-      </QueryClient>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }

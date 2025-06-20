@@ -191,7 +191,7 @@ const VacanciesPage = () => {
                       <span>{vacancy.school_profiles?.school_name}</span>
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type)}</Badge>
+                      <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type || 'teacher')}</Badge>
                       {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
                     </div>
                   </div>
@@ -217,7 +217,7 @@ const VacanciesPage = () => {
                   
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span>{getEducationLevelLabel(vacancy.education_level)}</span>
+                    <span>{getEducationLevelLabel(vacancy.education_level || 'any')}</span>
                   </div>
                 </div>
 

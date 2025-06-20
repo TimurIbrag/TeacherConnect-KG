@@ -84,13 +84,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNav 
-        isOpen={mobileMenuOpen} 
-        setIsOpen={setMobileMenuOpen} 
-        isLoggedIn={!!user} 
-        userType={compatibleUserType} 
-        handleLogout={handleLogout}
-      />
+      <MobileNav />
     </header>
   );
 };
