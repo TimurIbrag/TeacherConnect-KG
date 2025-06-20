@@ -231,6 +231,40 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     }
   };
 
+  // Handle housing toggle
+  const handleHousingToggle = (checked: boolean) => {
+    const updatedData = {
+      ...schoolData,
+      housing: checked
+    };
+    
+    setSchoolData(updatedData);
+    localStorage.setItem('schoolProfileData', JSON.stringify(updatedData));
+    
+    // Update published profile if it's currently public
+    if (isProfilePublic) {
+      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      const updatedSchools = publishedSchools.filter((s: any) => s.name !== schoolData.name);
+      const newProfile = createPublishedSchoolProfile();
+      updatedSchools.push(newProfile);
+      localStorage.setItem('publishedSchools', JSON.stringify(updatedSchools));
+      
+      // Trigger a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'publishedSchools',
+        newValue: JSON.stringify(updatedSchools),
+        oldValue: JSON.stringify(publishedSchools)
+      }));
+    }
+    
+    toast({
+      title: checked ? "Жилье включено" : "Жилье отключено",
+      description: checked 
+        ? "Школа теперь предоставляет жилье для учителей" 
+        : "Школа больше не предоставляет жилье для учителей",
+    });
+  };
+
   // Handle profile visibility toggle
   const handleProfileVisibilityChange = (checked: boolean) => {
     setIsProfilePublic(checked);
