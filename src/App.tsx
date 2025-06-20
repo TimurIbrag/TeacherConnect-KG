@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,40 +41,43 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LanguageProvider>
-            <div className="min-h-screen bg-background">
-              <Navbar />
-              <main>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/home" element={<HomePage />} />
-                  <Route path="/teachers" element={<TeachersPage />} />
-                  <Route path="/schools" element={<SchoolsPage />} />
-                  <Route path="/teacher/:id" element={<TeacherProfilePage />} />
-                  <Route path="/schools/:id" element={<SchoolProfilePage />} />
-                  <Route path="/school-profile/:id" element={<SchoolProfileDetailPage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/secure-login" element={<SecureLoginPage />} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<PasswordResetPage />} />
-                  <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
-                  <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
-                  <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/saved" element={<SavedItemsPage />} />
-                  <Route path="/support" element={<SupportPage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/terms" element={<TermsOfServicePage />} />
-                  <Route path="/vacancies" element={<VacanciesPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-              <Footer />
-              <Toaster />
-            </div>
+            <TooltipProvider>
+              <div className="min-h-screen bg-background">
+                <Navbar />
+                <main>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/home" element={<HomePage />} />
+                    <Route path="/teachers" element={<TeachersPage />} />
+                    <Route path="/schools" element={<SchoolsPage />} />
+                    <Route path="/teacher/:id" element={<TeacherProfilePage />} />
+                    <Route path="/schools/:id" element={<SchoolProfilePage />} />
+                    <Route path="/school-profile/:id" element={<SchoolProfileDetailPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/secure-login" element={<SecureLoginPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<PasswordResetPage />} />
+                    <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
+                    <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
+                    <Route path="/messages" element={<MessagesPage />} />
+                    <Route path="/notifications" element={<NotificationsPage />} />
+                    <Route path="/saved" element={<SavedItemsPage />} />
+                    <Route path="/support" element={<SupportPage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
+                    <Route path="/vacancies" element={<VacanciesPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <Toaster />
+                <Sonner />
+              </div>
+            </TooltipProvider>
           </LanguageProvider>
         </AuthProvider>
       </QueryClientProvider>
