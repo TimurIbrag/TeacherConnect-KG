@@ -14,44 +14,61 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('Google OAuth button clicked');
-      console.log('User type for OAuth:', userType);
+      console.log('🔵 Google OAuth login button clicked');
+      console.log('🎯 User type for OAuth:', userType);
       
-      // Store user type in multiple places for reliability
+      // Enhanced storage for login flow
       if (userType) {
-        localStorage.setItem('pendingUserType', userType);
-        sessionStorage.setItem('pendingUserType', userType);
-        console.log('Stored user type in both localStorage and sessionStorage:', userType);
+        const storageData = {
+          oauth_user_type: userType,
+          pendingUserType: userType,
+          pendingOAuthFlow: 'login',
+          intended_user_type: userType,
+          timestamp: Date.now().toString()
+        };
+        
+        // Store in both localStorage and sessionStorage
+        Object.entries(storageData).forEach(([key, value]) => {
+          localStorage.setItem(key, value);
+          sessionStorage.setItem(key, value);
+        });
+        
+        console.log('💾 Enhanced storage - stored user type for login:', userType);
       }
       
-      // Mark this as a login flow
-      localStorage.setItem('pendingOAuthFlow', 'login');
-      sessionStorage.setItem('pendingOAuthFlow', 'login');
-      
-      // Create redirect URL with userType parameter
+      // Create enhanced redirect URL with multiple parameter formats
       const baseUrl = window.location.origin;
       const redirectUrl = userType 
-        ? `${baseUrl}/?userType=${userType}`
-        : `${baseUrl}/`;
+        ? `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&flow=login&oauth=google`
+        : `${baseUrl}/?flow=login&oauth=google`;
       
-      console.log('OAuth redirect URL:', redirectUrl);
+      console.log('🔗 Enhanced OAuth redirect URL:', redirectUrl);
+      
+      const queryParams: Record<string, string> = {
+        access_type: 'offline',
+        prompt: 'consent'
+      };
+      
+      if (userType) {
+        queryParams.userType = userType;
+        queryParams.type = userType;
+        queryParams.user_type = userType;
+        queryParams.flow = 'login';
+        queryParams.oauth = 'google';
+      }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            ...(userType ? { userType } : {})
-          }
+          queryParams
         }
       });
 
-      console.log('Supabase OAuth response:', { data, error });
+      console.log('📤 Supabase OAuth response:', { data, error });
       
       if (error) {
-        console.error('Supabase OAuth error details:', {
+        console.error('❌ Supabase OAuth error details:', {
           message: error.message,
           status: error.status,
           details: error
@@ -65,10 +82,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         return;
       }
 
-      console.log('OAuth initiated successfully, redirecting to Google...');
+      console.log('✅ OAuth login initiated successfully, redirecting to Google...');
       
     } catch (error: any) {
-      console.error('Unexpected error during Google auth:', error);
+      console.error('❌ Unexpected error during Google auth:', error);
       
       toast({
         title: "Ошибка входа",

@@ -19,11 +19,20 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
   onClose,
   onUserTypeSelected
 }) => {
-  const [selectedType, setSelectedType] = useState<'teacher' | 'school'>('teacher');
+  const [selectedType, setSelectedType] = useState<'teacher' | 'school' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
+    if (!selectedType) {
+      toast({
+        title: "Выберите тип аккаунта",
+        description: "Пожалуйста, выберите, кем вы являетесь",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,6 +51,8 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
         throw error;
       }
 
+      console.log('✅ User type updated to:', selectedType);
+
       toast({
         title: "Тип пользователя сохранен",
         description: `Вы выбрали роль: ${selectedType === 'teacher' ? 'Учитель' : 'Школа'}`,
@@ -50,7 +61,7 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
       onUserTypeSelected(selectedType);
       onClose();
     } catch (error: any) {
-      console.error('Error updating user type:', error);
+      console.error('❌ Error updating user type:', error);
       toast({
         title: "Ошибка",
         description: "Не удалось сохранить тип пользователя",
@@ -73,7 +84,7 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
           </p>
           
           <RadioGroup
-            value={selectedType}
+            value={selectedType || ''}
             onValueChange={(value) => setSelectedType(value as 'teacher' | 'school')}
             className="space-y-3"
           >
@@ -104,7 +115,11 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
             <Button variant="outline" onClick={onClose} className="flex-1">
               Отмена
             </Button>
-            <Button onClick={handleSubmit} disabled={isLoading} className="flex-1">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isLoading || !selectedType} 
+              className="flex-1"
+            >
               {isLoading ? 'Сохранение...' : 'Продолжить'}
             </Button>
           </div>
