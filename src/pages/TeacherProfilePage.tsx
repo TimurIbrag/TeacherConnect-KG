@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
@@ -46,44 +45,105 @@ const TeacherProfilePage: React.FC = () => {
   // Try to get teacher from Supabase first
   const { data: supabaseTeacher, isLoading: isLoadingSupabase } = useTeacher(teacherId);
   
-  // Get published teacher from localStorage
-  const getPublishedTeacher = () => {
+  // Enhanced function to get all possible teachers including published ones
+  const getAllAvailableTeachers = () => {
+    const teachers = [];
+    
+    // 1. Get published teacher from localStorage
     try {
       const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
       const profileData = localStorage.getItem('teacherProfileData');
       
-      if (isPublished && profileData && teacherId === 'local-teacher') {
+      if (isPublished && profileData) {
         const profile = JSON.parse(profileData);
-        const currentUser = localStorage.getItem('user');
-        const userData = currentUser ? JSON.parse(currentUser) : null;
         
-        return {
-          id: 'local-teacher',
-          name: profile.fullName,
-          photo: profile.photoUrl || '/placeholder.svg',
-          specialization: profile.specialization,
-          experience: profile.experience + ' лет',
-          location: profile.location,
-          ratings: 5.0,
-          views: 0,
-          about: profile.bio,
-          education: profile.education,
-          languages: profile.languages || ['Кыргызский', 'Русский'],
-          achievements: 'Опубликованный профиль',
-          preferredSchedule: 'Полный день',
-          desiredSalary: '25,000 - 30,000 сом',
-          preferredDistricts: [profile.location || 'Бишкек'],
-          applications: 0,
-        };
+        if (profile.fullName && profile.specialization) {
+          teachers.push({
+            id: 'local-teacher',
+            name: profile.fullName,
+            photo: profile.photoUrl || '/placeholder.svg',
+            specialization: profile.specialization,
+            experience: (profile.experience || '0') + ' лет',
+            location: profile.location || 'Не указано',
+            ratings: 5.0,
+            views: 0,
+            about: profile.bio || 'Информация о себе не указана',
+            education: profile.education || 'Образование не указано',
+            languages: profile.languages || ['Кыргызский', 'Русский'],
+            achievements: 'Опубликованный профиль',
+            preferredSchedule: 'Полный день',
+            desiredSalary: '25,000 - 30,000 сом',
+            preferredDistricts: [profile.location || 'Бишкек'],
+            applications: 0,
+            source: 'published'
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading published teacher:', error);
     }
-    return null;
+    
+    // 2. Get all published teachers from a global storage (if exists)
+    try {
+      const allPublishedTeachers = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
+      allPublishedTeachers.forEach((teacher: any) => {
+        if (teacher.id && teacher.name) {
+          teachers.push({
+            id: teacher.id,
+            name: teacher.name,
+            photo: teacher.photo || '/placeholder.svg',
+            specialization: teacher.specialization || 'Специализация не указана',
+            experience: (teacher.experience || '0') + ' лет',
+            location: teacher.location || 'Не указано',
+            ratings: teacher.ratings || 5.0,
+            views: teacher.views || 0,
+            about: teacher.about || 'Информация о себе не указана',
+            education: teacher.education || 'Образование не указано',
+            languages: teacher.languages || ['Кыргызский', 'Русский'],
+            achievements: teacher.achievements || 'Опубликованный профиль',
+            preferredSchedule: teacher.preferredSchedule || 'Полный день',
+            desiredSalary: teacher.desiredSalary || '25,000 - 30,000 сом',
+            preferredDistricts: teacher.preferredDistricts || ['Бишкек'],
+            applications: teacher.applications || 0,
+            source: 'global_published'
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error loading global published teachers:', error);
+    }
+    
+    // 3. Get mock teachers
+    teachersData.forEach(teacher => {
+      teachers.push({
+        id: teacher.id.toString(),
+        name: teacher.name,
+        photo: teacher.photo,
+        specialization: teacher.specialization,
+        experience: teacher.experience,
+        location: teacher.location,
+        ratings: teacher.ratings,
+        views: teacher.views,
+        about: teacher.about,
+        education: teacher.education,
+        languages: teacher.languages,
+        achievements: teacher.achievements,
+        preferredSchedule: teacher.preferredSchedule,
+        desiredSalary: teacher.desiredSalary,
+        preferredDistricts: teacher.preferredDistricts,
+        applications: teacher.applications,
+        source: 'mock'
+      });
+    });
+    
+    return teachers;
   };
   
-  // Try to get from mock data as fallback
-  const mockTeacher = teachersData.find(t => t.id === Number(teacherId));
+  // Find the teacher from all available sources
+  const findTeacherById = (searchId: string) => {
+    const allTeachers = getAllAvailableTeachers();
+    return allTeachers.find(t => t.id === searchId || t.id.toString() === searchId);
+  };
   
   // Determine which teacher data to use
   const teacher = supabaseTeacher ? {
@@ -103,7 +163,8 @@ const TeacherProfilePage: React.FC = () => {
     desiredSalary: '25,000 - 30,000 сом',
     preferredDistricts: [supabaseTeacher.location || 'Бишкек'],
     applications: 0,
-  } : getPublishedTeacher() || mockTeacher;
+    source: 'supabase'
+  } : findTeacherById(teacherId);
   
   if (isLoadingSupabase) {
     return (
@@ -119,6 +180,7 @@ const TeacherProfilePage: React.FC = () => {
       <div className="container py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Учитель не найден</h1>
         <p className="mb-6">Пользователь с указанным ID не существует.</p>
+        <p className="text-sm text-muted-foreground mb-6">ID: {teacherId}</p>
         <Button asChild>
           <Link to="/teachers">Вернуться к списку учителей</Link>
         </Button>
@@ -342,8 +404,8 @@ const TeacherProfilePage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {teachersData
-                  .filter(t => t.id !== Number(teacherId) && t.specialization === teacher.specialization)
+                {getAllAvailableTeachers()
+                  .filter(t => t.id !== teacherId && t.specialization === teacher.specialization)
                   .slice(0, 3)
                   .map(similarTeacher => (
                     <div key={similarTeacher.id} className="flex items-center gap-3">
