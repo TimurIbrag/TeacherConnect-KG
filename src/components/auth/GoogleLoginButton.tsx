@@ -19,6 +19,18 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       
       // Store user type if provided (for login flow)
       if (userType) {
+        // Clear existing storage first
+        const keysToClean = [
+          'confirmed_user_type', 'oauth_user_type', 'registration_user_type',
+          'pendingUserType', 'intended_user_type', 'user_type_source',
+          'user_type_timestamp', 'oauth_provider', 'flow_type', 'oauth_flow'
+        ];
+        
+        keysToClean.forEach(key => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+        
         const timestamp = Date.now().toString();
         const storageData = {
           // Primary keys for login
@@ -30,7 +42,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
           intended_user_type: userType,
           
           // Metadata
-          user_type_source: 'login_oauth',
+          user_type_source: 'login_oauth_google',
           user_type_timestamp: timestamp,
           oauth_provider: 'google',
           flow_type: 'login',
@@ -44,7 +56,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
           console.log(`💾 LOGIN STORAGE ${key}: ${value}`);
         });
         
-        console.log('✅ User type stored for login:', userType);
+        console.log('✅ User type stored for LOGIN as:', userType);
       }
       
       // Build redirect URL
@@ -54,10 +66,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       let redirectUrl = `${baseUrl}/?flow=login&oauth=google&provider=google&timestamp=${timestamp}`;
       
       if (userType) {
-        redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}`;
+        redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}&intent=login&action=signin`;
       }
       
-      console.log('🔗 OAuth login redirect URL:', redirectUrl);
+      console.log('🔗 OAuth LOGIN redirect URL:', redirectUrl);
       
       // Prepare query parameters
       const queryParams: Record<string, string> = {
@@ -75,6 +87,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         queryParams.flow = 'login';
         queryParams.oauth = 'google';
         queryParams.provider = 'google';
+        queryParams.intent = 'login';
+        queryParams.action = 'signin';
       }
       
       // Initiate OAuth
@@ -86,10 +100,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         }
       });
 
-      console.log('📤 OAuth login response:', { data, error });
+      console.log('📤 OAuth LOGIN response:', { data, error });
       
       if (error) {
-        console.error('❌ OAuth login error:', error);
+        console.error('❌ OAuth LOGIN error:', error);
         
         toast({
           title: "Ошибка входа",
@@ -99,7 +113,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         return;
       }
 
-      console.log('🚀 OAuth login initiated successfully');
+      console.log('🚀 OAuth LOGIN initiated successfully');
       
     } catch (error: any) {
       console.error('❌ Unexpected error during Google login:', error);

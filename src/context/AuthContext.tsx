@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -88,13 +89,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 100);
   };
 
-  // Enhanced user type detection from all possible sources
+  // Enhanced user type detection with priority order
   const determineUserTypeFromAllSources = (): 'teacher' | 'school' | null => {
     console.log('🔍 COMPREHENSIVE USER TYPE DETECTION STARTED');
     
-    // Step 1: Check URL parameters (highest priority for OAuth redirects)
+    // Step 1: Check URL parameters first (highest priority for OAuth redirects)
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    console.log('🔗 Current URL:', window.location.href);
+    console.log('🔗 Search params:', urlParams.toString());
+    console.log('🔗 Hash params:', hashParams.toString());
     
     const possibleUrlKeys = ['userType', 'type', 'user_type', 'role'];
     
@@ -120,10 +125,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const sessionKeys = [
       'oauth_user_type',
       'confirmed_user_type', 
-      'pendingUserType',
       'registration_user_type',
-      'intended_user_type',
-      'user_type_source'
+      'pendingUserType',
+      'intended_user_type'
     ];
     
     for (const key of sessionKeys) {
@@ -201,9 +205,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user && event === 'SIGNED_IN') {
           console.log('🚀 PROCESSING SIGN IN EVENT');
           
-          // Give a moment for URL params to be available
+          // Give a moment for URL params to be available and page to settle
           setTimeout(async () => {
             try {
+              // First, determine the intended user type
+              const intendedUserType = determineUserTypeFromAllSources();
+              console.log('🎯 DETERMINED INTENDED USER TYPE:', intendedUserType);
+              
               // Check if profile already exists
               const { data: existingProfile } = await supabase
                 .from('profiles')
@@ -214,13 +222,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('🔍 Existing profile check:', existingProfile);
               
               if (!existingProfile) {
-                console.log('👤 New user - creating profile');
+                console.log('👤 NEW USER - Creating profile');
                 
-                // Determine user type from all sources
-                const userType = determineUserTypeFromAllSources();
-                console.log('🎯 DETERMINED USER TYPE FOR NEW USER:', userType);
-                
-                if (!userType) {
+                if (!intendedUserType) {
                   console.log('❓ No user type found - showing selection modal');
                   setShowUserTypeModal(true);
                   setLoading(false);
@@ -228,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 
                 // Create profile with determined role
-                console.log('📝 Creating profile with role:', userType);
+                console.log('📝 Creating NEW profile with role:', intendedUserType);
                 
                 const { data: newProfile, error: profileError } = await supabase
                   .from('profiles')
@@ -238,7 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     full_name: session.user.user_metadata?.full_name || 
                              session.user.user_metadata?.name || 
                              '',
-                    role: userType, // This is the critical line - ensure correct role assignment
+                    role: intendedUserType, // CRITICAL: Use the intended user type
                   })
                   .select()
                   .single();
@@ -247,27 +251,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   console.error('❌ Error creating profile:', profileError);
                   setShowUserTypeModal(true);
                 } else {
-                  console.log('✅ Profile created with role:', newProfile.role);
+                  console.log('✅ NEW Profile created successfully with role:', newProfile.role);
                   setProfile(newProfile);
                   
                   // Store the confirmed user type
-                  storeUserType(userType, 'profile_creation');
+                  storeUserType(intendedUserType, 'new_profile_creation');
                   
                   // Clean up temporary storage after successful creation
                   setTimeout(cleanupTemporaryStorage, 1000);
                 }
               } else {
-                console.log('👤 Existing user found');
+                console.log('👤 EXISTING USER found with role:', existingProfile.role);
                 
-                // Check if existing profile lacks a role
-                if (!existingProfile.role) {
-                  console.log('⚠️ Existing profile missing role - showing selection modal');
-                  setShowUserTypeModal(true);
+                // If existing profile has no role or wrong role, update it
+                if (!existingProfile.role && intendedUserType) {
+                  console.log('⚠️ Existing profile missing role - updating to:', intendedUserType);
+                  
+                  const { data: updatedProfile, error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ role: intendedUserType })
+                    .eq('id', session.user.id)
+                    .select()
+                    .single();
+                    
+                  if (updateError) {
+                    console.error('❌ Error updating profile role:', updateError);
+                    setShowUserTypeModal(true);
+                  } else {
+                    console.log('✅ Profile role updated to:', updatedProfile.role);
+                    setProfile(updatedProfile);
+                    storeUserType(intendedUserType, 'existing_profile_update');
+                  }
+                } else if (existingProfile.role !== intendedUserType && intendedUserType) {
+                  console.log('🔄 Role mismatch - existing:', existingProfile.role, 'intended:', intendedUserType);
+                  
+                  // Update to intended role
+                  const { data: updatedProfile, error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ role: intendedUserType })
+                    .eq('id', session.user.id)
+                    .select()
+                    .single();
+                    
+                  if (updateError) {
+                    console.error('❌ Error updating profile role:', updateError);
+                  } else {
+                    console.log('✅ Profile role corrected to:', updatedProfile.role);
+                    setProfile(updatedProfile);
+                    storeUserType(intendedUserType, 'role_correction');
+                  }
                 } else {
-                  console.log('✅ Existing profile with role:', existingProfile.role);
+                  console.log('✅ Using existing profile with role:', existingProfile.role);
+                  setProfile(existingProfile);
                 }
-                
-                setProfile(existingProfile);
               }
             } catch (error) {
               console.error('❌ Error in auth flow:', error);
@@ -275,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } finally {
               setLoading(false);
             }
-          }, 200); // Slight delay to ensure URL params are available
+          }, 500); // Increased delay to ensure URL params are available
         } else if (session?.user) {
           // Existing session, just fetch profile
           setTimeout(() => {
