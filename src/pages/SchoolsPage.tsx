@@ -44,9 +44,62 @@ const SchoolsPage: React.FC = () => {
   useEffect(() => {
     const loadPublishedSchools = () => {
       try {
-        const published = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-        console.log('Loaded published schools:', published);
-        setPublishedSchools(published);
+        // Load from multiple sources
+        const sources = [
+          'publishedSchools',
+          'allPublishedSchools', 
+          'schoolProfilePublished',
+          'schoolProfileData'
+        ];
+        
+        let allPublished: any[] = [];
+        
+        // Load from publishedSchools array
+        const publishedArray = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+        allPublished.push(...publishedArray);
+        
+        // Load from allPublishedSchools array
+        const allPublishedArray = JSON.parse(localStorage.getItem('allPublishedSchools') || '[]');
+        allPublished.push(...allPublishedArray);
+        
+        // Load individual published school
+        const isSchoolPublished = localStorage.getItem('schoolProfilePublished') === 'true';
+        const schoolData = localStorage.getItem('schoolProfileData');
+        
+        if (isSchoolPublished && schoolData) {
+          try {
+            const school = JSON.parse(schoolData);
+            if (school.name) {
+              // Convert to expected format
+              const formattedSchool = {
+                id: school.id || `school_${Date.now()}`,
+                name: school.name,
+                photo: school.photo || school.photoUrl || '/placeholder.svg',
+                address: school.address || 'Адрес не указан',
+                type: school.type || 'Государственная',
+                city: school.city || 'Бишкек',
+                specialization: school.specialization || school.description || 'Общее образование',
+                openPositions: school.openPositions || school.vacancies || [],
+                ratings: school.ratings || 4.5,
+                views: school.views || 0,
+                housing: school.housing || school.housingProvided || false,
+                locationVerified: school.locationVerified || false,
+                distance: school.distance
+              };
+              allPublished.push(formattedSchool);
+            }
+          } catch (error) {
+            console.error('Error parsing individual school data:', error);
+          }
+        }
+        
+        // Remove duplicates by name
+        const uniqueSchools = allPublished.filter((school, index, self) => 
+          index === self.findIndex(s => s.name === school.name)
+        );
+        
+        console.log('Loaded published schools:', uniqueSchools);
+        setPublishedSchools(uniqueSchools);
       } catch (error) {
         console.error('Error loading published schools:', error);
         setPublishedSchools([]);
@@ -56,56 +109,42 @@ const SchoolsPage: React.FC = () => {
     // Initial load
     loadPublishedSchools();
     
-    // Listen for storage changes to update when schools are published/unpublished
+    // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'publishedSchools') {
-        console.log('Storage changed for publishedSchools');
+      if (e.key && ['publishedSchools', 'allPublishedSchools', 'schoolProfilePublished', 'schoolProfileData'].includes(e.key)) {
+        console.log('Storage changed for schools:', e.key);
         loadPublishedSchools();
       }
     };
 
-    // Listen for custom events triggered by the dashboard
+    // Listen for custom events
     const handleCustomStorageChange = () => {
       loadPublishedSchools();
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('storage', handleCustomStorageChange);
+    window.addEventListener('schoolPublished', handleCustomStorageChange);
     
-    // Also poll for changes every 2 seconds to ensure we catch updates
-    const intervalId = setInterval(loadPublishedSchools, 2000);
+    // Poll for changes every 3 seconds
+    const intervalId = setInterval(loadPublishedSchools, 3000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storage', handleCustomStorageChange);
+      window.removeEventListener('schoolPublished', handleCustomStorageChange);
       clearInterval(intervalId);
     };
   }, []);
 
   // Combine mock data with published schools and Supabase data
   const allSchools = [
-    // Mock schools (original seed data) - add city property
+    // Mock schools (original seed data)
     ...schoolsData.map(school => ({
       ...school,
-      city: 'Бишкек', // Add default city for mock schools
-      openPositions: [], // Remove mock vacancies
+      city: 'Бишкек',
+      openPositions: [],
     })),
     // Published schools from dashboard (localStorage)
-    ...publishedSchools.map(school => ({
-      id: school.id,
-      name: school.name,
-      photo: school.photo,
-      address: school.address,
-      type: school.type,
-      city: school.city || 'Бишкек', // Ensure city is always present
-      specialization: school.specialization,
-      openPositions: school.openPositions || [],
-      ratings: school.ratings || 4.5,
-      views: school.views || 0,
-      housing: school.housing || false,
-      locationVerified: school.locationVerified || false,
-      distance: school.distance
-    })),
+    ...publishedSchools,
     // Supabase schools
     ...supabaseSchools.map((school: any) => {
       const vacancyCount = allVacancies.filter(v => v.school_id === school.id).length;

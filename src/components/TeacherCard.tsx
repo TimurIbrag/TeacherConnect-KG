@@ -12,7 +12,7 @@ import { MapPin, Star, Eye, Navigation, MessageSquare, User } from 'lucide-react
 import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 interface TeacherCardProps {
-  id: number;
+  id: number | string;
   name: string;
   photo: string;
   specialization: string;
