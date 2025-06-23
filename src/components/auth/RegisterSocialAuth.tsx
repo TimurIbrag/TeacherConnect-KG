@@ -19,54 +19,66 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
   const { toast } = useToast();
 
   const handleGoogleRegister = async () => {
+    if (!userType) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, выберите тип пользователя",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
+    
     try {
-      console.log('🔵 Google OAuth registration button clicked');
-      console.log('🎯 User type for registration:', userType);
+      console.log('🟢 Google OAuth REGISTRATION initiated for user type:', userType);
       
-      // ENHANCED storage with multiple redundant keys and timestamps
+      // CRITICAL: Store user type BEFORE OAuth redirect
       const timestamp = Date.now().toString();
       const storageData = {
-        // Primary keys
+        // High priority keys
         confirmed_user_type: userType,
         oauth_user_type: userType,
-        
-        // Legacy compatibility keys
-        pendingUserType: userType,
-        pendingOAuthFlow: 'registration',
         registration_user_type: userType,
+        
+        // Backup keys for compatibility
+        pendingUserType: userType,
         intended_user_type: userType,
         
-        // Additional verification
+        // Metadata
         user_type_source: 'registration_oauth',
         user_type_timestamp: timestamp,
         oauth_provider: 'google',
-        flow_type: 'registration'
+        flow_type: 'registration',
+        oauth_flow: 'registration'
       };
       
-      // Store in BOTH localStorage and sessionStorage with ALL keys
+      // Store in BOTH storage types for maximum persistence
       Object.entries(storageData).forEach(([key, value]) => {
         localStorage.setItem(key, value);
         sessionStorage.setItem(key, value);
-        console.log(`💾 Stored ${key}: ${value}`);
+        console.log(`💾 STORED ${key}: ${value}`);
       });
       
-      console.log('💾 COMPLETE storage setup completed for userType:', userType);
+      console.log('✅ User type storage completed for:', userType);
       
+      // Build redirect URL with EXPLICIT user type parameters
       const baseUrl = window.location.origin;
-      
-      // TRIPLE-REDUNDANT redirect URL with multiple formats
       const redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=registration&oauth=google&provider=google&timestamp=${timestamp}`;
-      console.log('🔗 ENHANCED registration redirect URL:', redirectUrl);
       
+      console.log('🔗 OAuth redirect URL:', redirectUrl);
+      
+      // Initiate OAuth with comprehensive parameters
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
           queryParams: {
+            // OAuth provider params
             access_type: 'offline',
             prompt: 'consent',
-            // Triple redundancy in query params
+            
+            // Our user type params (multiple formats for reliability)
             userType: userType,
             type: userType,
             user_type: userType,
@@ -79,25 +91,29 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
         }
       });
 
-      console.log('📤 Supabase OAuth registration response:', { data, error });
+      console.log('📤 Supabase OAuth response:', { data, error });
 
       if (error) {
-        console.error('❌ Supabase OAuth registration error details:', {
-          message: error.message,
-          status: error.status,
-          details: error
+        console.error('❌ OAuth registration error:', error);
+        
+        // Clear storage on error
+        Object.keys(storageData).forEach(key => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
         });
         
         toast({
-          title: "Ошибка",
-          description: `Детали ошибки: ${error.message}`,
+          title: "Ошибка регистрации",
+          description: `Ошибка OAuth: ${error.message}`,
           variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
 
-      console.log('✅ OAuth registration initiated successfully, redirecting to Google...');
+      console.log('🚀 OAuth registration flow initiated successfully');
+      // Don't setIsLoading(false) here - the page will redirect
+      
     } catch (error: any) {
       console.error('❌ Unexpected error during Google registration:', error);
       
@@ -114,11 +130,11 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
     <Button 
       variant="outline" 
       onClick={handleGoogleRegister} 
-      disabled={isLoading} 
+      disabled={isLoading || !userType} 
       className="w-full"
     >
       <Chrome className="mr-2 h-4 w-4" />
-      Зарегистрироваться через Google как {userType === 'teacher' ? 'учитель' : 'школа'}
+      {isLoading ? 'Регистрация...' : `Зарегистрироваться через Google как ${userType === 'teacher' ? 'учитель' : 'школа'}`}
     </Button>
   );
 };

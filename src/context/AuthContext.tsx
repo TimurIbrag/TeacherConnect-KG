@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
+      console.log('🔍 Fetching profile for user:', userId);
       
       const { data, error } = await supabase
         .from('profiles')
@@ -45,14 +44,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
+        console.error('❌ Error fetching profile:', error);
         return;
       }
 
-      console.log('Profile fetched:', data);
+      console.log('✅ Profile fetched:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('❌ Error fetching profile:', error);
     }
   };
 
@@ -84,162 +83,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleUserTypeSelection = (userType: 'teacher' | 'school') => {
-    // Refresh profile after user type selection
     setTimeout(() => {
       refreshProfile();
     }, 100);
   };
 
-  const getAllStorageValues = () => {
-    console.log('🔍 COMPLETE STORAGE DEBUG:');
-    console.log('Current URL:', window.location.href);
-    console.log('URL Search:', window.location.search);
-    console.log('URL Hash:', window.location.hash);
+  // Enhanced user type detection from all possible sources
+  const determineUserTypeFromAllSources = (): 'teacher' | 'school' | null => {
+    console.log('🔍 COMPREHENSIVE USER TYPE DETECTION STARTED');
     
-    // Check all possible storage keys
-    const possibleKeys = [
+    // Step 1: Check URL parameters (highest priority for OAuth redirects)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const possibleUrlKeys = ['userType', 'type', 'user_type', 'role'];
+    
+    // Check URL search params first
+    for (const key of possibleUrlKeys) {
+      const value = urlParams.get(key);
+      if (value === 'teacher' || value === 'school') {
+        console.log(`✅ Found user type in URL param ${key}:`, value);
+        return value;
+      }
+    }
+    
+    // Check URL hash params (OAuth sometimes puts params here)
+    for (const key of possibleUrlKeys) {
+      const value = hashParams.get(key);
+      if (value === 'teacher' || value === 'school') {
+        console.log(`✅ Found user type in hash param ${key}:`, value);
+        return value;
+      }
+    }
+
+    // Step 2: Check sessionStorage (session-scoped, higher priority)
+    const sessionKeys = [
       'oauth_user_type',
-      'pendingUserType', 
+      'confirmed_user_type', 
+      'pendingUserType',
       'registration_user_type',
       'intended_user_type',
-      'pendingOAuthFlow',
-      'userType',
-      'type',
-      'user_type'
+      'user_type_source'
     ];
     
-    console.log('LocalStorage contents:');
-    possibleKeys.forEach(key => {
-      const value = localStorage.getItem(key);
-      if (value) console.log(`  ${key}: ${value}`);
-    });
-    
-    console.log('SessionStorage contents:');
-    possibleKeys.forEach(key => {
+    for (const key of sessionKeys) {
       const value = sessionStorage.getItem(key);
-      if (value) console.log(`  ${key}: ${value}`);
-    });
-    
-    // Check URL parameters comprehensively
-    const urlParams = new URLSearchParams(window.location.search);
-    console.log('URL Parameters:');
-    urlParams.forEach((value, key) => {
-      console.log(`  ${key}: ${value}`);
-    });
-    
-    // Check hash parameters
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const hashParams = new URLSearchParams(hash);
-      console.log('Hash Parameters:');
-      hashParams.forEach((value, key) => {
-        console.log(`  ${key}: ${value}`);
-      });
-    }
-  };
-
-  const extractUserTypeFromUrl = (): 'teacher' | 'school' | null => {
-    getAllStorageValues();
-    
-    // Check current URL parameters with comprehensive detection
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Check all possible parameter names
-    const userTypeParams = ['userType', 'type', 'user_type', 'role'];
-    
-    for (const param of userTypeParams) {
-      const value = urlParams.get(param);
-      console.log(`🔍 URL parameter ${param}:`, value);
-      
       if (value === 'teacher' || value === 'school') {
-        console.log('✅ User type determined from URL parameter:', value);
+        console.log(`✅ Found user type in sessionStorage ${key}:`, value);
+        return value;
+      }
+    }
+
+    // Step 3: Check localStorage as fallback
+    for (const key of sessionKeys) {
+      const value = localStorage.getItem(key);
+      if (value === 'teacher' || value === 'school') {
+        console.log(`✅ Found user type in localStorage ${key}:`, value);
         return value;
       }
     }
     
-    // Check hash parameters (sometimes OAuth puts params in hash)
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const hashParams = new URLSearchParams(hash);
-      for (const param of userTypeParams) {
-        const value = hashParams.get(param);
-        console.log(`🔍 Hash parameter ${param}:`, value);
-        
-        if (value === 'teacher' || value === 'school') {
-          console.log('✅ User type determined from hash parameter:', value);
-          return value;
-        }
-      }
-    }
-    
-    console.log('❌ No user type found in URL or hash parameters');
+    console.log('❌ No user type found in any source');
     return null;
   };
 
-  const determineUserTypeFromStorage = (): 'teacher' | 'school' | null => {
-    console.log('🔍 ENHANCED USER TYPE DETERMINATION...');
+  // Store user type with maximum persistence
+  const storeUserType = (userType: 'teacher' | 'school', source: string) => {
+    console.log(`💾 Storing user type: ${userType} from source: ${source}`);
     
-    // Step 1: Check URL parameters first (most reliable for OAuth redirects)
-    const urlUserType = extractUserTypeFromUrl();
-    if (urlUserType) {
-      console.log('✅ User type determined from URL:', urlUserType);
-      // Store in both for persistence with enhanced keys
-      localStorage.setItem('oauth_user_type', urlUserType);
-      localStorage.setItem('confirmed_user_type', urlUserType);
-      sessionStorage.setItem('oauth_user_type', urlUserType);
-      sessionStorage.setItem('confirmed_user_type', urlUserType);
-      return urlUserType;
-    }
-
-    // Step 2: Check storage with improved key priority
-    const storageKeys = [
-      'confirmed_user_type', // New higher priority key
-      'oauth_user_type',
-      'pendingUserType', 
-      'registration_user_type',
-      'intended_user_type'
-    ];
+    const timestamp = Date.now().toString();
+    const storageEntries = {
+      'confirmed_user_type': userType,
+      'oauth_user_type': userType,
+      'user_type_source': source,
+      'user_type_timestamp': timestamp,
+      'pendingUserType': userType,
+      'registration_user_type': userType
+    };
     
-    // Check sessionStorage first (more session-specific)
-    for (const key of storageKeys) {
-      const value = sessionStorage.getItem(key);
-      console.log(`🔍 SessionStorage ${key}:`, value);
-      
-      if (value === 'teacher' || value === 'school') {
-        console.log('✅ User type determined from sessionStorage:', value);
-        // Promote to confirmed_user_type
-        localStorage.setItem('confirmed_user_type', value);
-        sessionStorage.setItem('confirmed_user_type', value);
-        return value;
-      }
-    }
+    // Store in both localStorage and sessionStorage
+    Object.entries(storageEntries).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+      sessionStorage.setItem(key, value);
+    });
     
-    // Check localStorage as fallback
-    for (const key of storageKeys) {
-      const value = localStorage.getItem(key);
-      console.log(`🔍 LocalStorage ${key}:`, value);
-      
-      if (value === 'teacher' || value === 'school') {
-        console.log('✅ User type determined from localStorage:', value);
-        // Promote to confirmed_user_type
-        localStorage.setItem('confirmed_user_type', value);
-        sessionStorage.setItem('confirmed_user_type', value);
-        return value;
-      }
-    }
-    
-    console.log('❌ Could not determine user type from any source');
-    return null;
+    console.log('💾 User type stored successfully');
   };
 
-  const cleanupStorageKeys = () => {
-    // Clean up all possible storage keys except confirmed ones
+  // Clean up temporary storage
+  const cleanupTemporaryStorage = () => {
     const keysToClean = [
       'oauth_user_type',
-      'pendingUserType',
+      'pendingUserType', 
       'pendingOAuthFlow',
       'registration_user_type',
-      'intended_user_type'
+      'intended_user_type',
+      'user_type_source',
+      'user_type_timestamp'
     ];
     
     keysToClean.forEach(key => {
@@ -251,23 +191,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 Auth state changed:', event, session?.user?.id);
-        console.log('Session details:', session);
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user && event === 'SIGNED_IN') {
           console.log('🚀 PROCESSING SIGN IN EVENT');
-          getAllStorageValues(); // Full debug output
           
-          // Handle new user creation or existing user login
+          // Give a moment for URL params to be available
           setTimeout(async () => {
             try {
-              // Check if profile exists
+              // Check if profile already exists
               const { data: existingProfile } = await supabase
                 .from('profiles')
                 .select('*')
@@ -277,19 +214,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('🔍 Existing profile check:', existingProfile);
               
               if (!existingProfile) {
-                console.log('👤 Creating new profile for user');
+                console.log('👤 New user - creating profile');
                 
-                // Get user type with enhanced detection
-                const userType = determineUserTypeFromStorage();
-                console.log('🎯 FINAL DETERMINED USER TYPE:', userType);
+                // Determine user type from all sources
+                const userType = determineUserTypeFromAllSources();
+                console.log('🎯 DETERMINED USER TYPE FOR NEW USER:', userType);
                 
                 if (!userType) {
-                  console.log('❓ No user type determined, showing selection modal');
+                  console.log('❓ No user type found - showing selection modal');
                   setShowUserTypeModal(true);
                   setLoading(false);
                   return;
                 }
                 
+                // Create profile with determined role
                 console.log('📝 Creating profile with role:', userType);
                 
                 const { data: newProfile, error: profileError } = await supabase
@@ -300,41 +238,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     full_name: session.user.user_metadata?.full_name || 
                              session.user.user_metadata?.name || 
                              '',
-                    role: userType,
+                    role: userType, // This is the critical line - ensure correct role assignment
                   })
                   .select()
                   .single();
                   
                 if (profileError) {
                   console.error('❌ Error creating profile:', profileError);
-                  // If profile creation fails, show user type selection modal
                   setShowUserTypeModal(true);
                 } else {
-                  console.log('✅ Profile created successfully with role:', newProfile.role);
+                  console.log('✅ Profile created with role:', newProfile.role);
                   setProfile(newProfile);
-                  // Clean up only after successful profile creation
-                  cleanupStorageKeys();
+                  
+                  // Store the confirmed user type
+                  storeUserType(userType, 'profile_creation');
+                  
+                  // Clean up temporary storage after successful creation
+                  setTimeout(cleanupTemporaryStorage, 1000);
                 }
               } else {
-                // Check if existing profile has a role set
+                console.log('👤 Existing user found');
+                
+                // Check if existing profile lacks a role
                 if (!existingProfile.role) {
-                  console.log('👤 Existing profile without role, showing selection modal');
+                  console.log('⚠️ Existing profile missing role - showing selection modal');
                   setShowUserTypeModal(true);
                 } else {
-                  console.log('✅ Existing profile found with role:', existingProfile.role);
+                  console.log('✅ Existing profile with role:', existingProfile.role);
                 }
+                
                 setProfile(existingProfile);
               }
             } catch (error) {
-              console.error('❌ Error handling user authentication:', error);
-              // Show user type selection modal as fallback
+              console.error('❌ Error in auth flow:', error);
               setShowUserTypeModal(true);
             } finally {
               setLoading(false);
             }
-          }, 100);
+          }, 200); // Slight delay to ensure URL params are available
         } else if (session?.user) {
-          // Existing user, just fetch profile
+          // Existing session, just fetch profile
           setTimeout(() => {
             fetchProfile(session.user.id);
             setLoading(false);
@@ -364,9 +307,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
-    // Clean up any pending user type data
-    cleanupStorageKeys();
-    // Also clean up confirmed user type on logout
+    cleanupTemporaryStorage();
     localStorage.removeItem('confirmed_user_type');
     sessionStorage.removeItem('confirmed_user_type');
   };

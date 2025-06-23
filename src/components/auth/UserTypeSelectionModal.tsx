@@ -35,23 +35,48 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
 
     setIsLoading(true);
     try {
+      console.log('🎯 Manual user type selection:', selectedType);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('No user found');
       }
 
-      // Update the user's profile with the selected role
-      const { error } = await supabase
+      // Check if profile exists, if not create it
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .update({ role: selectedType })
-        .eq('id', user.id);
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        throw error;
+      if (existingProfile) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: selectedType })
+          .eq('id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Create new profile
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+            role: selectedType
+          });
+
+        if (error) throw error;
       }
 
-      console.log('✅ User type updated to:', selectedType);
+      console.log('✅ User type updated via modal to:', selectedType);
+
+      // Store the confirmed user type
+      localStorage.setItem('confirmed_user_type', selectedType);
+      sessionStorage.setItem('confirmed_user_type', selectedType);
 
       toast({
         title: "Тип пользователя сохранен",
