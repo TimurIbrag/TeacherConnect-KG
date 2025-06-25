@@ -21,6 +21,7 @@ interface TeacherCardProps {
   ratings: number;
   views: number;
   distance?: number;
+  source?: string;
 }
 
 const TeacherCard: React.FC<TeacherCardProps> = ({
@@ -33,6 +34,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
   ratings,
   views,
   distance,
+  source = 'mock',
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -72,8 +74,24 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
     }
 
     try {
-      // Create a mock teacher user ID based on teacher ID
-      const teacherUserId = `teacher_${id}`;
+      // Handle different teacher types
+      let teacherUserId = id.toString();
+      
+      // For mock or published teachers, create a deterministic user ID
+      if (source === 'mock' || source === 'published' || source === 'global_published') {
+        teacherUserId = `mock_teacher_${id}`;
+        
+        // Store teacher info in localStorage for the chat system
+        const teacherInfo = {
+          id: teacherUserId,
+          full_name: name,
+          avatar_url: photo,
+          role: 'teacher'
+        };
+        localStorage.setItem(`profile_${teacherUserId}`, JSON.stringify(teacherInfo));
+      }
+      
+      console.log('Creating chat with teacher ID:', teacherUserId);
       const chatRoomId = await createChatRoom(teacherUserId);
       
       toast({

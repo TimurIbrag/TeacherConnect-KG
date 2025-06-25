@@ -220,14 +220,66 @@ export const useSecurePrivateChat = () => {
     }
   }, [isAuthenticated, user, chatRooms, toast]);
 
-  // Secure chat room creation with role validation
+  // Enhanced chat room creation with mock teacher support
   const createChatRoom = useCallback(async (otherUserId: string) => {
     if (!isAuthenticated) {
       throw new Error('Требуется авторизация');
     }
 
     try {
-      // Security: Validate other user exists and has compatible role
+      // Handle mock teachers differently
+      if (otherUserId.startsWith('mock_teacher_')) {
+        // For mock teachers, we need to create a special chat room that works with mock data
+        const chatRoomId = `chat_${[user.id, otherUserId].sort().join('_')}`;
+        
+        // Check if chat room already exists
+        const existingRoom = chatRooms.find(room => room.id === chatRoomId);
+        if (existingRoom) {
+          return existingRoom.id;
+        }
+
+        // Create mock chat room entry in Supabase with special handling
+        const { data, error } = await supabase
+          .from('chat_rooms')
+          .insert({
+            id: chatRoomId,
+            participant_a: user.id,
+            participant_b: otherUserId, // This will be our mock teacher ID
+          })
+          .select()
+          .single();
+
+        if (error) {
+          // If there's a foreign key constraint error, it's expected for mock teachers
+          // We'll create a local-only chat room
+          console.log('Creating local chat room for mock teacher:', error);
+          
+          const mockRoom: ChatRoom = {
+            id: chatRoomId,
+            participant_a: user.id,
+            participant_b: otherUserId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            unread_count: 0,
+          };
+
+          // Add to local state
+          setChatRooms(prev => [mockRoom, ...prev]);
+          setMessages(prev => ({ ...prev, [mockRoom.id]: [] }));
+
+          console.log('Mock chat room created locally:', mockRoom);
+          return mockRoom.id;
+        }
+
+        // Add to local state if created successfully
+        setChatRooms(prev => [data, ...prev]);
+        setMessages(prev => ({ ...prev, [data.id]: [] }));
+
+        console.log('Mock chat room created in Supabase:', data);
+        return data.id;
+      }
+
+      // For real users, validate they exist and have compatible role
       const { data: otherProfile, error: profileError } = await supabase
         .from('profiles')
         .select('role')

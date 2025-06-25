@@ -215,7 +215,25 @@ const TeacherProfilePage: React.FC = () => {
     }
 
     try {
-      const teacherUserId = typeof teacher.id === 'string' ? teacher.id : `teacher_${teacher.id}`;
+      // For mock or published teachers, we need to create a mock teacher profile in Supabase
+      let teacherUserId = teacher.id;
+      
+      // If this is a mock teacher (numeric ID), we need to handle it differently
+      if (teacher.source === 'mock' || teacher.source === 'published' || teacher.source === 'global_published') {
+        // Create a deterministic user ID for mock teachers
+        teacherUserId = `mock_teacher_${teacher.id}`;
+        
+        // Store teacher info in localStorage for the chat system
+        const teacherInfo = {
+          id: teacherUserId,
+          full_name: teacher.name,
+          avatar_url: teacher.photo,
+          role: 'teacher'
+        };
+        localStorage.setItem(`profile_${teacherUserId}`, JSON.stringify(teacherInfo));
+      }
+      
+      console.log('Creating chat with teacher ID:', teacherUserId);
       const chatRoomId = await createChatRoom(teacherUserId);
       
       toast({
