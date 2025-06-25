@@ -289,10 +289,27 @@ const TeacherProfilePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 md:self-start">
-                  <Button onClick={handleStartChat}>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    {t('button.message')}
-                  </Button>
+                  {/* Show message button only for authenticated school users */}
+                  {isAuthenticated && profile?.role === 'school' && (
+                    <Button onClick={handleStartChat}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      {t('button.message')}
+                    </Button>
+                  )}
+                  {/* Show login prompt for non-authenticated users */}
+                  {!isAuthenticated && (
+                    <Button variant="outline" onClick={() => navigate('/login')}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Войти для связи
+                    </Button>
+                  )}
+                  {/* Show access restriction for teachers */}
+                  {isAuthenticated && profile?.role === 'teacher' && (
+                    <Button variant="outline" disabled>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Недоступно
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>

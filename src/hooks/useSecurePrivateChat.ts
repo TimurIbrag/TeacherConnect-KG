@@ -227,33 +227,65 @@ export const useSecurePrivateChat = () => {
     }
 
     try {
+      console.log('Creating chat room with user:', otherUserId);
+      console.log('Current user profile:', profile);
+
       // Handle mock teachers differently
       if (otherUserId.startsWith('mock_teacher_')) {
-        // For mock teachers, we need to create a special chat room that works with mock data
+        console.log('Creating chat with mock teacher');
+        
+        // Generate deterministic chat room ID
         const chatRoomId = `chat_${[user.id, otherUserId].sort().join('_')}`;
         
         // Check if chat room already exists
         const existingRoom = chatRooms.find(room => room.id === chatRoomId);
         if (existingRoom) {
+          console.log('Mock chat room already exists:', existingRoom.id);
           return existingRoom.id;
         }
 
-        // Create mock chat room entry in Supabase with special handling
-        const { data, error } = await supabase
-          .from('chat_rooms')
-          .insert({
-            id: chatRoomId,
-            participant_a: user.id,
-            participant_b: otherUserId, // This will be our mock teacher ID
-          })
-          .select()
-          .single();
+        // Create mock chat room entry - try Supabase first, fallback to local
+        try {
+          const { data, error } = await supabase
+            .from('chat_rooms')
+            .insert({
+              id: chatRoomId,
+              participant_a: user.id,
+              participant_b: otherUserId,
+            })
+            .select()
+            .single();
 
-        if (error) {
-          // If there's a foreign key constraint error, it's expected for mock teachers
-          // We'll create a local-only chat room
-          console.log('Creating local chat room for mock teacher:', error);
+          if (error) {
+            console.log('Supabase insert failed for mock teacher, creating locally:', error);
+            
+            // Create local chat room
+            const mockRoom: ChatRoom = {
+              id: chatRoomId,
+              participant_a: user.id,
+              participant_b: otherUserId,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              unread_count: 0,
+            };
+
+            setChatRooms(prev => [mockRoom, ...prev]);
+            setMessages(prev => ({ ...prev, [mockRoom.id]: [] }));
+
+            console.log('Mock chat room created locally:', mockRoom);
+            return mockRoom.id;
+          }
+
+          // Add to local state if created successfully
+          setChatRooms(prev => [data, ...prev]);
+          setMessages(prev => ({ ...prev, [data.id]: [] }));
+
+          console.log('Mock chat room created in Supabase:', data);
+          return data.id;
+        } catch (supabaseError) {
+          console.error('Failed to create mock chat room in Supabase:', supabaseError);
           
+          // Fallback to local creation
           const mockRoom: ChatRoom = {
             id: chatRoomId,
             participant_a: user.id,
@@ -263,20 +295,12 @@ export const useSecurePrivateChat = () => {
             unread_count: 0,
           };
 
-          // Add to local state
           setChatRooms(prev => [mockRoom, ...prev]);
           setMessages(prev => ({ ...prev, [mockRoom.id]: [] }));
 
-          console.log('Mock chat room created locally:', mockRoom);
+          console.log('Mock chat room created locally after Supabase error:', mockRoom);
           return mockRoom.id;
         }
-
-        // Add to local state if created successfully
-        setChatRooms(prev => [data, ...prev]);
-        setMessages(prev => ({ ...prev, [data.id]: [] }));
-
-        console.log('Mock chat room created in Supabase:', data);
-        return data.id;
       }
 
       // For real users, validate they exist and have compatible role
@@ -286,12 +310,17 @@ export const useSecurePrivateChat = () => {
         .eq('id', otherUserId)
         .single();
 
-      if (profileError) throw new Error('Пользователь не найден');
+      if (profileError) {
+        console.error('Failed to fetch other user profile:', profileError);
+        throw new Error('Пользователь не найден');
+      }
 
       // Security: Ensure different roles (teacher <-> school only)
       if (!profile || !otherProfile) {
         throw new Error('Профили пользователей не найдены');
       }
+
+      console.log('User roles:', { currentUser: profile.role, otherUser: otherProfile.role });
 
       const allowedCombinations = [
         ['teacher', 'school'],
@@ -314,6 +343,7 @@ export const useSecurePrivateChat = () => {
       // Check if chat room already exists
       const existingRoom = chatRooms.find(room => room.id === chatRoomId);
       if (existingRoom) {
+        console.log('Chat room already exists:', existingRoom.id);
         return existingRoom.id;
       }
 

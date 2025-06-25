@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
@@ -196,7 +195,7 @@ const TeachersPage = () => {
 
   const isLoading = teachersLoading || vacanciesLoading;
 
-  // Handle contact teacher - redirect to messages page
+  // Handle contact teacher - redirect to messages page or show login prompt
   const handleContactTeacher = (teacher: any) => {
     if (!user) {
       toast({
@@ -383,7 +382,7 @@ const TeachersPage = () => {
                 <CardContent className="p-0">
                   <div className="p-4">
                     <div className="flex items-center gap-4">
-                      {/* Main Avatar */}
+                      {/* Main Avatar - Show for all users including guests */}
                       <Avatar className="h-16 w-16">
                         <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
                         <AvatarFallback>
@@ -394,6 +393,7 @@ const TeachersPage = () => {
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
                           <div>
+                            {/* Show full name for all users including guests */}
                             <h3 className="text-lg font-medium">
                               {teacher.profiles?.full_name || 'Имя не указано'}
                             </h3>
@@ -415,7 +415,7 @@ const TeachersPage = () => {
                             )}
                           </div>
                           
-                          {/* Top-right corner avatar */}
+                          {/* Top-right corner avatar - Show for all users */}
                           <Avatar className="h-12 w-12">
                             <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
                             <AvatarFallback>
@@ -426,14 +426,14 @@ const TeachersPage = () => {
                       </div>
                     </div>
 
-                    {/* Bio */}
+                    {/* Bio - Show for all users */}
                     {teacher.bio && (
                       <p className="text-gray-600 mt-4 line-clamp-3">
                         {teacher.bio}
                       </p>
                     )}
 
-                    {/* Skills */}
+                    {/* Skills - Show for all users */}
                     {teacher.skills && teacher.skills.length > 0 && (
                       <div className="mt-4">
                         <div className="flex flex-wrap gap-1">
@@ -451,7 +451,7 @@ const TeachersPage = () => {
                       </div>
                     )}
 
-                    {/* Languages */}
+                    {/* Languages - Show for all users */}
                     {teacher.languages && teacher.languages.length > 0 && (
                       <div className="mt-2">
                         <p className="text-xs text-gray-500">
@@ -477,14 +477,33 @@ const TeachersPage = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleContactTeacher(teacher)}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-1" />
-                      Связаться
-                    </Button>
+                    {/* Show contact button differently based on auth status */}
+                    {user ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleContactTeacher(teacher)}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Связаться
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          toast({
+                            title: 'Требуется авторизация',
+                            description: 'Войдите в систему для связи с преподавателем',
+                            variant: 'destructive',
+                          });
+                          navigate('/login');
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        Войти для связи
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       size="sm" 
