@@ -65,6 +65,7 @@ function App() {
                     <Route path="/teacher-dashboard" element={<TeacherDashboardPage />} />
                     <Route path="/school-dashboard" element={<SchoolDashboardPage />} />
                     <Route path="/messages" element={<MessagesPage />} />
+                    <Route path="/messages/:chatRoomId" element={<MessagesPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/saved" element={<SavedItemsPage />} />
                     <Route path="/support" element={<SupportPage />} />
