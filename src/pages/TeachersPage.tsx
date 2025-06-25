@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
 import { useLanguage } from '@/context/LanguageContext';
@@ -50,41 +50,73 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
-// Get published teachers from localStorage (only if actually published)
+// Get published teachers from localStorage with proper formatting
 const getPublishedTeachers = () => {
   try {
+    const publishedTeachers = [];
+    
+    // Check for individual published teacher
     const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
     const profileData = localStorage.getItem('teacherProfileData');
     
     if (isPublished && profileData) {
       const profile = JSON.parse(profileData);
-      const currentUser = localStorage.getItem('user');
-      const userData = currentUser ? JSON.parse(currentUser) : null;
+      console.log('Found published teacher profile:', profile);
       
-      // Only return if profile has meaningful data
       if (profile.fullName && profile.specialization) {
-        return [{
-          id: 'local-teacher',
-          user_id: userData?.email || 'local-teacher-id',
+        const teacherData = {
+          id: 'published-teacher-1',
+          user_id: 'published-teacher-1',
           profiles: {
             full_name: profile.fullName,
-            avatar_url: profile.photoUrl
+            avatar_url: profile.photoUrl || null
           },
           specialization: profile.specialization,
-          bio: profile.bio,
+          bio: profile.bio || 'Информация о преподавателе',
           experience_years: parseInt(profile.experience) || 0,
-          location: profile.location,
-          education: profile.education,
+          location: profile.location || 'Бишкек',
+          education: profile.education || 'Образование не указано',
           skills: profile.skills || [],
-          languages: profile.languages || [],
+          languages: profile.languages || ['Кыргызский', 'Русский'],
           verification_status: 'verified' as const
-        }];
+        };
+        
+        publishedTeachers.push(teacherData);
+        console.log('Added published teacher:', teacherData);
       }
     }
+    
+    // Check for array of published teachers
+    const allPublishedTeachers = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
+    allPublishedTeachers.forEach((teacher: any, index: number) => {
+      if (teacher.fullName || teacher.name) {
+        const teacherData = {
+          id: `published-teacher-${index + 2}`,
+          user_id: `published-teacher-${index + 2}`,
+          profiles: {
+            full_name: teacher.fullName || teacher.name,
+            avatar_url: teacher.photoUrl || teacher.photo || null
+          },
+          specialization: teacher.specialization || 'Специализация не указана',
+          bio: teacher.bio || 'Информация о преподавателе',
+          experience_years: parseInt(teacher.experience || teacher.experience_years) || 0,
+          location: teacher.location || 'Бишкек',
+          education: teacher.education || 'Образование не указано',
+          skills: teacher.skills || [],
+          languages: teacher.languages || ['Кыргызский', 'Русский'],
+          verification_status: 'verified' as const
+        };
+        
+        publishedTeachers.push(teacherData);
+      }
+    });
+    
+    console.log('Total published teachers found:', publishedTeachers.length);
+    return publishedTeachers;
   } catch (error) {
-    console.error('Error loading published teacher:', error);
+    console.error('Error loading published teachers:', error);
+    return [];
   }
-  return [];
 };
 
 const TeachersPage = () => {
@@ -99,20 +131,37 @@ const TeachersPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
+  const [publishedTeachers, setPublishedTeachers] = useState<any[]>([]);
 
-  // Combine Supabase teachers with published local teachers (no duplicates)
-  const publishedLocalTeachers = getPublishedTeachers();
+  // Load published teachers on component mount and poll for changes
+  useEffect(() => {
+    const loadPublishedTeachers = () => {
+      const published = getPublishedTeachers();
+      setPublishedTeachers(published);
+    };
+
+    loadPublishedTeachers();
+    
+    // Poll for changes every 2 seconds
+    const interval = setInterval(loadPublishedTeachers, 2000);
+    
+    // Listen for storage events
+    const handleStorageChange = () => loadPublishedTeachers();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('teacherPublished', handleStorageChange);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('teacherPublished', handleStorageChange);
+    };
+  }, []);
+
+  // Combine Supabase teachers with published local teachers
   const supabaseTeachers = teachers || [];
-  
-  // Remove duplicates by checking if local teacher already exists in Supabase
-  const allTeachers = [
-    ...supabaseTeachers,
-    ...publishedLocalTeachers.filter(localTeacher => 
-      !supabaseTeachers.some(supabaseTeacher => 
-        supabaseTeacher.profiles?.full_name === localTeacher.profiles?.full_name
-      )
-    )
-  ];
+  const allTeachers = [...supabaseTeachers, ...publishedTeachers];
+
+  console.log('All teachers:', allTeachers);
 
   // Filter teachers based on search criteria
   const filteredTeachers = allTeachers?.filter(teacher => {
@@ -160,7 +209,7 @@ const TeachersPage = () => {
     }
 
     // Create a unique chat room ID based on both user IDs
-    const currentUserId = user.email || 'current_user';
+    const currentUserId = user.email || user.id || 'current_user';
     const teacherId = teacher.user_id || teacher.id;
     const chatRoomId = `chat_${[currentUserId, teacherId].sort().join('_')}`;
     
@@ -173,13 +222,15 @@ const TeachersPage = () => {
     };
     localStorage.setItem(`teacher_${teacherId}`, JSON.stringify(teacherInfo));
     
+    console.log('Attempting to navigate to chat:', chatRoomId);
+    
     // Navigate to messages page with the specific chat room
     navigate(`/messages/${chatRoomId}`);
   };
 
   // Handle view teacher profile
   const handleViewProfile = (teacher: any) => {
-    // Navigate to the teacher profile with the correct ID
+    console.log('Viewing profile for teacher:', teacher);
     const teacherId = teacher.id;
     navigate(`/teachers/${teacherId}`);
   };
@@ -194,7 +245,7 @@ const TeachersPage = () => {
       .toUpperCase();
   };
 
-  if (isLoading) {
+  if (isLoading && publishedTeachers.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">

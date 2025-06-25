@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -59,7 +60,7 @@ const TeacherProfilePage: React.FC = () => {
         
         if (profile.fullName && profile.specialization) {
           teachers.push({
-            id: 'local-teacher',
+            id: 'published-teacher-1',
             name: profile.fullName,
             photo: profile.photoUrl || '/placeholder.svg',
             specialization: profile.specialization,
@@ -86,7 +87,7 @@ const TeacherProfilePage: React.FC = () => {
     // 2. Get all published teachers from a global storage (if exists)
     try {
       const allPublishedTeachers = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
-      allPublishedTeachers.forEach((teacher: any) => {
+      allPublishedTeachers.forEach((teacher: any, index: number) => {
         if (teacher.id && teacher.name) {
           teachers.push({
             id: teacher.id,
@@ -142,6 +143,9 @@ const TeacherProfilePage: React.FC = () => {
   // Find the teacher from all available sources
   const findTeacherById = (searchId: string) => {
     const allTeachers = getAllAvailableTeachers();
+    console.log('Searching for teacher ID:', searchId);
+    console.log('Available teachers:', allTeachers.map(t => ({ id: t.id, name: t.name })));
+    
     return allTeachers.find(t => t.id === searchId || t.id.toString() === searchId);
   };
   
@@ -165,6 +169,8 @@ const TeacherProfilePage: React.FC = () => {
     applications: 0,
     source: 'supabase'
   } : findTeacherById(teacherId);
+  
+  console.log('Found teacher:', teacher);
   
   if (isLoadingSupabase) {
     return (
