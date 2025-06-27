@@ -120,6 +120,43 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   const onSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
     
+    // Validate required fields
+    if (!data.title?.trim()) {
+      toast({
+        title: 'Ошибка валидации',
+        description: 'Название вакансии обязательно',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!data.contact_name?.trim()) {
+      toast({
+        title: 'Ошибка валидации',
+        description: 'Контактное лицо обязательно',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!data.contact_phone?.trim()) {
+      toast({
+        title: 'Ошибка валидации',
+        description: 'Телефон обязателен',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!data.contact_email?.trim()) {
+      toast({
+        title: 'Ошибка валидации',
+        description: 'Email обязателен',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     const vacancyData = {
       title: data.title?.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
@@ -137,7 +174,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       experience_required: Number(data.experience_required) || 0,
       requirements: Array.isArray(data.requirements) ? data.requirements.filter(r => r?.trim()) : [],
       benefits: Array.isArray(data.benefits) ? data.benefits.filter(b => b?.trim()) : [],
-      is_active: true,
       housing_provided: Boolean(data.housing_provided),
       application_deadline: data.application_deadline || null
     };
@@ -150,30 +186,8 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     const data = form.getValues();
     setPreviewOpen(false);
     
-    const vacancyData = {
-      title: data.title?.trim(),
-      vacancy_type: data.vacancy_type || 'teacher',
-      subject: data.subject?.trim() || null,
-      education_level: data.education_level || 'any',
-      employment_type: data.employment_type || 'full-time',
-      location: data.location?.trim() || null,
-      salary_min: data.salary_min ? Number(data.salary_min) : null,
-      salary_max: data.salary_max ? Number(data.salary_max) : null,
-      salary_currency: data.salary_currency || 'rub',
-      description: data.description?.trim() || null,
-      contact_name: data.contact_name?.trim(),
-      contact_phone: data.contact_phone?.trim(),
-      contact_email: data.contact_email?.trim(),
-      experience_required: Number(data.experience_required) || 0,
-      requirements: Array.isArray(data.requirements) ? data.requirements.filter(r => r?.trim()) : [],
-      benefits: Array.isArray(data.benefits) ? data.benefits.filter(b => b?.trim()) : [],
-      is_active: true,
-      housing_provided: Boolean(data.housing_provided),
-      application_deadline: data.application_deadline || null
-    };
-    
-    console.log('Publishing vacancy from preview:', vacancyData);
-    onVacancyCreated(vacancyData);
+    // Trigger form submission validation
+    form.handleSubmit(onSubmit)();
   };
 
   return (
@@ -189,11 +203,11 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Основная информация */}
-                <div className="space-y-4">
-                  <h3 className="font-medium text-lg border-b pb-2">Основная информация</h3>
-                  
+              {/* Основная информация */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Основная информация</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="title"
@@ -232,7 +246,9 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       </FormItem>
                     )}
                   />
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="subject"
@@ -270,11 +286,13 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     )}
                   />
                 </div>
+              </div>
 
-                {/* Условия работы */}
-                <div className="space-y-4">
-                  <h3 className="font-medium text-lg border-b pb-2">Условия работы</h3>
-                  
+              {/* Условия работы */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Условия работы</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="employment_type"
@@ -312,47 +330,47 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       </FormItem>
                     )}
                   />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label>Зарплата (по желанию)</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <FormField
-                        control={form.control}
-                        name="salary_min"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                value={field.value || ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="От"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="salary_max"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                value={field.value || ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                placeholder="До"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label>Зарплата (по желанию)</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="salary_min"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              placeholder="От"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="salary_max"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                              placeholder="До"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="salary_currency"
@@ -375,7 +393,9 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       )}
                     />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="experience_required"
@@ -412,27 +432,27 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="housing_provided"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Предоставляется жилье
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="housing_provided"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Предоставляется жилье
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Описание */}

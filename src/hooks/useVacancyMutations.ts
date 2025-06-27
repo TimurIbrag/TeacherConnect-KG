@@ -13,9 +13,21 @@ export const useVacancyMutations = () => {
 
   const createVacancyMutation = useMutation({
     mutationFn: async (newVacancy: any) => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id) {
+        console.error('User not authenticated');
+        throw new Error('User not authenticated');
+      }
 
       console.log('Creating vacancy with data:', newVacancy);
+
+      // Validate required fields before processing
+      const requiredFields = ['title', 'contact_name', 'contact_phone', 'contact_email'];
+      const missingFields = requiredFields.filter(field => !newVacancy[field]?.trim());
+      
+      if (missingFields.length > 0) {
+        console.error('Missing required fields:', missingFields);
+        throw new Error(`Обязательные поля: ${missingFields.join(', ')}`);
+      }
 
       const vacancyData = {
         school_id: user.id,
@@ -39,20 +51,6 @@ export const useVacancyMutations = () => {
         application_deadline: newVacancy.application_deadline || null,
         housing_provided: Boolean(newVacancy.housing_provided)
       };
-
-      // Validate required fields
-      if (!vacancyData.title) {
-        throw new Error('Название вакансии обязательно');
-      }
-      if (!vacancyData.contact_name) {
-        throw new Error('Контактное лицо обязательно');
-      }
-      if (!vacancyData.contact_phone) {
-        throw new Error('Телефон обязателен');
-      }
-      if (!vacancyData.contact_email) {
-        throw new Error('Email обязателен');
-      }
 
       console.log('Final vacancy data to insert:', vacancyData);
 
@@ -93,7 +91,7 @@ export const useVacancyMutations = () => {
       let errorMessage = "Не удалось создать вакансию. Попробуйте снова.";
       
       if (error.message) {
-        if (error.message.includes('обязательно') || error.message.includes('обязателен')) {
+        if (error.message.includes('обязательно') || error.message.includes('обязателен') || error.message.includes('Обязательные поля')) {
           errorMessage = error.message;
         } else if (error.message.includes('duplicate key') || error.message.includes('unique')) {
           errorMessage = "Вакансия с таким названием уже существует.";
