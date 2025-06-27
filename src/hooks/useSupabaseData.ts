@@ -116,6 +116,8 @@ export const useVacancies = () => {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+          queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
+          queryClient.invalidateQueries({ queryKey: ['active-vacancies'] });
         }
       )
       .subscribe();
@@ -324,6 +326,61 @@ export const useCreateTeacherVacancy = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teacher-vacancies'] });
+    },
+  });
+};
+
+// Updated hook specifically for public vacancies
+export const usePublicVacancies = (limit?: number) => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('public-vacancies-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vacancies'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  return useQuery({
+    queryKey: ['public-vacancies', limit],
+    queryFn: async () => {
+      let query = supabase
+        .from('vacancies')
+        .select(`
+          *,
+          school_profiles (
+            school_name,
+            address,
+            profiles (
+              full_name
+            )
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data;
     },
   });
 };

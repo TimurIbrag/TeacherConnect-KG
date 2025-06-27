@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -57,6 +58,7 @@ const VacanciesTab = () => {
         .insert({
           ...newVacancy,
           school_id: user.id,
+          is_active: true, // Automatically set as active when created
         })
         .select()
         .single();
@@ -66,10 +68,12 @@ const VacanciesTab = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
       toast({
-        title: t('vacancy.created'),
-        description: "Вакансия была успешно опубликована",
+        title: "Вакансия опубликована!",
+        description: "Вакансия была успешно создана и опубликована на публичной странице",
       });
       setCreateDialogOpen(false);
     },
@@ -95,9 +99,11 @@ const VacanciesTab = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
       toast({
-        title: t('vacancy.deleted'),
+        title: "Вакансия удалена",
         description: "Вакансия была успешно удалена",
       });
     },
@@ -124,13 +130,31 @@ const VacanciesTab = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
       queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
-      toast({
-        title: t('vacancy.updated'),
-        description: "Изменения сохранены",
-      });
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
+      
+      const isActivating = variables.updates.is_active === true;
+      const isDeactivating = variables.updates.is_active === false;
+      
+      if (isActivating) {
+        toast({
+          title: "Вакансия опубликована!",
+          description: "Вакансия теперь видна на публичной странице вакансий",
+        });
+      } else if (isDeactivating) {
+        toast({
+          title: "Вакансия снята с публикации",
+          description: "Вакансия больше не видна на публичной странице",
+        });
+      } else {
+        toast({
+          title: "Вакансия обновлена",
+          description: "Изменения сохранены",
+        });
+      }
     },
     onError: (error) => {
       console.error('Error updating vacancy:', error);
@@ -211,10 +235,10 @@ const VacanciesTab = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">{t('vacancy.schoolVacancies')}</h2>
+          <h2 className="text-xl font-semibold">Мои вакансии</h2>
         </div>
         <div className="text-center py-12">
-          <p className="text-muted-foreground">{t('common.loading')}</p>
+          <p className="text-muted-foreground">Загрузка...</p>
         </div>
       </div>
     );
@@ -223,21 +247,21 @@ const VacanciesTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{t('vacancy.schoolVacancies')}</h2>
+        <h2 className="text-xl font-semibold">Мои вакансии</h2>
         <Button onClick={handleCreateButtonClick} disabled={createVacancyMutation.isPending}>
           <Plus className="h-4 w-4 mr-2" />
-          {createVacancyMutation.isPending ? t('vacancy.creating') : t('vacancy.createNew')}
+          {createVacancyMutation.isPending ? "Создание..." : "Создать вакансию"}
         </Button>
       </div>
       
       {vacancies.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">
-            {t('vacancy.noVacancies')}
+            У вас пока нет созданных вакансий
           </p>
           <Button onClick={handleCreateButtonClick} disabled={createVacancyMutation.isPending}>
             <Plus className="h-4 w-4 mr-2" />
-            {t('vacancy.createFirst')}
+            Создать первую вакансию
           </Button>
         </div>
       ) : (

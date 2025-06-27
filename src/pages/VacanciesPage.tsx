@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,9 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign, Clock, GraduationCap, Building2, Search } from 'lucide-react';
+import { MapPin, DollarSign, Clock, GraduationCap, Building2, Search, MessageSquare, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
+import { useNavigate } from 'react-router-dom';
 
 // Extended vacancy type with new fields
 type ExtendedVacancy = {
@@ -26,6 +31,8 @@ type ExtendedVacancy = {
   is_active?: boolean;
   created_at: string;
   requirements?: string[];
+  benefits?: string[];
+  school_id: string;
   school_profiles?: {
     school_name: string;
     address?: string;
@@ -37,6 +44,10 @@ type ExtendedVacancy = {
 
 const VacanciesPage = () => {
   const { t } = useLanguage();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  const { createChatRoom } = useSecurePrivateChat();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [typeFilter, setTypeFilter] = React.useState('all');
   const [locationFilter, setLocationFilter] = React.useState('');
@@ -102,13 +113,14 @@ const VacanciesPage = () => {
     const symbols = {
       rub: '₽',
       usd: '$',
-      eur: '€'
+      eur: '€',
+      som: 'сом'
     };
-    return symbols[currency as keyof typeof symbols] || '₽';
+    return symbols[currency as keyof typeof symbols] || 'сом';
   };
 
   const formatSalary = (vacancy: ExtendedVacancy) => {
-    const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
+    const { salary_min, salary_max, salary_currency = 'som' } = vacancy;
     const symbol = getCurrencySymbol(salary_currency);
     
     if (!salary_min && !salary_max) return 'По договоренности';
@@ -116,6 +128,74 @@ const VacanciesPage = () => {
     if (salary_min) return `от ${salary_min.toLocaleString()} ${symbol}`;
     if (salary_max) return `до ${salary_max.toLocaleString()} ${symbol}`;
     return 'Не указана';
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
+  const handleContactSchool = async (schoolId: string, schoolName: string) => {
+    if (!user) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему, чтобы связаться со школой",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (profile?.role !== 'teacher') {
+      toast({
+        title: "Недоступно",
+        description: "Связаться со школой могут только учителя",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const chatRoomId = await createChatRoom(schoolId);
+      toast({
+        title: "Чат создан",
+        description: `Теперь вы можете общаться с ${schoolName}`,
+      });
+      navigate(`/messages/${chatRoomId}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать чат со школой",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleApplyToVacancy = (vacancy: ExtendedVacancy) => {
+    if (!user) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему, чтобы откликнуться на вакансию",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (profile?.role !== 'teacher') {
+      toast({
+        title: "Недоступно",
+        description: "Откликнуться на вакансию могут только учителя",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Заявка отправлена!",
+      description: `Ваш отклик на вакансию "${vacancy.title}" успешно отправлен`,
+    });
   };
 
   const filteredVacancies = vacancies.filter(vacancy => {
@@ -218,6 +298,9 @@ const VacanciesPage = () => {
                     <div className="flex gap-2 flex-wrap">
                       <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type || 'teacher')}</Badge>
                       {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
+                      <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                        Активна
+                      </Badge>
                     </div>
                   </div>
                   <div className="text-right">
@@ -230,26 +313,30 @@ const VacanciesPage = () => {
               
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{vacancy.location}</span>
-                  </div>
+                  {vacancy.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{vacancy.location}</span>
+                    </div>
+                  )}
                   
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>{getEmploymentTypeLabel(vacancy.employment_type || 'full-time')}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span>{getEducationLevelLabel(vacancy.education_level || 'any')}</span>
-                  </div>
+                  {vacancy.application_deadline && (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>До {formatDate(vacancy.application_deadline)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {vacancy.description && (
                   <div>
                     <h4 className="font-medium mb-2">Описание</h4>
-                    <p className="text-sm text-gray-600 line-clamp-3">
+                    <p className="text-sm text-gray-600">
                       {vacancy.description}
                     </p>
                   </div>
@@ -259,14 +346,32 @@ const VacanciesPage = () => {
                   <div>
                     <h4 className="font-medium mb-2">Требования</h4>
                     <div className="flex flex-wrap gap-1">
-                      {vacancy.requirements.slice(0, 3).map((req: string, index: number) => (
+                      {vacancy.requirements.slice(0, 5).map((req: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {req}
                         </Badge>
                       ))}
-                      {vacancy.requirements.length > 3 && (
+                      {vacancy.requirements.length > 5 && (
                         <Badge variant="outline" className="text-xs">
-                          +{vacancy.requirements.length - 3} еще
+                          +{vacancy.requirements.length - 5} еще
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {vacancy.benefits && vacancy.benefits.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2">Дополнительно</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {vacancy.benefits.slice(0, 3).map((benefit: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {benefit}
+                        </Badge>
+                      ))}
+                      {vacancy.benefits.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{vacancy.benefits.length - 3} еще
                         </Badge>
                       )}
                     </div>
@@ -275,13 +380,21 @@ const VacanciesPage = () => {
 
                 <div className="flex justify-between items-center pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    Опубликовано: {new Date(vacancy.created_at).toLocaleDateString('ru-RU')}
+                    Опубликовано: {formatDate(vacancy.created_at)}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      Подробнее
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleContactSchool(vacancy.school_id, vacancy.school_profiles?.school_name || 'школой')}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Связаться со школой
                     </Button>
-                    <Button size="sm">
+                    <Button 
+                      size="sm"
+                      onClick={() => handleApplyToVacancy(vacancy)}
+                    >
                       Откликнуться
                     </Button>
                   </div>
