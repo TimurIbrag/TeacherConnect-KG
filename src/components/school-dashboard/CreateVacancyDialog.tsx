@@ -116,27 +116,30 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   const onSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
     
-    // Ensure all required fields are present
+    // Ensure all required fields are properly formatted
     const vacancyData = {
-      title: data.title,
+      title: data.title?.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
-      subject: data.subject,
+      subject: data.subject?.trim() || null,
       education_level: data.education_level || 'any',
       employment_type: data.employment_type || 'full-time',
-      location: data.location,
-      salary_min: data.salary_min || null,
-      salary_max: data.salary_max || null,
+      location: data.location?.trim() || null,
+      salary_min: data.salary_min ? Number(data.salary_min) : null,
+      salary_max: data.salary_max ? Number(data.salary_max) : null,
       salary_currency: data.salary_currency || 'rub',
-      description: data.description,
-      contact_name: data.contact_name,
-      contact_phone: data.contact_phone,
-      contact_email: data.contact_email,
-      experience_required: data.experience_required || 0,
-      requirements: data.requirements || [],
-      benefits: data.benefits || [],
-      is_active: true, // Automatically publish
+      description: data.description?.trim() || null,
+      contact_name: data.contact_name?.trim(),
+      contact_phone: data.contact_phone?.trim(),
+      contact_email: data.contact_email?.trim(),
+      experience_required: Number(data.experience_required) || 0,
+      requirements: Array.isArray(data.requirements) ? data.requirements.filter(r => r?.trim()) : [],
+      benefits: Array.isArray(data.benefits) ? data.benefits.filter(b => b?.trim()) : [],
+      is_active: true,
+      housing_provided: Boolean(data.housing_provided),
+      application_deadline: data.application_deadline || null
     };
     
+    console.log('Processed vacancy data:', vacancyData);
     onVacancyCreated(vacancyData);
   };
 
@@ -145,25 +148,28 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     setPreviewOpen(false);
     
     const vacancyData = {
-      title: data.title,
+      title: data.title?.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
-      subject: data.subject,
+      subject: data.subject?.trim() || null,
       education_level: data.education_level || 'any',
       employment_type: data.employment_type || 'full-time',
-      location: data.location,
-      salary_min: data.salary_min || null,
-      salary_max: data.salary_max || null,
+      location: data.location?.trim() || null,
+      salary_min: data.salary_min ? Number(data.salary_min) : null,
+      salary_max: data.salary_max ? Number(data.salary_max) : null,
       salary_currency: data.salary_currency || 'rub',
-      description: data.description,
-      contact_name: data.contact_name,
-      contact_phone: data.contact_phone,
-      contact_email: data.contact_email,
-      experience_required: data.experience_required || 0,
-      requirements: data.requirements || [],
-      benefits: data.benefits || [],
-      is_active: true, // Automatically publish
+      description: data.description?.trim() || null,
+      contact_name: data.contact_name?.trim(),
+      contact_phone: data.contact_phone?.trim(),
+      contact_email: data.contact_email?.trim(),
+      experience_required: Number(data.experience_required) || 0,
+      requirements: Array.isArray(data.requirements) ? data.requirements.filter(r => r?.trim()) : [],
+      benefits: Array.isArray(data.benefits) ? data.benefits.filter(b => b?.trim()) : [],
+      is_active: true,
+      housing_provided: Boolean(data.housing_provided),
+      application_deadline: data.application_deadline || null
     };
     
+    console.log('Publishing vacancy from preview:', vacancyData);
     onVacancyCreated(vacancyData);
   };
 

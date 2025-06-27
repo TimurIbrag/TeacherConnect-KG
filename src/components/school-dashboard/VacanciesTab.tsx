@@ -47,7 +47,7 @@ const VacanciesTab = () => {
     enabled: !!user?.id && profile?.role === 'school',
   });
 
-  // Create vacancy mutation
+  // Create vacancy mutation with improved error handling
   const createVacancyMutation = useMutation({
     mutationFn: async (newVacancy: any) => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -57,24 +57,42 @@ const VacanciesTab = () => {
       // Ensure all required fields are present and properly formatted
       const vacancyData = {
         school_id: user.id,
-        title: newVacancy.title,
-        description: newVacancy.description || null,
+        title: newVacancy.title?.trim(),
+        description: newVacancy.description?.trim() || null,
         vacancy_type: newVacancy.vacancy_type || 'teacher',
-        subject: newVacancy.subject || null,
+        subject: newVacancy.subject?.trim() || null,
         education_level: newVacancy.education_level || 'any',
         employment_type: newVacancy.employment_type || 'full-time',
-        location: newVacancy.location || null,
-        salary_min: newVacancy.salary_min || null,
-        salary_max: newVacancy.salary_max || null,
+        location: newVacancy.location?.trim() || null,
+        salary_min: newVacancy.salary_min ? Number(newVacancy.salary_min) : null,
+        salary_max: newVacancy.salary_max ? Number(newVacancy.salary_max) : null,
         salary_currency: newVacancy.salary_currency || 'rub',
-        experience_required: newVacancy.experience_required || 0,
-        requirements: newVacancy.requirements || [],
-        benefits: newVacancy.benefits || [],
-        contact_name: newVacancy.contact_name,
-        contact_phone: newVacancy.contact_phone,
-        contact_email: newVacancy.contact_email,
-        is_active: true, // Always publish automatically
+        experience_required: Number(newVacancy.experience_required) || 0,
+        requirements: Array.isArray(newVacancy.requirements) ? newVacancy.requirements.filter(r => r?.trim()) : [],
+        benefits: Array.isArray(newVacancy.benefits) ? newVacancy.benefits.filter(b => b?.trim()) : [],
+        contact_name: newVacancy.contact_name?.trim(),
+        contact_phone: newVacancy.contact_phone?.trim(),
+        contact_email: newVacancy.contact_email?.trim(),
+        is_active: true,
+        application_deadline: newVacancy.application_deadline || null,
+        housing_provided: Boolean(newVacancy.housing_provided)
       };
+
+      // Validate required fields
+      if (!vacancyData.title) {
+        throw new Error('Название вакансии обязательно');
+      }
+      if (!vacancyData.contact_name) {
+        throw new Error('Контактное лицо обязательно');
+      }
+      if (!vacancyData.contact_phone) {
+        throw new Error('Телефон обязателен');
+      }
+      if (!vacancyData.contact_email) {
+        throw new Error('Email обязателен');
+      }
+
+      console.log('Final vacancy data to insert:', vacancyData);
 
       const { data, error } = await supabase
         .from('vacancies')
@@ -83,7 +101,12 @@ const VacanciesTab = () => {
         .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
@@ -104,17 +127,25 @@ const VacanciesTab = () => {
       setDuplicateVacancy(null);
     },
     onError: (error: any) => {
-      console.error('Error creating vacancy:', error);
+      console.error('Error creating vacancy - full error object:', error);
       
       let errorMessage = "Не удалось создать вакансию. Попробуйте снова.";
       
-      // Provide more specific error messages
-      if (error.message?.includes('not-null')) {
-        errorMessage = "Пожалуйста, заполните все обязательные поля.";
-      } else if (error.message?.includes('foreign key')) {
-        errorMessage = "Ошибка связи с профилем школы. Обратитесь в поддержку.";
-      } else if (error.message?.includes('permission')) {
-        errorMessage = "У вас нет прав для создания вакансий.";
+      // Provide more specific error messages based on the error
+      if (error.message) {
+        if (error.message.includes('обязательно') || error.message.includes('обязателен')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('duplicate key') || error.message.includes('unique')) {
+          errorMessage = "Вакансия с таким названием уже существует.";
+        } else if (error.message.includes('invalid input syntax')) {
+          errorMessage = "Проверьте правильность заполнения полей.";
+        } else if (error.message.includes('foreign key')) {
+          errorMessage = "Ошибка связи с профилем школы. Убедитесь, что профиль школы создан.";
+        } else if (error.message.includes('permission') || error.message.includes('policy')) {
+          errorMessage = "У вас нет прав для создания вакансий.";
+        } else if (error.code === 'PGRST301') {
+          errorMessage = "Ошибка авторизации. Попробуйте войти в систему заново.";
+        }
       }
       
       toast({
