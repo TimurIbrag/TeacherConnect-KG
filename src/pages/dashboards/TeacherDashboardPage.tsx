@@ -30,12 +30,26 @@ const TeacherDashboardPage = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+  const [pendingDraftChanges, setPendingDraftChanges] = useState<Partial<ProfileData>>({});
 
   // Load published status from localStorage on mount
   useEffect(() => {
     const publishedStatus = localStorage.getItem('teacherProfilePublished');
     setIsPublished(publishedStatus === 'true');
   }, []);
+
+  // Auto-save every 30 seconds if there are pending changes
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      if (Object.keys(pendingDraftChanges).length > 0 && hasUnsavedChanges) {
+        saveDraftToLocalStorage(pendingDraftChanges);
+        setPendingDraftChanges({}); // Clear pending changes after saving
+        setLastSaved(new Date());
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [pendingDraftChanges, hasUnsavedChanges]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -131,6 +145,7 @@ const TeacherDashboardPage = () => {
 
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
+      setPendingDraftChanges({}); // Clear pending changes
       
       toast({
         title: 'Профиль обновлен',
@@ -181,7 +196,7 @@ const TeacherDashboardPage = () => {
     }
   };
 
-  // Auto-save draft data to localStorage
+  // Auto-save draft data to localStorage (without toast notifications)
   const saveDraftToLocalStorage = (data: Partial<ProfileData>) => {
     try {
       const existingDraft = localStorage.getItem('teacher_profile_draft');
@@ -190,15 +205,16 @@ const TeacherDashboardPage = () => {
       localStorage.setItem('teacher_profile_draft', JSON.stringify(updatedDraft));
       setHasUnsavedChanges(true);
       
-      // Show auto-save indicator
-      toast({
-        title: 'Черновик сохранен',
-        description: 'Ваши изменения сохранены локально',
-        duration: 2000,
-      });
+      // No toast notification for auto-save
     } catch (error) {
       console.error('Failed to save draft:', error);
     }
+  };
+
+  // Updated draft save handler that accumulates changes instead of immediate saving
+  const handleDraftSave = (data: Partial<ProfileData>) => {
+    setPendingDraftChanges(prev => ({ ...prev, ...data }));
+    setHasUnsavedChanges(true);
   };
 
   // Load draft from localStorage
@@ -216,6 +232,7 @@ const TeacherDashboardPage = () => {
   const clearDraft = () => {
     localStorage.removeItem('teacher_profile_draft');
     setHasUnsavedChanges(false);
+    setPendingDraftChanges({});
   };
 
   // Handle action buttons
@@ -296,7 +313,7 @@ const TeacherDashboardPage = () => {
               {hasUnsavedChanges && !isAutoSaving && (
                 <div className="flex items-center gap-2 text-orange-600">
                   <Clock className="h-4 w-4" />
-                  <span className="text-sm">Есть несохраненные изменения</span>
+                  <span className="text-sm">Автосохранение каждые 30 сек.</span>
                 </div>
               )}
             </div>
@@ -707,7 +724,7 @@ const TeacherDashboardPage = () => {
             clearDraft(); // Clear draft after successful save
           }}
           userType="teacher"
-          onDraftSave={saveDraftToLocalStorage} // Pass auto-save function
+          onDraftSave={handleDraftSave} // Pass updated auto-save function
         />
       </div>
     </div>
