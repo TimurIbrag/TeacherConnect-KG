@@ -94,68 +94,8 @@ export const teachersData: Teacher[] = [
   }
 ];
 
-export const schoolsData: School[] = [
-  {
-    id: 1,
-    name: 'Гимназия №1',
-    address: 'Центр города',
-    type: 'Государственная',
-    specialization: 'Математика и естественные науки',
-    openPositions: [
-      { id: 1, title: 'Учитель математики', schedule: 'Полный день', salary: '25,000 - 30,000 сом', requirements: ['Высшее образование', 'Опыт 3+ лет'], additionalInfo: 'Работа в старших классах' },
-      { id: 2, title: 'Учитель физики', schedule: 'Полный день', salary: '23,000 - 28,000 сом', requirements: ['Высшее образование', 'Опыт 2+ лет'], additionalInfo: 'Лабораторная работа' },
-      { id: 3, title: 'Учитель химии', schedule: 'Неполный день', salary: '18,000 - 22,000 сом', requirements: ['Высшее образование'], additionalInfo: 'Молодые специалисты приветствуются' }
-    ],
-    photo: '/placeholder.svg',
-    ratings: 4.8,
-    views: 245,
-    housing: false,
-    about: 'Ведущая гимназия города с углубленным изучением математики и естественных наук.',
-    facilities: ['Современные лаборатории', 'Спортивный зал', 'Библиотека', 'Компьютерный класс'],
-    applications: 28,
-    city: 'Бишкек'
-  },
-  {
-    id: 2,
-    name: 'Школа-лицей №15',
-    address: 'Первомайский район',
-    type: 'Частная',
-    specialization: 'Языки и технологии',
-    openPositions: [
-      { id: 4, title: 'Учитель английского языка', schedule: 'Полный день', salary: '22,000 - 28,000 сом', requirements: ['Сертификат IELTS/TOEFL', 'Опыт 2+ лет'], additionalInfo: 'Международные программы' },
-      { id: 5, title: 'Учитель информатики', schedule: 'Полный день', salary: '26,000 - 32,000 сом', requirements: ['IT образование', 'Программирование'], additionalInfo: 'Современные технологии' }
-    ],
-    photo: '/placeholder.svg',
-    ratings: 4.9,
-    views: 189,
-    housing: true,
-    about: 'Инновационная школа с изучением нескольких языков и современными технологиями.',
-    facilities: ['Интерактивные доски', 'Языковые лаборатории', 'Столовая', 'Медпункт'],
-    applications: 42,
-    city: 'Бишкек'
-  },
-  {
-    id: 3,
-    name: 'Средняя школа №8',
-    address: 'Ленинский район',
-    type: 'Государственная',
-    specialization: 'Общеобразовательная',
-    openPositions: [
-      { id: 6, title: 'Учитель истории', schedule: 'Полный день', salary: '20,000 - 26,000 сом', requirements: ['Высшее образование', 'Опыт желателен'], additionalInfo: 'Дружный коллектив' },
-      { id: 7, title: 'Учитель кыргызского языка', schedule: 'Полный день', salary: '19,000 - 25,000 сом', requirements: ['Филологическое образование'], additionalInfo: 'Родной язык и литература' },
-      { id: 8, title: 'Учитель биологии', schedule: 'Неполный день', salary: '16,000 - 20,000 сом', requirements: ['Биологическое образование'], additionalInfo: 'Экологические проекты' },
-      { id: 9, title: 'Учитель географии', schedule: 'Полный день', salary: '18,000 - 24,000 сом', requirements: ['Географическое образование'], additionalInfo: 'Краеведение' }
-    ],
-    photo: '/placeholder.svg',
-    ratings: 4.6,
-    views: 156,
-    housing: false,
-    about: 'Традиционная школа с сильным педагогическим составом и хорошими результатами.',
-    facilities: ['Актовый зал', 'Спортивная площадка', 'Мастерские', 'Кабинет труда'],
-    applications: 31,
-    city: 'Бишкек'
-  }
-];
+// Remove all default school profiles - schools data will only come from Supabase and localStorage now
+export const schoolsData: School[] = [];
 
 export const vacanciesData: Vacancy[] = [
   {

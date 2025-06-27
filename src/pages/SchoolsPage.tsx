@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSchools } from '@/hooks/useSupabaseData';
@@ -7,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, MapPin, Filter, Building, Home } from 'lucide-react';
 import SchoolCard from '@/components/SchoolCard';
-import { schoolsData } from '@/data/mockData';
 import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -135,14 +135,8 @@ const SchoolsPage: React.FC = () => {
     };
   }, []);
 
-  // Combine mock data with published schools and Supabase data
+  // Only show published schools from localStorage and Supabase schools (no mock data)
   const allSchools = [
-    // Mock schools (original seed data)
-    ...schoolsData.map(school => ({
-      ...school,
-      city: 'Бишкек',
-      openPositions: [],
-    })),
     // Published schools from dashboard (localStorage)
     ...publishedSchools,
     // Supabase schools
