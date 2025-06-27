@@ -14,42 +14,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail, Loader2 } from 'lucide-react';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 
 const ForgotPasswordPage: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { securePasswordReset } = useSecureAuth();
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   
-  const handleSendEmail = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate API call to send recovery email
-    setTimeout(() => {
-      setIsLoading(false);
-      setEmailSent(true);
-      toast({
-        title: "Код отправлен",
-        description: "Проверьте вашу электронную почту для получения кода восстановления",
-        variant: "default",
-      });
-    }, 1500);
-  };
-  
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newPassword !== confirmPassword) {
+    if (!email.trim()) {
       toast({
         title: "Ошибка",
-        description: "Пароли не совпадают",
+        description: "Пожалуйста, введите email адрес",
         variant: "destructive",
       });
       return;
@@ -57,15 +40,24 @@ const ForgotPasswordPage: React.FC = () => {
     
     setIsLoading(true);
     
-    // Simulate API call to reset password
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await securePasswordReset(email);
+      setEmailSent(true);
       toast({
-        title: "Пароль изменен",
-        description: "Ваш пароль был успешно изменен. Теперь вы можете войти в систему.",
+        title: "Письмо отправлено",
+        description: "Проверьте вашу электронную почту для получения ссылки восстановления пароля",
         variant: "default",
       });
-    }, 1500);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось отправить письмо для восстановления пароля",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -75,7 +67,7 @@ const ForgotPasswordPage: React.FC = () => {
           <CardTitle className="text-2xl font-bold">Восстановление пароля</CardTitle>
           <CardDescription>
             {emailSent 
-              ? "Введите код подтверждения и новый пароль" 
+              ? "Письмо с инструкциями отправлено на ваш email" 
               : "Введите ваш email для восстановления пароля"}
           </CardDescription>
         </CardHeader>
@@ -94,56 +86,42 @@ const ForgotPasswordPage: React.FC = () => {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Отправка...' : 'Отправить код'}
-                {!isLoading && <Mail className="ml-2 h-4 w-4" />}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Отправка...
+                  </>
+                ) : (
+                  <>
+                    Отправить ссылку
+                    <Mail className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
               <div className="space-y-2">
-                <Label htmlFor="code">Код подтверждения</Label>
-                <Input 
-                  id="code" 
-                  placeholder="123456" 
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Новый пароль</Label>
-                <Input 
-                  id="newPassword" 
-                  type="password" 
-                  placeholder="********" 
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
-                <Input 
-                  id="confirmPassword" 
-                  type="password" 
-                  placeholder="********" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-sm text-destructive">Пароли не совпадают</p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Мы отправили ссылку для восстановления пароля на адрес:
+                </p>
+                <p className="font-semibold">{email}</p>
+                <p className="text-sm text-muted-foreground">
+                  Проверьте папку "Спам", если письмо не появилось в основной папке.
+                </p>
               </div>
               <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading || newPassword !== confirmPassword || !verificationCode}
+                onClick={() => {
+                  setEmailSent(false);
+                  setEmail('');
+                }} 
+                variant="outline" 
+                className="w-full"
               >
-                {isLoading ? 'Сохранение...' : 'Изменить пароль'}
-                {!isLoading && <CheckCircle className="ml-2 h-4 w-4" />}
+                Отправить повторно
               </Button>
-            </form>
+            </div>
           )}
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
