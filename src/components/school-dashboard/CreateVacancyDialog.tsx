@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -116,13 +115,56 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
   const onSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
-    onVacancyCreated(data);
+    
+    // Ensure all required fields are present
+    const vacancyData = {
+      title: data.title,
+      vacancy_type: data.vacancy_type || 'teacher',
+      subject: data.subject,
+      education_level: data.education_level || 'any',
+      employment_type: data.employment_type || 'full-time',
+      location: data.location,
+      salary_min: data.salary_min || null,
+      salary_max: data.salary_max || null,
+      salary_currency: data.salary_currency || 'rub',
+      description: data.description,
+      contact_name: data.contact_name,
+      contact_phone: data.contact_phone,
+      contact_email: data.contact_email,
+      experience_required: data.experience_required || 0,
+      requirements: data.requirements || [],
+      benefits: data.benefits || [],
+      is_active: true, // Automatically publish
+    };
+    
+    onVacancyCreated(vacancyData);
   };
 
   const handlePublishFromPreview = () => {
     const data = form.getValues();
     setPreviewOpen(false);
-    onVacancyCreated(data);
+    
+    const vacancyData = {
+      title: data.title,
+      vacancy_type: data.vacancy_type || 'teacher',
+      subject: data.subject,
+      education_level: data.education_level || 'any',
+      employment_type: data.employment_type || 'full-time',
+      location: data.location,
+      salary_min: data.salary_min || null,
+      salary_max: data.salary_max || null,
+      salary_currency: data.salary_currency || 'rub',
+      description: data.description,
+      contact_name: data.contact_name,
+      contact_phone: data.contact_phone,
+      contact_email: data.contact_email,
+      experience_required: data.experience_required || 0,
+      requirements: data.requirements || [],
+      benefits: data.benefits || [],
+      is_active: true, // Automatically publish
+    };
+    
+    onVacancyCreated(vacancyData);
   };
 
   return (

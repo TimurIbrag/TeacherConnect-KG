@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -53,35 +52,74 @@ const VacanciesTab = () => {
     mutationFn: async (newVacancy: any) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      console.log('Creating vacancy with data:', newVacancy);
+
+      // Ensure all required fields are present and properly formatted
+      const vacancyData = {
+        school_id: user.id,
+        title: newVacancy.title,
+        description: newVacancy.description || null,
+        vacancy_type: newVacancy.vacancy_type || 'teacher',
+        subject: newVacancy.subject || null,
+        education_level: newVacancy.education_level || 'any',
+        employment_type: newVacancy.employment_type || 'full-time',
+        location: newVacancy.location || null,
+        salary_min: newVacancy.salary_min || null,
+        salary_max: newVacancy.salary_max || null,
+        salary_currency: newVacancy.salary_currency || 'rub',
+        experience_required: newVacancy.experience_required || 0,
+        requirements: newVacancy.requirements || [],
+        benefits: newVacancy.benefits || [],
+        contact_name: newVacancy.contact_name,
+        contact_phone: newVacancy.contact_phone,
+        contact_email: newVacancy.contact_email,
+        is_active: true, // Always publish automatically
+      };
+
       const { data, error } = await supabase
         .from('vacancies')
-        .insert({
-          ...newVacancy,
-          school_id: user.id,
-          is_active: true, // Automatically set as active when created
-        })
+        .insert(vacancyData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Vacancy created successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Vacancy creation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] });
       toast({
         title: "Вакансия опубликована!",
-        description: "Вакансия была успешно создана и опубликована на публичной странице",
+        description: "Вакансия была успешно создана и автоматически опубликована на публичной странице",
       });
       setCreateDialogOpen(false);
+      setDuplicateVacancy(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating vacancy:', error);
+      
+      let errorMessage = "Не удалось создать вакансию. Попробуйте снова.";
+      
+      // Provide more specific error messages
+      if (error.message?.includes('not-null')) {
+        errorMessage = "Пожалуйста, заполните все обязательные поля.";
+      } else if (error.message?.includes('foreign key')) {
+        errorMessage = "Ошибка связи с профилем школы. Обратитесь в поддержку.";
+      } else if (error.message?.includes('permission')) {
+        errorMessage = "У вас нет прав для создания вакансий.";
+      }
+      
       toast({
-        title: t('common.error'),
-        description: "Не удалось создать вакансию. Попробуйте снова.",
+        title: "Ошибка",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -99,9 +137,9 @@ const VacanciesTab = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] });
       toast({
         title: "Вакансия удалена",
         description: "Вакансия была успешно удалена",
@@ -132,9 +170,9 @@ const VacanciesTab = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['vacancies'] }); // Refresh public vacancies
-      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] }); // Refresh active vacancies
+      queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['active-vacancies'] });
       
       const isActivating = variables.updates.is_active === true;
       const isDeactivating = variables.updates.is_active === false;
