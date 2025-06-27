@@ -5,32 +5,34 @@ import { useActiveVacancies, useTeachers, useSchools } from '@/hooks/useSupabase
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  GraduationCap, 
-  School, 
-  MapPin, 
-  DollarSign, 
-  Calendar,
-  Users,
-  BookOpen,
-  ArrowRight,
-  Search
-} from 'lucide-react';
+import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-
 const HomePage = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const { user, profile } = useAuth();
-  const { data: featuredVacancies, isLoading: vacanciesLoading } = useActiveVacancies(6);
-  const { data: featuredTeachers, isLoading: teachersLoading } = useTeachers();
-  const { data: featuredSchools, isLoading: schoolsLoading } = useSchools();
+  const {
+    t
+  } = useLanguage();
+  const {
+    user,
+    profile
+  } = useAuth();
+  const {
+    data: featuredVacancies,
+    isLoading: vacanciesLoading
+  } = useActiveVacancies(6);
+  const {
+    data: featuredTeachers,
+    isLoading: teachersLoading
+  } = useTeachers();
+  const {
+    data: featuredSchools,
+    isLoading: schoolsLoading
+  } = useSchools();
 
   // Take first 3 items for featured sections
   const limitedTeachers = featuredTeachers?.slice(0, 3) || [];
   const limitedSchools = featuredSchools?.slice(0, 3) || [];
-
   const formatSalary = (min?: number, max?: number) => {
     if (!min && !max) return 'По договоренности';
     if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ₽`;
@@ -38,7 +40,6 @@ const HomePage = () => {
     if (max) return `до ${max.toLocaleString()} ₽`;
     return 'Не указана';
   };
-
   const handleAddVacancy = () => {
     if (profile?.role === 'school') {
       navigate('/dashboard/school');
@@ -46,9 +47,7 @@ const HomePage = () => {
       navigate('/login');
     }
   };
-
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div className="container mx-auto px-4 text-center">
@@ -113,10 +112,8 @@ const HomePage = () => {
             </p>
           </div>
 
-          {vacanciesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="animate-pulse">
+          {vacanciesLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(i => <Card key={i} className="animate-pulse">
                   <CardHeader>
                     <div className="h-6 bg-gray-200 rounded mb-2"></div>
                     <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -127,13 +124,9 @@ const HomePage = () => {
                       <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {featuredVacancies?.map((vacancy) => (
-                <Card key={vacancy.id} className="hover:shadow-lg transition-shadow">
+                </Card>)}
+            </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {featuredVacancies?.map(vacancy => <Card key={vacancy.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <CardTitle className="text-lg">{vacancy.title}</CardTitle>
                     <CardDescription>
@@ -151,22 +144,16 @@ const HomePage = () => {
                       <span>{formatSalary(vacancy.salary_min, vacancy.salary_max)}</span>
                     </div>
 
-                    {vacancy.employment_type && (
-                      <Badge variant="secondary">
+                    {vacancy.employment_type && <Badge variant="secondary">
                         {vacancy.employment_type}
-                      </Badge>
-                    )}
+                      </Badge>}
 
-                    {vacancy.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                    {vacancy.description && <p className="text-sm text-gray-600 line-clamp-2">
                         {vacancy.description}
-                      </p>
-                    )}
+                      </p>}
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
 
           <div className="text-center">
             <Button asChild>
@@ -191,22 +178,16 @@ const HomePage = () => {
             </p>
           </div>
 
-          {teachersLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
+          {teachersLoading ? <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => <Card key={i} className="animate-pulse">
                   <CardHeader className="text-center">
                     <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4"></div>
                     <div className="h-6 bg-gray-200 rounded mb-2"></div>
                     <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
                   </CardHeader>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              {limitedTeachers.map((teacher) => (
-                <Card key={teacher.id} className="text-center hover:shadow-lg transition-shadow">
+                </Card>)}
+            </div> : <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              {limitedTeachers.map(teacher => <Card key={teacher.id} className="text-center hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
                       {teacher.profiles?.full_name?.charAt(0) || 'T'}
@@ -215,26 +196,20 @@ const HomePage = () => {
                     <CardDescription>{teacher.specialization}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {teacher.experience_years && (
-                      <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
+                    {teacher.experience_years && <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
                         <GraduationCap className="h-4 w-4" />
                         <span>{teacher.experience_years} лет опыта</span>
-                      </div>
-                    )}
-                    {teacher.location && (
-                      <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
+                      </div>}
+                    {teacher.location && <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
                         <MapPin className="h-4 w-4" />
                         <span>{teacher.location}</span>
-                      </div>
-                    )}
+                      </div>}
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/teachers/${teacher.id}`}>Подробнее</Link>
                     </Button>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
 
           <div className="text-center">
             <Button asChild>
@@ -259,22 +234,16 @@ const HomePage = () => {
             </p>
           </div>
 
-          {schoolsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
+          {schoolsLoading ? <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => <Card key={i} className="animate-pulse">
                   <div className="h-48 bg-gray-200 rounded-t-lg"></div>
                   <CardHeader>
                     <div className="h-6 bg-gray-200 rounded mb-2"></div>
                     <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                   </CardHeader>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-              {limitedSchools.map((school) => (
-                <Card key={school.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                </Card>)}
+            </div> : <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              {limitedSchools.map(school => <Card key={school.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white text-4xl font-bold">
                     {school.school_name?.charAt(0) || 'S'}
                   </div>
@@ -283,26 +252,20 @@ const HomePage = () => {
                     <CardDescription>{school.school_type}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {school.address && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                    {school.address && <div className="flex items-center gap-1 text-sm text-gray-600">
                         <MapPin className="h-4 w-4" />
                         <span>{school.address}</span>
-                      </div>
-                    )}
-                    {school.student_count && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                      </div>}
+                    {school.student_count && <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Users className="h-4 w-4" />
                         <span>{school.student_count} учеников</span>
-                      </div>
-                    )}
+                      </div>}
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/schools/${school.id}`}>Подробнее</Link>
                     </Button>
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                </Card>)}
+            </div>}
 
           <div className="text-center">
             <Button asChild>
@@ -328,14 +291,12 @@ const HomePage = () => {
             <Button size="lg" variant="secondary" onClick={handleAddVacancy}>
               Добавить вакансию
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/vacancies')}>
+            <Button size="lg" variant="outline" onClick={() => navigate('/vacancies')} className="text-slate-500">
               Найти работу
             </Button>
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default HomePage;
