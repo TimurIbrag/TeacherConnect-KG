@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Eye, Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +73,8 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       experience_required: duplicateVacancy?.experience_required || 0,
       requirements: duplicateVacancy?.requirements || [],
       benefits: duplicateVacancy?.benefits || [],
+      housing_provided: duplicateVacancy?.housing_provided || false,
+      application_deadline: duplicateVacancy?.application_deadline || '',
     },
   });
 
@@ -116,7 +120,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   const onSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
     
-    // Ensure all required fields are properly formatted
     const vacancyData = {
       title: data.title?.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
@@ -235,7 +238,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     name="subject"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Предмет / Специализация *</FormLabel>
+                        <FormLabel>Предмет / Специализация</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Например: Математика, Физика" />
                         </FormControl>
@@ -249,7 +252,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     name="education_level"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Требуемый уровень образования *</FormLabel>
+                        <FormLabel>Требуемый уровень образования</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -277,7 +280,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     name="employment_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>График работы *</FormLabel>
+                        <FormLabel>График работы</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -301,7 +304,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Город / Локация *</FormLabel>
+                        <FormLabel>Город / Локация</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Например: Москва, Санкт-Петербург" />
                         </FormControl>
@@ -392,6 +395,43 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="application_deadline"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Крайний срок подачи заявок</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="housing_provided"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Предоставляется жилье
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
 
@@ -403,7 +443,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Полное описание вакансии *</FormLabel>
+                      <FormLabel>Полное описание вакансии</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
