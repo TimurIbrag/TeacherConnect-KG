@@ -29,10 +29,16 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Eye, Plus, X, User } from 'lucide-react';
+import { Copy, Eye, Plus, X, User, Phone, Mail, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import VacancyPreviewDialog from './VacancyPreviewDialog';
+
+interface ContactInfo {
+  name: string;
+  phone: string;
+  email: string;
+}
 
 interface CreateVacancyDialogProps {
   open: boolean;
@@ -54,6 +60,11 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newBenefit, setNewBenefit] = useState('');
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    name: '',
+    phone: '',
+    email: ''
+  });
 
   const form = useForm({
     resolver: zodResolver(vacancySchema),
@@ -102,9 +113,9 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
   const addSchoolContact = () => {
     if (profile?.email) {
-      const contactInfo = `Контакт: ${profile.email}${profile.phone ? `, тел: ${profile.phone}` : ''}`;
+      const contactText = `Контакт: ${profile.email}${profile.phone ? `, тел: ${profile.phone}` : ''}`;
       const currentDesc = form.getValues('description') || '';
-      const newDesc = currentDesc ? `${currentDesc}\n\n${contactInfo}` : contactInfo;
+      const newDesc = currentDesc ? `${currentDesc}\n\n${contactText}` : contactText;
       form.setValue('description', newDesc);
       toast({
         title: "Контакт добавлен",
@@ -119,11 +130,38 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     }
   };
 
+  const addContactToDescription = () => {
+    if (!contactInfo.name && !contactInfo.phone && !contactInfo.email) {
+      toast({
+        title: "Заполните контактную информацию",
+        description: "Добавьте хотя бы одно поле контактной информации",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let contactText = "Контактная информация:\n";
+    if (contactInfo.name) contactText += `Имя: ${contactInfo.name}\n`;
+    if (contactInfo.phone) contactText += `Телефон: ${contactInfo.phone}\n`;
+    if (contactInfo.email) contactText += `Email: ${contactInfo.email}\n`;
+
+    const currentDesc = form.getValues('description') || '';
+    const newDesc = currentDesc ? `${currentDesc}\n\n${contactText}` : contactText;
+    form.setValue('description', newDesc);
+    
+    toast({
+      title: "Контакт добавлен",
+      description: "Контактная информация добавлена в описание вакансии",
+    });
+
+    // Clear contact form
+    setContactInfo({ name: '', phone: '', email: '' });
+  };
+
   const handlePreview = () => {
     const formData = form.getValues();
     console.log('Preview form data:', formData);
     
-    // Simple validation for preview
     if (!formData.title?.trim()) {
       toast({
         title: 'Заполните название',
@@ -136,11 +174,10 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     setPreviewOpen(true);
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     console.log('=== FORM SUBMISSION START ===');
     console.log('Form data:', data);
     
-    // Basic validation - only title is required
     if (!data.title?.trim()) {
       console.error('Missing title');
       toast({
@@ -151,7 +188,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       return;
     }
     
-    // Process the data directly without excessive validation
     const vacancyData = {
       title: data.title.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
@@ -170,15 +206,22 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     };
     
     console.log('Processed vacancy data:', vacancyData);
+    console.log('Calling onVacancyCreated...');
+    
+    try {
+      await onVacancyCreated(vacancyData);
+      console.log('onVacancyCreated completed successfully');
+    } catch (error) {
+      console.error('Error in onVacancyCreated:', error);
+    }
+    
     console.log('=== FORM SUBMISSION END ===');
-    onVacancyCreated(vacancyData);
   };
 
-  const handlePublishFromPreview = () => {
+  const handlePublishFromPreview = async () => {
     setPreviewOpen(false);
-    // Get current form values and submit directly
     const data = form.getValues();
-    onSubmit(data);
+    await onSubmit(data);
   };
 
   return (
@@ -518,12 +561,69 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                 </div>
               </div>
 
+              {/* Контактная информация */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2 flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Контактная информация
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-name" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Имя контактного лица
+                    </Label>
+                    <Input
+                      id="contact-name"
+                      value={contactInfo.name}
+                      onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Например: Иван Иванов"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-phone" className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Телефон
+                    </Label>
+                    <Input
+                      id="contact-phone"
+                      value={contactInfo.phone}
+                      onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+996 XXX XXX XXX"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-email" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                    <Input
+                      id="contact-email"
+                      type="email"
+                      value={contactInfo.email}
+                      onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="example@school.com"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addContactToDescription}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Добавить контактную информацию в описание
+                </Button>
+              </div>
+
               {/* Кнопки действий */}
               <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
+                  disabled={isCreating}
                 >
                   Отмена
                 </Button>
@@ -531,12 +631,17 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                   type="button"
                   variant="outline"
                   onClick={handlePreview}
+                  disabled={isCreating}
                   className="flex items-center gap-2"
                 >
                   <Eye className="h-4 w-4" />
                   Предварительный просмотр
                 </Button>
-                <Button type="submit" disabled={isCreating}>
+                <Button 
+                  type="submit" 
+                  disabled={isCreating}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   {isCreating ? 'Создаем...' : 'Опубликовать вакансию'}
                 </Button>
               </div>

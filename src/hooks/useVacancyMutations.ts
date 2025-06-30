@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,12 +21,10 @@ export const useVacancyMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      // Basic validation - only check for title as it's the only required field
       if (!newVacancy.title?.trim()) {
         throw new Error('Название вакансии обязательно');
       }
 
-      // Prepare vacancy data with only fields that exist in the database
       const vacancyData = {
         school_id: user.id,
         title: newVacancy.title?.trim(),
@@ -42,7 +39,7 @@ export const useVacancyMutations = () => {
         experience_required: Number(newVacancy.experience_required) || 0,
         requirements: Array.isArray(newVacancy.requirements) ? newVacancy.requirements.filter(r => r?.trim()) : [],
         benefits: Array.isArray(newVacancy.benefits) ? newVacancy.benefits.filter(b => b?.trim()) : [],
-        is_active: true, // Always set to active when creating
+        is_active: true,
         application_deadline: newVacancy.application_deadline || null,
         housing_provided: Boolean(newVacancy.housing_provided)
       };

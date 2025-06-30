@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/LanguageContext';
 import { useVacancyMutations } from './useVacancyMutations';
@@ -8,9 +7,21 @@ export const useVacancyHandlers = () => {
   const { t } = useLanguage();
   const { createVacancyMutation, deleteVacancyMutation, updateVacancyMutation } = useVacancyMutations();
 
-  const handleVacancyCreated = (newVacancy: any) => {
+  const handleVacancyCreated = async (newVacancy: any) => {
     console.log('handleVacancyCreated called with:', newVacancy);
-    createVacancyMutation.mutate(newVacancy);
+    
+    return new Promise((resolve, reject) => {
+      createVacancyMutation.mutate(newVacancy, {
+        onSuccess: (data) => {
+          console.log('Vacancy created successfully:', data);
+          resolve(data);
+        },
+        onError: (error) => {
+          console.error('Failed to create vacancy:', error);
+          reject(error);
+        }
+      });
+    });
   };
 
   const handleEditVacancy = (vacancy: any) => {
