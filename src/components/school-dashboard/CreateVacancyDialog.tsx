@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,8 +29,9 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Eye, Plus, X } from 'lucide-react';
+import { Copy, Eye, Plus, X, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import VacancyPreviewDialog from './VacancyPreviewDialog';
 
 interface CreateVacancyDialogProps {
@@ -50,6 +50,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   duplicateVacancy
 }) => {
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newBenefit, setNewBenefit] = useState('');
@@ -99,25 +100,47 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     form.setValue('benefits', benefits.filter((_, i) => i !== index));
   };
 
+  const addSchoolContact = () => {
+    if (profile?.email) {
+      const contactInfo = `Контакт: ${profile.email}${profile.phone ? `, тел: ${profile.phone}` : ''}`;
+      const currentDesc = form.getValues('description') || '';
+      const newDesc = currentDesc ? `${currentDesc}\n\n${contactInfo}` : contactInfo;
+      form.setValue('description', newDesc);
+      toast({
+        title: "Контакт добавлен",
+        description: "Контактная информация школы добавлена в описание вакансии",
+      });
+    } else {
+      toast({
+        title: "Нет контактной информации",
+        description: "Заполните профиль школы для добавления контактов",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePreview = () => {
-    form.trigger().then((isValid) => {
-      if (isValid) {
-        setPreviewOpen(true);
-      } else {
-        toast({
-          title: 'Проверьте форму',
-          description: 'Пожалуйста, исправьте ошибки в форме перед предварительным просмотром',
-          variant: 'destructive',
-        });
-      }
-    });
+    const formData = form.getValues();
+    console.log('Preview form data:', formData);
+    
+    // Simple validation for preview
+    if (!formData.title?.trim()) {
+      toast({
+        title: 'Заполните название',
+        description: 'Название вакансии обязательно для предварительного просмотра',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setPreviewOpen(true);
   };
 
   const onSubmit = (data: any) => {
     console.log('=== FORM SUBMISSION START ===');
     console.log('Form data:', data);
     
-    // Validate required fields
+    // Basic validation - only title is required
     if (!data.title?.trim()) {
       console.error('Missing title');
       toast({
@@ -128,8 +151,9 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       return;
     }
     
+    // Process the data directly without excessive validation
     const vacancyData = {
-      title: data.title?.trim(),
+      title: data.title.trim(),
       vacancy_type: data.vacancy_type || 'teacher',
       subject: data.subject?.trim() || null,
       education_level: data.education_level || 'any',
@@ -151,11 +175,10 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const handlePublishFromPreview = () => {
-    const data = form.getValues();
     setPreviewOpen(false);
-    
-    // Trigger form submission validation
-    form.handleSubmit(onSubmit)();
+    // Get current form values and submit directly
+    const data = form.getValues();
+    onSubmit(data);
   };
 
   return (
@@ -195,8 +218,8 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     name="vacancy_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Тип вакансии *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel>Тип вакансии</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите тип вакансии" />
@@ -237,7 +260,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Требуемый уровень образования</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите уровень" />
@@ -267,7 +290,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>График работы</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите график" />
@@ -404,7 +427,19 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
               {/* Описание */}
               <div className="space-y-4">
-                <h3 className="font-medium text-lg border-b pb-2">Описание вакансии</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-lg border-b pb-2 flex-1">Описание вакансии</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addSchoolContact}
+                    className="ml-4"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Добавить контакт школы
+                  </Button>
+                </div>
                 <FormField
                   control={form.control}
                   name="description"
