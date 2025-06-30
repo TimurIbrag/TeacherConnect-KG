@@ -13,22 +13,21 @@ export const useVacancyMutations = () => {
 
   const createVacancyMutation = useMutation({
     mutationFn: async (newVacancy: any) => {
+      console.log('=== VACANCY CREATION START ===');
+      console.log('User:', user);
+      console.log('Form data received:', newVacancy);
+
       if (!user?.id) {
         console.error('User not authenticated');
         throw new Error('User not authenticated');
       }
 
-      console.log('Creating vacancy with data:', newVacancy);
-
-      // Validate required fields before processing
-      const requiredFields = ['title', 'contact_name', 'contact_phone', 'contact_email'];
-      const missingFields = requiredFields.filter(field => !newVacancy[field]?.trim());
-      
-      if (missingFields.length > 0) {
-        console.error('Missing required fields:', missingFields);
-        throw new Error(`Обязательные поля: ${missingFields.join(', ')}`);
+      // Basic validation
+      if (!newVacancy.title?.trim()) {
+        throw new Error('Название вакансии обязательно');
       }
 
+      // Prepare vacancy data with only fields that exist in the database
       const vacancyData = {
         school_id: user.id,
         title: newVacancy.title?.trim(),
@@ -40,13 +39,9 @@ export const useVacancyMutations = () => {
         location: newVacancy.location?.trim() || null,
         salary_min: newVacancy.salary_min ? Number(newVacancy.salary_min) : null,
         salary_max: newVacancy.salary_max ? Number(newVacancy.salary_max) : null,
-        salary_currency: newVacancy.salary_currency || 'rub',
         experience_required: Number(newVacancy.experience_required) || 0,
         requirements: Array.isArray(newVacancy.requirements) ? newVacancy.requirements.filter(r => r?.trim()) : [],
         benefits: Array.isArray(newVacancy.benefits) ? newVacancy.benefits.filter(b => b?.trim()) : [],
-        contact_name: newVacancy.contact_name?.trim(),
-        contact_phone: newVacancy.contact_phone?.trim(),
-        contact_email: newVacancy.contact_email?.trim(),
         is_active: true,
         application_deadline: newVacancy.application_deadline || null,
         housing_provided: Boolean(newVacancy.housing_provided)
@@ -72,10 +67,11 @@ export const useVacancyMutations = () => {
       }
       
       console.log('Vacancy created successfully:', data);
+      console.log('=== VACANCY CREATION END ===');
       return data;
     },
     onSuccess: (data) => {
-      console.log('Vacancy creation successful:', data);
+      console.log('Vacancy creation successful, invalidating queries...');
       queryClient.invalidateQueries({ queryKey: ['school-vacancies', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['public-vacancies'] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
@@ -86,12 +82,13 @@ export const useVacancyMutations = () => {
       });
     },
     onError: (error: any) => {
-      console.error('Error creating vacancy:', error);
+      console.error('=== VACANCY CREATION ERROR ===');
+      console.error('Error details:', error);
       
       let errorMessage = "Не удалось создать вакансию. Попробуйте снова.";
       
       if (error.message) {
-        if (error.message.includes('обязательно') || error.message.includes('обязателен') || error.message.includes('Обязательные поля')) {
+        if (error.message.includes('обязательно')) {
           errorMessage = error.message;
         } else if (error.message.includes('duplicate key') || error.message.includes('unique')) {
           errorMessage = "Вакансия с таким названием уже существует.";

@@ -65,11 +65,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       location: duplicateVacancy?.location || '',
       salary_min: duplicateVacancy?.salary_min || undefined,
       salary_max: duplicateVacancy?.salary_max || undefined,
-      salary_currency: duplicateVacancy?.salary_currency || 'rub',
       description: duplicateVacancy?.description || '',
-      contact_name: duplicateVacancy?.contact_name || '',
-      contact_phone: duplicateVacancy?.contact_phone || '',
-      contact_email: duplicateVacancy?.contact_email || '',
       experience_required: duplicateVacancy?.experience_required || 0,
       requirements: duplicateVacancy?.requirements || [],
       benefits: duplicateVacancy?.benefits || [],
@@ -118,40 +114,15 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
   };
 
   const onSubmit = (data: any) => {
-    console.log('Form submitted with data:', data);
+    console.log('=== FORM SUBMISSION START ===');
+    console.log('Form data:', data);
     
     // Validate required fields
     if (!data.title?.trim()) {
+      console.error('Missing title');
       toast({
         title: 'Ошибка валидации',
         description: 'Название вакансии обязательно',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!data.contact_name?.trim()) {
-      toast({
-        title: 'Ошибка валидации',
-        description: 'Контактное лицо обязательно',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!data.contact_phone?.trim()) {
-      toast({
-        title: 'Ошибка валидации',
-        description: 'Телефон обязателен',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!data.contact_email?.trim()) {
-      toast({
-        title: 'Ошибка валидации',
-        description: 'Email обязателен',
         variant: 'destructive',
       });
       return;
@@ -166,11 +137,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
       location: data.location?.trim() || null,
       salary_min: data.salary_min ? Number(data.salary_min) : null,
       salary_max: data.salary_max ? Number(data.salary_max) : null,
-      salary_currency: data.salary_currency || 'rub',
       description: data.description?.trim() || null,
-      contact_name: data.contact_name?.trim(),
-      contact_phone: data.contact_phone?.trim(),
-      contact_email: data.contact_email?.trim(),
       experience_required: Number(data.experience_required) || 0,
       requirements: Array.isArray(data.requirements) ? data.requirements.filter(r => r?.trim()) : [],
       benefits: Array.isArray(data.benefits) ? data.benefits.filter(b => b?.trim()) : [],
@@ -179,6 +146,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     };
     
     console.log('Processed vacancy data:', vacancyData);
+    console.log('=== FORM SUBMISSION END ===');
     onVacancyCreated(vacancyData);
   };
 
@@ -334,7 +302,7 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
 
                 <div className="space-y-2">
                   <Label>Зарплата (по желанию)</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <FormField
                       control={form.control}
                       name="salary_min"
@@ -367,27 +335,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                               placeholder="До"
                             />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="salary_currency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="rub">Рубли (₽)</SelectItem>
-                              <SelectItem value="usd">Доллары ($)</SelectItem>
-                              <SelectItem value="eur">Евро (€)</SelectItem>
-                            </SelectContent>
-                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -533,54 +480,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Контактная информация */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-lg border-b pb-2">Контактная информация</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="contact_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Контактное лицо *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Имя Фамилия" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="contact_phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Телефон *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="+7 (XXX) XXX-XX-XX" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="contact_email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" placeholder="contact@school.com" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </div>
 
