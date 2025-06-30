@@ -1,0 +1,112 @@
+
+import React from 'react';
+import { UseFormReturn } from 'react-hook-form';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+interface BasicInfoSectionProps {
+  form: UseFormReturn<any>;
+}
+
+const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium text-lg border-b pb-2">Основная информация</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Название вакансии *</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Например: Учитель математики" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="vacancy_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Тип вакансии</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите тип вакансии" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="teacher">Учитель</SelectItem>
+                  <SelectItem value="tutor">Репетитор</SelectItem>
+                  <SelectItem value="assistant">Ассистент</SelectItem>
+                  <SelectItem value="coordinator">Координатор</SelectItem>
+                  <SelectItem value="other">Другое</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="subject"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Предмет / Специализация</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Например: Математика, Физика" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="education_level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Требуемый уровень образования</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите уровень" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="any">Не важно</SelectItem>
+                  <SelectItem value="bachelor">Бакалавр</SelectItem>
+                  <SelectItem value="master">Магистр</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default BasicInfoSection;
