@@ -141,7 +141,7 @@ const SchoolProfilePage: React.FC = () => {
             <CardContent className="border-t pt-6">
               <SchoolTabs
                 school={displaySchool}
-                vacancies={vacancies}
+                vacancies={vacancies || []}
                 isLoadingVacancies={isLoadingVacancies}
                 onApplyToVacancy={handleApplyToVacancy}
               />
@@ -152,7 +152,7 @@ const SchoolProfilePage: React.FC = () => {
         <div className="space-y-6">
           <SchoolStats 
             school={displaySchool} 
-            vacancyCount={vacancies.length} 
+            vacancyCount={(vacancies || []).length} 
           />
           
           <SimilarSchools currentSchool={displaySchool} />

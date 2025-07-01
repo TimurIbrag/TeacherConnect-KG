@@ -281,10 +281,6 @@ const TeacherProfilePage: React.FC = () => {
                     </CardDescription>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <Badge variant="secondary">{teacher.experience}</Badge>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                        <span>{teacher.ratings}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -428,13 +424,6 @@ const TeacherProfilePage: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Отклики на вакансии:</span>
                 <span className="font-medium">{teacher.applications}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Рейтинг:</span>
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 mr-1 text-accent fill-accent" />
-                  <span className="font-medium">{teacher.ratings}</span>
-                </div>
               </div>
             </CardContent>
           </Card>
