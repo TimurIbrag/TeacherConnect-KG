@@ -150,11 +150,18 @@ const SchoolProfileDetailPage: React.FC = () => {
           website: foundSchool.website || '',
           facilities: foundSchool.facilities || [],
           applications: foundSchool.applications || 0,
-          photos: foundSchool.photos || foundSchool.photo_urls || [], // Include published school photos
+          // Extract photos for gallery - include main photo and any additional photos
+          photos: [
+            ...(foundSchool.photos || []), // Additional photos if they exist
+            ...(foundSchool.photo_urls || []), // Photo URLs if they exist
+            ...(foundSchool.photo?.value ? [foundSchool.photo.value] : []), // Main photo as base64
+            ...(foundSchool.photo && typeof foundSchool.photo === 'string' ? [foundSchool.photo] : []) // Main photo as string
+          ].filter(Boolean), // Remove any null/undefined values
           locationVerified: foundSchool.locationVerified || false,
           // Include open positions from published school data
           openPositions: foundSchool.openPositions || []
         };
+        console.log('DEBUG: Processed published school photos:', foundSchool.photos);
       } else {
         foundSchool = schoolsData.find(s => s.id.toString() === id);
         if (foundSchool) {
