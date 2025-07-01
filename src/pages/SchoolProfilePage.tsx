@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
-import { schoolsData } from '@/data/mockData';
+import { schoolsData, vacanciesData } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 import { useSchool } from '@/hooks/useSupabaseData';
 import { useQuery } from '@tanstack/react-query';
@@ -28,6 +28,7 @@ interface DisplaySchool {
   facilities: string[];
   applications: number;
   city?: string;
+  photos?: string[];
 }
 
 const SchoolProfilePage: React.FC = () => {
@@ -38,33 +39,52 @@ const SchoolProfilePage: React.FC = () => {
   // Try to get school from Supabase first, then fallback to mock data
   const { data: supabaseSchool, isLoading: isLoadingSupabase } = useSchool(id || '');
   
-  // Get vacancies for this school - only fetch if we have a Supabase school (UUID)
+  // Get vacancies for this school - fetch for both Supabase and mock schools
   const { data: vacancies = [], isLoading: isLoadingVacancies } = useQuery({
     queryKey: ['school-vacancies-public', id],
     queryFn: async () => {
-      if (!id || !supabaseSchool) return [];
+      if (!id) return [];
       
-      const { data, error } = await supabase
-        .from('vacancies')
-        .select(`
-          *,
-          school_profiles (
-            school_name,
-            address
-          )
-        `)
-        .eq('school_id', id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      // Only fetch from Supabase if we have a UUID format (Supabase school)
+      if (supabaseSchool && id.includes('-')) {
+        const { data, error } = await supabase
+          .from('vacancies')
+          .select(`
+            *,
+            school_profiles (
+              school_name,
+              address
+            )
+          `)
+          .eq('school_id', id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching vacancies:', error);
-        return [];
+        if (error) {
+          console.error('Error fetching vacancies:', error);
+          return [];
+        }
+
+        return data || [];
       }
-
-      return data || [];
+      
+      // For mock schools (numeric IDs), transform mock vacancies to match expected format
+      return vacanciesData
+        .filter(v => v.schoolId === id && v.status === 'active')
+        .map(v => ({
+          id: v.id,
+          title: v.subjectId, // Use subjectId as title for now
+          description: v.description,
+          employment_type: 'full-time',
+          salary_min: undefined,
+          salary_max: undefined,
+          location: undefined,
+          application_deadline: undefined,
+          requirements: v.requirements,
+          benefits: v.benefits,
+        }));
     },
-    enabled: !!id && !!supabaseSchool,
+    enabled: !!id,
   });
 
   const schoolId = Number(id);
@@ -114,7 +134,8 @@ const SchoolProfilePage: React.FC = () => {
     about: supabaseSchool.description || 'Описание школы',
     facilities: supabaseSchool.facilities || [],
     applications: 0,
-    city: supabaseSchool.address?.split(',')[0] || 'Бишкек'
+    city: supabaseSchool.address?.split(',')[0] || 'Бишкек',
+    photos: supabaseSchool.photo_urls || []
   } : {
     id: mockSchool!.id,
     name: mockSchool!.name,
@@ -128,7 +149,8 @@ const SchoolProfilePage: React.FC = () => {
     about: mockSchool!.about,
     facilities: mockSchool!.facilities,
     applications: mockSchool!.applications,
-    city: mockSchool!.address?.split(',')[0] || 'Бишкек'
+    city: mockSchool!.address?.split(',')[0] || 'Бишкек',
+    photos: []
   };
   
   return (

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building, Briefcase, Check, Home } from 'lucide-react';
 import LocationMap from '@/components/LocationMap';
 import SchoolVacancyCard from './SchoolVacancyCard';
+import SchoolPhotoGallery from './SchoolPhotoGallery';
 
 interface DisplaySchool {
   id: string | number;
@@ -14,6 +15,7 @@ interface DisplaySchool {
   housing: boolean;
   about: string;
   facilities: string[];
+  photos?: string[];
 }
 
 interface Vacancy {
@@ -83,6 +85,10 @@ const SchoolTabs: React.FC<SchoolTabsProps> = ({
           <h3 className="text-lg font-medium mb-3">Местоположение</h3>
           <LocationMap address={school.address} />
         </div>
+        
+        {school.photos && school.photos.length > 0 && (
+          <SchoolPhotoGallery photos={school.photos} schoolName={school.name} />
+        )}
       </TabsContent>
       
       <TabsContent value="vacancies" className="space-y-6">
