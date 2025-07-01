@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, DollarSign, Clock, GraduationCap, Mail, Phone, User } from 'lucide-react';
+import { MapPin, DollarSign, Clock, Mail, Phone, User } from 'lucide-react';
 
 interface VacancyPreviewDialogProps {
   open: boolean;
@@ -37,14 +37,6 @@ const VacancyPreviewDialog: React.FC<VacancyPreviewDialogProps> = ({
     return types[type as keyof typeof types] || type;
   };
 
-  const getEducationLevelLabel = (level: string) => {
-    const levels = {
-      bachelor: 'Бакалавр',
-      master: 'Магистр',
-      any: 'Не важно'
-    };
-    return levels[level as keyof typeof levels] || level;
-  };
 
   const getEmploymentTypeLabel = (type: string) => {
     const types = {
@@ -112,11 +104,6 @@ const VacancyPreviewDialog: React.FC<VacancyPreviewDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>{getEmploymentTypeLabel(vacancyData.employment_type)}</span>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  <span>{getEducationLevelLabel(vacancyData.education_level)}</span>
                 </div>
               </div>
 

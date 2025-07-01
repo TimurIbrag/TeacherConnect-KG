@@ -31,7 +31,6 @@ export const useVacancyMutations = () => {
         description: newVacancy.description?.trim() || null,
         vacancy_type: newVacancy.vacancy_type || 'teacher',
         subject: newVacancy.subject?.trim() || null,
-        education_level: newVacancy.education_level || 'any',
         employment_type: newVacancy.employment_type || 'full-time',
         location: newVacancy.location?.trim() || null,
         salary_min: newVacancy.salary_min ? Number(newVacancy.salary_min) : null,

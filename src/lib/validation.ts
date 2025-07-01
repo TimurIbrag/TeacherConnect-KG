@@ -92,9 +92,6 @@ export const vacancySchema = z.object({
   subject: z.string()
     .min(1, 'Укажите предмет или специализацию')
     .max(100, 'Предмет слишком длинный'),
-  education_level: z.enum(['bachelor', 'master', 'any'], {
-    errorMap: () => ({ message: 'Выберите требуемый уровень образования' }),
-  }),
   employment_type: z.enum(['full-time', 'part-time', 'online', 'flexible'], {
     errorMap: () => ({ message: 'Выберите график работы' }),
   }),

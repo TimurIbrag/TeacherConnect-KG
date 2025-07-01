@@ -81,29 +81,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="education_level"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Требуемый уровень образования</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите уровень" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="any">Не важно</SelectItem>
-                  <SelectItem value="bachelor">Бакалавр</SelectItem>
-                  <SelectItem value="master">Магистр</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
     </div>
   );
