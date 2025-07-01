@@ -39,11 +39,17 @@ const SchoolProfileDetailPage: React.FC = () => {
     queryFn: async () => {
       if (!id) return [];
       
-      // Only query Supabase if the ID looks like a UUID (contains hyphens)
+      // For UUID format (Supabase schools), query the database
       if (id.includes('-')) {
         const { data, error } = await supabase
           .from('vacancies')
-          .select('*')
+          .select(`
+            *,
+            school_profiles (
+              school_name,
+              address
+            )
+          `)
           .eq('school_id', id)
           .eq('is_active', true)
           .order('created_at', { ascending: false });
@@ -56,7 +62,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         return (data || []) as ExtendedVacancy[];
       }
       
-      // For numeric IDs, return empty array since these are mock schools
+      // For numeric IDs (mock schools), return empty array - we'll show openPositions instead
       return [];
     },
     enabled: !!id,
@@ -86,12 +92,50 @@ const SchoolProfileDetailPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const loadSchoolData = () => {
-      // Try to find school in published schools first
+    const loadSchoolData = async () => {
+      // Try to find school in Supabase first
+      if (id && id.includes('-')) {
+        try {
+          const { data: supabaseSchool, error } = await supabase
+            .from('school_profiles')
+            .select(`
+              *,
+              profiles (*)
+            `)
+            .eq('id', id)
+            .single();
+
+          if (!error && supabaseSchool) {
+            const schoolData = {
+              id: supabaseSchool.id,
+              name: supabaseSchool.school_name || 'Школа',
+              photo: supabaseSchool.photo_urls?.[0] || '/placeholder.svg',
+              address: supabaseSchool.address || 'Адрес не указан',
+              type: supabaseSchool.school_type || 'Государственная',
+              specialization: supabaseSchool.description || 'Общее образование',
+              views: 150, // Mock value
+              housing: supabaseSchool.housing_provided || false,
+              about: supabaseSchool.description || 'Информация о школе не предоставлена.',
+              website: supabaseSchool.website_url || '',
+              facilities: supabaseSchool.facilities || [],
+              applications: 0, // Mock value
+              city: supabaseSchool.address?.split(',')[0] || 'Бишкек',
+              photos: supabaseSchool.photo_urls || [], // Display all photos from school profile
+              locationVerified: supabaseSchool.location_verified || false
+            };
+            setSchool(schoolData);
+            setLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching school from Supabase:', error);
+        }
+      }
+
+      // Fallback to published schools and mock data
       const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
       let foundSchool = publishedSchools.find((s: any) => s.id.toString() === id);
 
-      // If not found in published, check mock data
       if (!foundSchool) {
         foundSchool = schoolsData.find(s => s.id.toString() === id);
         if (foundSchool) {
@@ -102,7 +146,9 @@ const SchoolProfileDetailPage: React.FC = () => {
             about: foundSchool.about || 'Информация о школе не предоставлена.',
             website: foundSchool.website || '',
             facilities: foundSchool.facilities || [],
-            applications: foundSchool.applications || 0
+            applications: foundSchool.applications || 0,
+            photos: [], // Mock schools don't have photos
+            locationVerified: false
           };
         }
       }
