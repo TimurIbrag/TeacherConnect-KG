@@ -98,7 +98,10 @@ const SchoolsPage: React.FC = () => {
           index === self.findIndex(s => s.name === school.name)
         );
         
-        console.log('Loaded published schools:', uniqueSchools);
+        console.log('DEBUG: Loaded published schools:', uniqueSchools);
+        console.log('DEBUG: localStorage publishedSchools:', localStorage.getItem('publishedSchools'));
+        console.log('DEBUG: localStorage schoolProfilePublished:', localStorage.getItem('schoolProfilePublished'));
+        console.log('DEBUG: localStorage schoolProfileData:', localStorage.getItem('schoolProfileData'));
         setPublishedSchools(uniqueSchools);
       } catch (error) {
         console.error('Error loading published schools:', error);

@@ -136,6 +136,9 @@ const TeachersPage = () => {
   useEffect(() => {
     const loadPublishedTeachers = () => {
       const published = getPublishedTeachers();
+      console.log('DEBUG: Loading published teachers:', published);
+      console.log('DEBUG: localStorage teacherProfilePublished:', localStorage.getItem('teacherProfilePublished'));
+      console.log('DEBUG: localStorage teacherProfileData:', localStorage.getItem('teacherProfileData'));
       setPublishedTeachers(published);
     };
 

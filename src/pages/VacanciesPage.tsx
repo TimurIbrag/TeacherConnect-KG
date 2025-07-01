@@ -36,6 +36,7 @@ type ExtendedVacancy = {
   school_profiles?: {
     school_name: string;
     address?: string;
+    photo_urls?: string[];
     profiles?: {
       full_name: string;
     };
@@ -52,7 +53,7 @@ const VacanciesPage = () => {
   const [typeFilter, setTypeFilter] = React.useState('all');
   const [locationFilter, setLocationFilter] = React.useState('');
 
-  const { data: vacancies = [], isLoading } = useQuery({
+  const { data: supabaseVacancies = [], isLoading: isLoadingSupabase } = useQuery({
     queryKey: ['public-vacancies'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -62,6 +63,7 @@ const VacanciesPage = () => {
           school_profiles (
             school_name,
             address,
+            photo_urls,
             profiles (
               full_name
             )
@@ -78,6 +80,109 @@ const VacanciesPage = () => {
       return (data || []) as ExtendedVacancy[];
     },
   });
+
+  // Get teacher services/vacancies
+  const { data: teacherVacancies = [], isLoading: isLoadingTeacherVacancies } = useQuery({
+    queryKey: ['teacher-services-public'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teacher_vacancies')
+        .select(`
+          *,
+          profiles (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching teacher services:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+  });
+
+  // Get published schools and their vacancies from localStorage
+  const getPublishedSchoolVacancies = () => {
+    try {
+      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      console.log('DEBUG: Published schools for vacancies:', publishedSchools);
+      
+      const vacancies: ExtendedVacancy[] = [];
+      
+      publishedSchools.forEach((school: any) => {
+        if (school.openPositions && school.openPositions.length > 0) {
+          school.openPositions.forEach((position: any, index: number) => {
+            vacancies.push({
+              id: `published-${school.id}-${index}`,
+              title: position.title || position.subject || 'Учитель',
+              description: position.description || position.additionalInfo || '',
+              employment_type: position.schedule || 'full-time',
+              location: school.address || 'Не указано',
+              salary_min: undefined,
+              salary_max: undefined,
+              salary_currency: 'som',
+              created_at: new Date().toISOString(),
+              is_active: true,
+              school_id: school.id,
+              school_profiles: {
+                school_name: school.name,
+                address: school.address,
+                photo_urls: school.photos || [school.photo?.value || school.photo],
+                profiles: {
+                  full_name: school.name
+                }
+              }
+            });
+          });
+        }
+      });
+      
+      return vacancies;
+    } catch (error) {
+      console.error('Error loading published school vacancies:', error);
+      return [];
+    }
+  };
+
+  // Combine all vacancy sources
+  const publishedVacancies = getPublishedSchoolVacancies();
+  const allVacancies = [...supabaseVacancies, ...publishedVacancies];
+  
+  // Convert teacher services to vacation format for display
+  const teacherServicesAsVacancies: ExtendedVacancy[] = teacherVacancies.map((service: any) => ({
+    id: `teacher-service-${service.id}`,
+    title: `${service.title} - Услуги репетитора`,
+    description: service.description || '',
+    vacancy_type: 'tutor',
+    subject: service.subject,
+    employment_type: service.employment_type || 'flexible',
+    location: service.location || 'Не указано',
+    salary_min: service.hourly_rate,
+    salary_max: service.group_rate,
+    salary_currency: 'som',
+    application_deadline: undefined,
+    requirements: [],
+    benefits: [],
+    created_at: service.created_at,
+    is_active: service.is_active,
+    school_id: service.teacher_id,
+    school_profiles: {
+      school_name: `Репетитор: ${service.profiles?.full_name || 'Преподаватель'}`,
+      address: service.location || 'Не указано',
+      photo_urls: [service.profiles?.avatar_url || '/placeholder.svg'],
+      profiles: {
+        full_name: service.profiles?.full_name || 'Преподаватель'
+      }
+    }
+  }));
+  
+  const vacancies = [...allVacancies, ...teacherServicesAsVacancies];
+  const isLoading = isLoadingSupabase || isLoadingTeacherVacancies;
 
   const getVacancyTypeLabel = (type: string) => {
     const types = {

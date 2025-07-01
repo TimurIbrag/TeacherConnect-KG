@@ -93,6 +93,7 @@ const SchoolProfileDetailPage: React.FC = () => {
 
   useEffect(() => {
     const loadSchoolData = async () => {
+      console.log('DEBUG: Loading school data for ID:', id);
       // Try to find school in Supabase first
       if (id && id.includes('-')) {
         try {
@@ -134,7 +135,9 @@ const SchoolProfileDetailPage: React.FC = () => {
 
       // Fallback to published schools and mock data
       const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+      console.log('DEBUG: All published schools from localStorage:', publishedSchools);
       let foundSchool = publishedSchools.find((s: any) => s.id.toString() === id);
+      console.log('DEBUG: Found school for ID', id, ':', foundSchool);
 
       if (foundSchool) {
         // Handle published school data with proper photo handling
