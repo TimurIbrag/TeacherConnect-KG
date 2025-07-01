@@ -52,10 +52,6 @@ const SchoolHeader: React.FC<SchoolHeaderProps> = ({ school }) => {
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline">{school.type}</Badge>
               <Badge variant="secondary">{school.specialization}</Badge>
-              <div className="flex items-center">
-                <Star className="h-4 w-4 text-accent fill-accent mr-1" />
-                <span>{school.ratings}</span>
-              </div>
             </div>
           </div>
           <div className="flex gap-2 md:self-start">

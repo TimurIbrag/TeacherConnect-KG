@@ -159,10 +159,6 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       </CardContent>
       <CardFooter className="flex justify-between items-center border-t p-4 bg-muted/30">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1" title="Rating">
-            <Star className="w-4 h-4 text-accent fill-accent" />
-            <span className="text-sm">{ratings}</span>
-          </div>
           <div className="flex items-center gap-1" title="Profile views">
             <Eye className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{views}</span>

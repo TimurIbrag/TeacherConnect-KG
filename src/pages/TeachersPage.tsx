@@ -49,73 +49,9 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
-// Get published teachers from localStorage with proper formatting
+// Only show real teachers from Supabase, no mock/default profiles
 const getPublishedTeachers = () => {
-  try {
-    const publishedTeachers = [];
-    
-    // Check for individual published teacher
-    const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
-    const profileData = localStorage.getItem('teacherProfileData');
-    
-    if (isPublished && profileData) {
-      const profile = JSON.parse(profileData);
-      console.log('Found published teacher profile:', profile);
-      
-      if (profile.fullName && profile.specialization) {
-        const teacherData = {
-          id: 'published-teacher-1',
-          user_id: 'published-teacher-1',
-          profiles: {
-            full_name: profile.fullName,
-            avatar_url: profile.photoUrl || null
-          },
-          specialization: profile.specialization,
-          bio: profile.bio || 'Информация о преподавателе',
-          experience_years: parseInt(profile.experience) || 0,
-          location: profile.location || 'Бишкек',
-          education: profile.education || 'Образование не указано',
-          skills: profile.skills || [],
-          languages: profile.languages || ['Кыргызский', 'Русский'],
-          verification_status: 'verified' as const
-        };
-        
-        publishedTeachers.push(teacherData);
-        console.log('Added published teacher:', teacherData);
-      }
-    }
-    
-    // Check for array of published teachers
-    const allPublishedTeachers = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
-    allPublishedTeachers.forEach((teacher: any, index: number) => {
-      if (teacher.fullName || teacher.name) {
-        const teacherData = {
-          id: `published-teacher-${index + 2}`,
-          user_id: `published-teacher-${index + 2}`,
-          profiles: {
-            full_name: teacher.fullName || teacher.name,
-            avatar_url: teacher.photoUrl || teacher.photo || null
-          },
-          specialization: teacher.specialization || 'Специализация не указана',
-          bio: teacher.bio || 'Информация о преподавателе',
-          experience_years: parseInt(teacher.experience || teacher.experience_years) || 0,
-          location: teacher.location || 'Бишкек',
-          education: teacher.education || 'Образование не указано',
-          skills: teacher.skills || [],
-          languages: teacher.languages || ['Кыргызский', 'Русский'],
-          verification_status: 'verified' as const
-        };
-        
-        publishedTeachers.push(teacherData);
-      }
-    });
-    
-    console.log('Total published teachers found:', publishedTeachers.length);
-    return publishedTeachers;
-  } catch (error) {
-    console.error('Error loading published teachers:', error);
-    return [];
-  }
+  return []; // Removed all mock/default teacher data
 };
 
 const TeachersPage = () => {

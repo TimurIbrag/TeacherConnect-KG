@@ -92,7 +92,7 @@ const SchoolTabs: React.FC<SchoolTabsProps> = ({
             <div className="text-center py-8">
               <p className="text-muted-foreground">Загрузка вакансий...</p>
             </div>
-          ) : vacancies.length > 0 ? (
+          ) : vacancies && vacancies.length > 0 ? (
             <div className="space-y-4">
               {vacancies.map((vacancy) => (
                 <SchoolVacancyCard
@@ -108,7 +108,7 @@ const SchoolTabs: React.FC<SchoolTabsProps> = ({
             <div className="text-center py-8">
               <h3 className="text-lg font-medium mb-2">Нет открытых вакансий</h3>
               <p className="text-muted-foreground">
-                В настоящее время школа не разместила открытых вакансий.
+                В настоящее время школа не размещала открытых вакансий.
               </p>
             </div>
           )}
