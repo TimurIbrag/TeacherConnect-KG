@@ -58,11 +58,11 @@ const SchoolProfilePage: React.FC = () => {
   // Try to get school from Supabase first, then fallback to mock data
   const { data: supabaseSchool, isLoading: isLoadingSupabase } = useSchool(id || '');
   
-  // Get vacancies for this school
+  // Get vacancies for this school - only fetch if we have a Supabase school (UUID)
   const { data: vacancies = [], isLoading: isLoadingVacancies } = useQuery({
     queryKey: ['school-vacancies-public', id],
     queryFn: async () => {
-      if (!id) return [];
+      if (!id || !supabaseSchool) return [];
       
       const { data, error } = await supabase
         .from('vacancies')
@@ -84,7 +84,7 @@ const SchoolProfilePage: React.FC = () => {
 
       return data || [];
     },
-    enabled: !!id,
+    enabled: !!id && !!supabaseSchool,
   });
 
   const schoolId = Number(id);
