@@ -87,11 +87,15 @@ const SchoolProfilePage: React.FC = () => {
     enabled: !!id,
   });
 
+  // Get published schools from localStorage
+  const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+  const publishedSchool = publishedSchools.find((s: any) => s.id.toString() === id);
+  
   const schoolId = Number(id);
   const mockSchool = schoolsData.find(s => s.id === schoolId);
   
-  // Use Supabase school if available, otherwise use mock data
-  const school = supabaseSchool || mockSchool;
+  // Use Supabase school if available, otherwise use published or mock data
+  const school = supabaseSchool || publishedSchool || mockSchool;
   
   const handleApplyToVacancy = (vacancyId: string) => {
     toast({
@@ -136,6 +140,21 @@ const SchoolProfilePage: React.FC = () => {
     applications: 0,
     city: supabaseSchool.address?.split(',')[0] || 'Бишкек',
     photos: supabaseSchool.photo_urls || []
+  } : publishedSchool ? {
+    id: publishedSchool.id,
+    name: publishedSchool.name,
+    photo: publishedSchool.photo?.value || publishedSchool.photo || '/placeholder.svg',
+    address: publishedSchool.address || 'Адрес не указан',
+    type: publishedSchool.type || 'Частная',
+    specialization: publishedSchool.specialization || 'Общее образование',
+    ratings: 4.5,
+    views: 150,
+    housing: publishedSchool.housing || false,
+    about: publishedSchool.about || publishedSchool.description || 'Описание школы',
+    facilities: publishedSchool.facilities || [],
+    applications: 0,
+    city: publishedSchool.address?.split(',')[0] || 'Бишкек',
+    photos: publishedSchool.photos || publishedSchool.photo_urls || []
   } : {
     id: mockSchool!.id,
     name: mockSchool!.name,

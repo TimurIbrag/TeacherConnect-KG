@@ -136,7 +136,23 @@ const SchoolProfileDetailPage: React.FC = () => {
       const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
       let foundSchool = publishedSchools.find((s: any) => s.id.toString() === id);
 
-      if (!foundSchool) {
+      if (foundSchool) {
+        // Handle published school data with proper photo handling
+        foundSchool = {
+          ...foundSchool,
+          photo: foundSchool.photo?.value || foundSchool.photo || '/placeholder.svg', // Handle both base64 and regular URLs
+          city: foundSchool.address?.split(',')[0] || 'Бишкек',
+          housing: foundSchool.housing || false,
+          about: foundSchool.about || foundSchool.description || 'Информация о школе не предоставлена.',
+          website: foundSchool.website || '',
+          facilities: foundSchool.facilities || [],
+          applications: foundSchool.applications || 0,
+          photos: foundSchool.photos || foundSchool.photo_urls || [], // Include published school photos
+          locationVerified: foundSchool.locationVerified || false,
+          // Include open positions from published school data
+          openPositions: foundSchool.openPositions || []
+        };
+      } else {
         foundSchool = schoolsData.find(s => s.id.toString() === id);
         if (foundSchool) {
           foundSchool = {

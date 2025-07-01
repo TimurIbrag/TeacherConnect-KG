@@ -49,9 +49,73 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
-// Only show real teachers from Supabase, no mock/default profiles
+// Get published teachers from localStorage
 const getPublishedTeachers = () => {
-  return []; // Removed all mock/default teacher data
+  const allTeachers = [];
+  
+  // 1. Get the current user's published teacher profile
+  try {
+    const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
+    const profileData = localStorage.getItem('teacherProfileData');
+    
+    if (isPublished && profileData) {
+      const profile = JSON.parse(profileData);
+      
+      if (profile.fullName && profile.specialization) {
+        allTeachers.push({
+          id: 'published-teacher-1',
+          specialization: profile.specialization,
+          experience_years: parseInt(profile.experience) || 0,
+          location: profile.location || 'Не указано',
+          available: true,
+          profiles: {
+            id: 'published-teacher-1',
+            full_name: profile.fullName,
+            avatar_url: profile.photoUrl || '/placeholder.svg',
+            email: profile.email || '',
+            role: 'teacher'
+          },
+          bio: profile.bio || 'Информация о себе не указана',
+          education: profile.education || 'Образование не указано',
+          languages: profile.languages || ['Кыргызский', 'Русский'],
+          source: 'published'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error loading published teacher:', error);
+  }
+  
+  // 2. Get all globally published teachers
+  try {
+    const globalPublished = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
+    globalPublished.forEach((teacher: any) => {
+      if (teacher.id && teacher.name) {
+        allTeachers.push({
+          id: teacher.id,
+          specialization: teacher.specialization || 'Специализация не указана',
+          experience_years: parseInt(teacher.experience) || 0,
+          location: teacher.location || 'Не указано',
+          available: true,
+          profiles: {
+            id: teacher.id,
+            full_name: teacher.name,
+            avatar_url: teacher.photo || '/placeholder.svg',
+            email: teacher.email || '',
+            role: 'teacher'
+          },
+          bio: teacher.about || 'Информация о себе не указана',
+          education: teacher.education || 'Образование не указано',
+          languages: teacher.languages || ['Кыргызский', 'Русский'],
+          source: 'global_published'
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error loading global published teachers:', error);
+  }
+  
+  return allTeachers;
 };
 
 const TeachersPage = () => {

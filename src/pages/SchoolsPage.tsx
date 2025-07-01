@@ -74,7 +74,7 @@ const SchoolsPage: React.FC = () => {
               const formattedSchool = {
                 id: school.id || `school_${Date.now()}`,
                 name: school.name,
-                photo: school.photo || school.photoUrl || '/placeholder.svg',
+                photo: school.photo?.value || school.photo || school.photoUrl || '/placeholder.svg', // Handle base64 photos
                 address: school.address || 'Адрес не указан',
                 type: school.type || 'Государственная',
                 city: school.city || 'Бишкек',
