@@ -29,7 +29,6 @@ export const useVacancyMutations = () => {
         school_id: user.id,
         title: newVacancy.title?.trim(),
         description: newVacancy.description?.trim() || null,
-        vacancy_type: newVacancy.vacancy_type || 'teacher',
         subject: newVacancy.subject?.trim() || null,
         employment_type: newVacancy.employment_type || 'full-time',
         location: newVacancy.location?.trim() || null,

@@ -26,16 +26,6 @@ const VacancyPreviewDialog: React.FC<VacancyPreviewDialogProps> = ({
   onConfirmPublish,
   isPublishing
 }) => {
-  const getVacancyTypeLabel = (type: string) => {
-    const types = {
-      teacher: 'Учитель',
-      tutor: 'Репетитор',
-      assistant: 'Ассистент',
-      coordinator: 'Координатор',
-      other: 'Другое'
-    };
-    return types[type as keyof typeof types] || type;
-  };
 
 
   const getEmploymentTypeLabel = (type: string) => {
@@ -82,7 +72,6 @@ const VacancyPreviewDialog: React.FC<VacancyPreviewDialogProps> = ({
                 <div>
                   <CardTitle className="text-xl">{vacancyData.title}</CardTitle>
                   <div className="flex gap-2 mt-2">
-                    <Badge variant="outline">{getVacancyTypeLabel(vacancyData.vacancy_type)}</Badge>
                     <Badge variant="secondary">{vacancyData.subject}</Badge>
                   </div>
                 </div>

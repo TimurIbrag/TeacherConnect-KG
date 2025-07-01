@@ -43,33 +43,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
 
         <FormField
           control={form.control}
-          name="vacancy_type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Тип вакансии</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите тип вакансии" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="teacher">Учитель</SelectItem>
-                  <SelectItem value="tutor">Репетитор</SelectItem>
-                  <SelectItem value="assistant">Ассистент</SelectItem>
-                  <SelectItem value="coordinator">Координатор</SelectItem>
-                  <SelectItem value="other">Другое</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
           name="subject"
           render={({ field }) => (
             <FormItem>

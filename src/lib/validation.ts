@@ -86,9 +86,6 @@ export const vacancySchema = z.object({
   title: z.string()
     .min(5, 'Название должно содержать минимум 5 символов')
     .max(150, 'Название слишком длинное'),
-  vacancy_type: z.enum(['teacher', 'tutor', 'assistant', 'coordinator', 'other'], {
-    errorMap: () => ({ message: 'Выберите тип вакансии' }),
-  }),
   subject: z.string()
     .min(1, 'Укажите предмет или специализацию')
     .max(100, 'Предмет слишком длинный'),

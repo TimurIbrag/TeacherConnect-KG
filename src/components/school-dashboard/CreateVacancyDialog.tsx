@@ -44,7 +44,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     resolver: zodResolver(vacancySchema),
     defaultValues: {
       title: duplicateVacancy?.title || '',
-      vacancy_type: duplicateVacancy?.vacancy_type || 'teacher',
       subject: duplicateVacancy?.subject || '',
       employment_type: duplicateVacancy?.employment_type || 'full-time',
       location: duplicateVacancy?.location || '',
@@ -95,7 +94,6 @@ const CreateVacancyDialog: React.FC<CreateVacancyDialogProps> = ({
     
     const vacancyData = {
       title: data.title.trim(),
-      vacancy_type: data.vacancy_type || 'teacher',
       subject: data.subject?.trim() || null,
       employment_type: data.employment_type || 'full-time',
       location: data.location?.trim() || null,
