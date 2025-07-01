@@ -509,6 +509,9 @@ export type Database = {
         Row: {
           application_deadline: string | null
           benefits: string[] | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string | null
           description: string | null
           employment_type: string | null
@@ -518,6 +521,7 @@ export type Database = {
           is_active: boolean | null
           location: string | null
           requirements: string[] | null
+          salary_currency: string | null
           salary_max: number | null
           salary_min: number | null
           school_id: string
@@ -528,6 +532,9 @@ export type Database = {
         Insert: {
           application_deadline?: string | null
           benefits?: string[] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           description?: string | null
           employment_type?: string | null
@@ -537,6 +544,7 @@ export type Database = {
           is_active?: boolean | null
           location?: string | null
           requirements?: string[] | null
+          salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
           school_id: string
@@ -547,6 +555,9 @@ export type Database = {
         Update: {
           application_deadline?: string | null
           benefits?: string[] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string | null
           description?: string | null
           employment_type?: string | null
@@ -556,6 +567,7 @@ export type Database = {
           is_active?: boolean | null
           location?: string | null
           requirements?: string[] | null
+          salary_currency?: string | null
           salary_max?: number | null
           salary_min?: number | null
           school_id?: string
