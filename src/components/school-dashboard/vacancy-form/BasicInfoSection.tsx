@@ -73,7 +73,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ form }) => {
           name="subject"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Предмет / Специализация</FormLabel>
+              <FormLabel>Предмет / Специализация *</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Например: Математика, Физика" />
               </FormControl>

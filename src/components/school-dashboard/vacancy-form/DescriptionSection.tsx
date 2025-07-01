@@ -61,12 +61,12 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ form }) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Полное описание вакансии</FormLabel>
+            <FormLabel>Полное описание вакансии *</FormLabel>
             <FormControl>
               <Textarea
                 {...field}
                 rows={6}
-                placeholder="Опишите обязанности, условия работы, требования к кандидату..."
+                placeholder="Опишите обязанности, условия работы, требования к кандидату... (минимум 50 символов)"
               />
             </FormControl>
             <FormMessage />

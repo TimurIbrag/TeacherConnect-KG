@@ -58,7 +58,7 @@ const WorkConditionsSection: React.FC<WorkConditionsSectionProps> = ({ form }) =
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Город / Локация</FormLabel>
+              <FormLabel>Город / Локация *</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="Например: Москва, Санкт-Петербург" />
               </FormControl>
@@ -70,7 +70,7 @@ const WorkConditionsSection: React.FC<WorkConditionsSectionProps> = ({ form }) =
 
       <div className="space-y-2">
         <Label>Зарплата (по желанию)</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <FormField
             control={form.control}
             name="salary_min"
@@ -103,6 +103,27 @@ const WorkConditionsSection: React.FC<WorkConditionsSectionProps> = ({ form }) =
                     placeholder="До"
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="salary_currency"
+            render={({ field }) => (
+              <FormItem>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Валюта" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="rub">₽ (Рубль)</SelectItem>
+                    <SelectItem value="usd">$ (Доллар)</SelectItem>
+                    <SelectItem value="eur">€ (Евро)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
