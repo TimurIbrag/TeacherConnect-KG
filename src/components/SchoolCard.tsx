@@ -43,6 +43,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative h-48 w-full">
+        {/* School photo - Always visible to all users including guests */}
         <img 
           src={photo} 
           alt={name} 

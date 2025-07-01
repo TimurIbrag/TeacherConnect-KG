@@ -202,6 +202,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-64 h-48 rounded-lg overflow-hidden border">
+              {/* School photo - Always visible to all users including guests */}
               <img 
                 src={school.photo} 
                 alt={school.name} 
@@ -392,6 +393,7 @@ const SchoolProfileDetailPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {school.photos.map((photo: string, index: number) => (
                     <div key={index} className="relative aspect-video overflow-hidden rounded-lg border">
+                      {/* School gallery photos - Always visible to all users including guests */}
                       <img 
                         src={photo} 
                         alt={`${school.name} - фото ${index + 1}`}

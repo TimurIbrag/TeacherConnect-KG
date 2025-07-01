@@ -121,7 +121,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       <CardContent className="p-0">
         <div className="p-4">
           <div className="flex items-center gap-4">
-            {/* Main Avatar */}
+            {/* Main Avatar - Always visible to all users including guests */}
             <Avatar className="h-16 w-16">
               <AvatarImage src={photo} alt={name} />
               <AvatarFallback>{getInitials(name)}</AvatarFallback>
@@ -147,7 +147,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
                   </div>
                 </div>
                 
-                {/* Top-right corner avatar */}
+                {/* Top-right corner avatar - Always visible to all users */}
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={photo} alt={name} />
                   <AvatarFallback>{getInitials(name)}</AvatarFallback>
