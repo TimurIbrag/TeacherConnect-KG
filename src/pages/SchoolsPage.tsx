@@ -42,104 +42,20 @@ const SchoolsPage: React.FC = () => {
 
   // Load published schools from localStorage and listen for changes
   useEffect(() => {
-    const loadPublishedSchools = () => {
-      try {
-        // Load from multiple sources
-        const sources = [
-          'publishedSchools',
-          'allPublishedSchools', 
-          'schoolProfilePublished',
-          'schoolProfileData'
-        ];
-        
-        let allPublished: any[] = [];
-        
-        // Load from publishedSchools array
-        const publishedArray = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-        allPublished.push(...publishedArray);
-        
-        // Load from allPublishedSchools array
-        const allPublishedArray = JSON.parse(localStorage.getItem('allPublishedSchools') || '[]');
-        allPublished.push(...allPublishedArray);
-        
-        // Load individual published school
-        const isSchoolPublished = localStorage.getItem('schoolProfilePublished') === 'true';
-        const schoolData = localStorage.getItem('schoolProfileData');
-        
-        if (isSchoolPublished && schoolData) {
-          try {
-            const school = JSON.parse(schoolData);
-            if (school.name) {
-              // Convert to expected format
-              const formattedSchool = {
-                id: school.id || `school_${Date.now()}`,
-                name: school.name,
-                photo: school.photo?.value || school.photo || school.photoUrl || '/placeholder.svg', // Handle base64 photos
-                address: school.address || 'Адрес не указан',
-                type: school.type || 'Государственная',
-                city: school.city || 'Бишкек',
-                specialization: school.specialization || school.description || 'Общее образование',
-                openPositions: [
-                  ...(school.openPositions || []),
-                  ...(school.vacancies || []),
-                  ...(school.positions || [])
-                ],
-                ratings: school.ratings || 4.5,
-                views: school.views || 0,
-                housing: school.housing || school.housingProvided || false,
-                locationVerified: school.locationVerified || false,
-                distance: school.distance
-              };
-              allPublished.push(formattedSchool);
-            }
-          } catch (error) {
-            console.error('Error parsing individual school data:', error);
-          }
-        }
-        
-        // Remove duplicates by name
-        const uniqueSchools = allPublished.filter((school, index, self) => 
-          index === self.findIndex(s => s.name === school.name)
-        );
-        
-        console.log('DEBUG: Loaded published schools:', uniqueSchools);
-        console.log('DEBUG: localStorage publishedSchools:', localStorage.getItem('publishedSchools'));
-        console.log('DEBUG: localStorage schoolProfilePublished:', localStorage.getItem('schoolProfilePublished'));
-        console.log('DEBUG: localStorage schoolProfileData:', localStorage.getItem('schoolProfileData'));
-        setPublishedSchools(uniqueSchools);
-      } catch (error) {
-        console.error('Error loading published schools:', error);
-        setPublishedSchools([]);
-      }
-    };
-
-    // Initial load
-    loadPublishedSchools();
+    // DISABLED - No longer loading any localStorage data for schools
+    // Force clear any existing localStorage data that might contain false profiles
+    const keysToRemove = [
+      'publishedSchools',
+      'allPublishedSchools', 
+      'schoolProfilePublished',
+      'schoolProfileData'
+    ];
     
-    // Listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && ['publishedSchools', 'allPublishedSchools', 'schoolProfilePublished', 'schoolProfileData'].includes(e.key)) {
-        console.log('Storage changed for schools:', e.key);
-        loadPublishedSchools();
-      }
-    };
-
-    // Listen for custom events
-    const handleCustomStorageChange = () => {
-      loadPublishedSchools();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('schoolPublished', handleCustomStorageChange);
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
     
-    // Poll for changes every 3 seconds
-    const intervalId = setInterval(loadPublishedSchools, 3000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('schoolPublished', handleCustomStorageChange);
-      clearInterval(intervalId);
-    };
+    setPublishedSchools([]);
   }, []);
 
   // Only show published schools from localStorage and Supabase schools (no mock data)

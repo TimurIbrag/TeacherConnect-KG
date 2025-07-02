@@ -50,123 +50,8 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
-// Get published teachers from localStorage
-const getPublishedTeachers = () => {
-  const allTeachers = [];
-  
-  // 1. Get the current user's published teacher profile
-  try {
-    const isPublished = localStorage.getItem('teacherProfilePublished') === 'true';
-    const profileData = localStorage.getItem('teacherProfileData');
-    
-    if (isPublished && profileData) {
-      const profile = JSON.parse(profileData);
-      
-      if (profile.fullName && profile.specialization) {
-        // Handle photo data structure properly
-        const photoValue = profile.photo?.value || profile.photoUrl || profile.photo || '/placeholder.svg';
-        
-        allTeachers.push({
-          id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          specialization: profile.specialization,
-          experience_years: parseInt(profile.experience) || 0,
-          location: profile.location || 'Не указано',
-          available: true,
-          profiles: {
-            id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            full_name: profile.fullName || profile.name,
-            avatar_url: photoValue,
-            email: profile.email || '',
-            role: 'teacher'
-          },
-          bio: profile.bio || profile.about || 'Информация о себе не указана',
-          education: profile.education || 'Образование не указано',
-          languages: profile.languages || ['Кыргызский', 'Русский'],
-          source: 'published'
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Error loading published teacher:', error);
-  }
-  
-  // 2. Get all globally published teachers from different localStorage keys
-  try {
-    // Check multiple possible keys for published teachers
-    const storageKeys = ['publishedTeachers', 'teacherProfileData', 'teacherProfilePublished'];
-    
-    for (const key of storageKeys) {
-      const data = localStorage.getItem(key);
-      if (data) {
-        console.log(`DEBUG: Found teacher data in ${key}:`, data);
-        try {
-          const parsed = JSON.parse(data);
-          
-          // Handle array of teachers
-          if (Array.isArray(parsed)) {
-            parsed.forEach((teacher: any) => {
-              const teacherData = teacher.profile || teacher;
-              const photoValue = teacherData.photo?.value || teacherData.photo || '/placeholder.svg';
-              
-              if (teacherData.id || teacherData.name) {
-                allTeachers.push({
-                  id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
-                  specialization: teacherData.specialization || 'Специализация не указана',
-                  experience_years: parseInt(teacherData.experience) || 0,
-                  location: teacherData.location || 'Не указано',
-                  available: true,
-                  profiles: {
-                    id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
-                    full_name: teacherData.name || teacherData.full_name || 'Имя не указано',
-                    avatar_url: photoValue,
-                    email: teacherData.email || '',
-                    role: 'teacher'
-                  },
-                  bio: teacherData.about || teacherData.bio || 'Информация о себе не указана',
-                  education: teacherData.education || 'Образование не указано',
-                  languages: teacherData.languages || ['Кыргызский', 'Русский'],
-                  source: 'global_published'
-                });
-              }
-            });
-          }
-          // Handle single teacher object
-          else if (parsed && typeof parsed === 'object') {
-            const teacherData = parsed.profile || parsed;
-            const photoValue = teacherData.photo?.value || teacherData.photo || '/placeholder.svg';
-            
-            if (teacherData.id || teacherData.name) {
-              allTeachers.push({
-                id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
-                specialization: teacherData.specialization || 'Специализация не указана',
-                experience_years: parseInt(teacherData.experience) || 0,
-                location: teacherData.location || 'Не указано',
-                available: true,
-                profiles: {
-                  id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
-                  full_name: teacherData.name || teacherData.full_name || 'Имя не указано',
-                  avatar_url: photoValue,
-                  email: teacherData.email || '',
-                  role: 'teacher'
-                },
-                bio: teacherData.about || teacherData.bio || 'Информация о себе не указана',
-                education: teacherData.education || 'Образование не указано',
-                languages: teacherData.languages || ['Кыргызский', 'Русский'],
-                source: 'global_published'
-              });
-            }
-          }
-        } catch (parseError) {
-          console.error(`Error parsing ${key}:`, parseError);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error loading global published teachers:', error);
-  }
-  
-  return allTeachers;
-};
+// DISABLED - No longer using localStorage for published teachers
+// All teacher data will only come from Supabase database
 
 const TeachersPage = () => {
   const navigate = useNavigate();
@@ -184,29 +69,19 @@ const TeachersPage = () => {
 
   // Load published teachers on component mount and poll for changes
   useEffect(() => {
-    const loadPublishedTeachers = () => {
-      const published = getPublishedTeachers();
-      console.log('DEBUG: Loading published teachers:', published);
-      console.log('DEBUG: localStorage teacherProfilePublished:', localStorage.getItem('teacherProfilePublished'));
-      console.log('DEBUG: localStorage teacherProfileData:', localStorage.getItem('teacherProfileData'));
-      setPublishedTeachers(published);
-    };
-
-    loadPublishedTeachers();
+    // DISABLED - No longer loading any localStorage data for teachers
+    // Force clear any existing localStorage data that might contain false profiles
+    const keysToRemove = [
+      'teacherProfileData',
+      'teacherProfilePublished', 
+      'publishedTeachers'
+    ];
     
-    // Poll for changes every 2 seconds
-    const interval = setInterval(loadPublishedTeachers, 2000);
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
     
-    // Listen for storage events
-    const handleStorageChange = () => loadPublishedTeachers();
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('teacherPublished', handleStorageChange);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('teacherPublished', handleStorageChange);
-    };
+    setPublishedTeachers([]);
   }, []);
 
   // Combine Supabase teachers with published local teachers
