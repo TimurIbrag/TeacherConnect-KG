@@ -60,7 +60,7 @@ const TeacherProfilePage: React.FC = () => {
         
         if (profile.fullName && profile.specialization) {
           teachers.push({
-            id: 'published-teacher-1',
+            id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: profile.fullName,
             photo: profile.photoUrl || '/placeholder.svg',
             specialization: profile.specialization,

@@ -67,13 +67,13 @@ const getPublishedTeachers = () => {
         const photoValue = profile.photo?.value || profile.photoUrl || profile.photo || '/placeholder.svg';
         
         allTeachers.push({
-          id: 'published-teacher-1',
+          id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           specialization: profile.specialization,
           experience_years: parseInt(profile.experience) || 0,
           location: profile.location || 'Не указано',
           available: true,
           profiles: {
-            id: 'published-teacher-1',
+            id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             full_name: profile.fullName || profile.name,
             avatar_url: photoValue,
             email: profile.email || '',
