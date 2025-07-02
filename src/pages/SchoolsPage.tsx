@@ -79,7 +79,11 @@ const SchoolsPage: React.FC = () => {
                 type: school.type || 'Государственная',
                 city: school.city || 'Бишкек',
                 specialization: school.specialization || school.description || 'Общее образование',
-                openPositions: school.openPositions || school.vacancies || [],
+                openPositions: [
+                  ...(school.openPositions || []),
+                  ...(school.vacancies || []),
+                  ...(school.positions || [])
+                ],
                 ratings: school.ratings || 4.5,
                 views: school.views || 0,
                 housing: school.housing || school.housingProvided || false,

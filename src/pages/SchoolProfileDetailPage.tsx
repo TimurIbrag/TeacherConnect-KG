@@ -158,8 +158,12 @@ const SchoolProfileDetailPage: React.FC = () => {
             ...(foundSchool.photo && typeof foundSchool.photo === 'string' ? [foundSchool.photo] : []) // Main photo as string
           ].filter(Boolean), // Remove any null/undefined values
           locationVerified: foundSchool.locationVerified || false,
-          // Include open positions from published school data
-          openPositions: foundSchool.openPositions || []
+          // Include open positions from published school data - combine all possible vacancy sources
+          openPositions: [
+            ...(foundSchool.openPositions || []),
+            ...(foundSchool.vacancies || []),
+            ...(foundSchool.positions || [])
+          ]
         };
         console.log('DEBUG: Processed published school photos:', foundSchool.photos);
       } else {

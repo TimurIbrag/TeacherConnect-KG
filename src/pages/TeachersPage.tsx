@@ -62,6 +62,9 @@ const getPublishedTeachers = () => {
       const profile = JSON.parse(profileData);
       
       if (profile.fullName && profile.specialization) {
+        // Handle photo data structure properly
+        const photoValue = profile.photo?.value || profile.photoUrl || profile.photo || '/placeholder.svg';
+        
         allTeachers.push({
           id: 'published-teacher-1',
           specialization: profile.specialization,
@@ -70,12 +73,12 @@ const getPublishedTeachers = () => {
           available: true,
           profiles: {
             id: 'published-teacher-1',
-            full_name: profile.fullName,
-            avatar_url: profile.photoUrl || '/placeholder.svg',
+            full_name: profile.fullName || profile.name,
+            avatar_url: photoValue,
             email: profile.email || '',
             role: 'teacher'
           },
-          bio: profile.bio || 'Информация о себе не указана',
+          bio: profile.bio || profile.about || 'Информация о себе не указана',
           education: profile.education || 'Образование не указано',
           languages: profile.languages || ['Кыргызский', 'Русский'],
           source: 'published'
@@ -86,31 +89,77 @@ const getPublishedTeachers = () => {
     console.error('Error loading published teacher:', error);
   }
   
-  // 2. Get all globally published teachers
+  // 2. Get all globally published teachers from different localStorage keys
   try {
-    const globalPublished = JSON.parse(localStorage.getItem('allPublishedTeachers') || '[]');
-    globalPublished.forEach((teacher: any) => {
-      if (teacher.id && teacher.name) {
-        allTeachers.push({
-          id: teacher.id,
-          specialization: teacher.specialization || 'Специализация не указана',
-          experience_years: parseInt(teacher.experience) || 0,
-          location: teacher.location || 'Не указано',
-          available: true,
-          profiles: {
-            id: teacher.id,
-            full_name: teacher.name,
-            avatar_url: teacher.photo || '/placeholder.svg',
-            email: teacher.email || '',
-            role: 'teacher'
-          },
-          bio: teacher.about || 'Информация о себе не указана',
-          education: teacher.education || 'Образование не указано',
-          languages: teacher.languages || ['Кыргызский', 'Русский'],
-          source: 'global_published'
-        });
+    // Check multiple possible keys for published teachers
+    const storageKeys = ['publishedTeachers', 'teacherProfileData', 'teacherProfilePublished'];
+    
+    for (const key of storageKeys) {
+      const data = localStorage.getItem(key);
+      if (data) {
+        console.log(`DEBUG: Found teacher data in ${key}:`, data);
+        try {
+          const parsed = JSON.parse(data);
+          
+          // Handle array of teachers
+          if (Array.isArray(parsed)) {
+            parsed.forEach((teacher: any) => {
+              const teacherData = teacher.profile || teacher;
+              const photoValue = teacherData.photo?.value || teacherData.photo || '/placeholder.svg';
+              
+              if (teacherData.id || teacherData.name) {
+                allTeachers.push({
+                  id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
+                  specialization: teacherData.specialization || 'Специализация не указана',
+                  experience_years: parseInt(teacherData.experience) || 0,
+                  location: teacherData.location || 'Не указано',
+                  available: true,
+                  profiles: {
+                    id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
+                    full_name: teacherData.name || teacherData.full_name || 'Имя не указано',
+                    avatar_url: photoValue,
+                    email: teacherData.email || '',
+                    role: 'teacher'
+                  },
+                  bio: teacherData.about || teacherData.bio || 'Информация о себе не указана',
+                  education: teacherData.education || 'Образование не указано',
+                  languages: teacherData.languages || ['Кыргызский', 'Русский'],
+                  source: 'global_published'
+                });
+              }
+            });
+          }
+          // Handle single teacher object
+          else if (parsed && typeof parsed === 'object') {
+            const teacherData = parsed.profile || parsed;
+            const photoValue = teacherData.photo?.value || teacherData.photo || '/placeholder.svg';
+            
+            if (teacherData.id || teacherData.name) {
+              allTeachers.push({
+                id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
+                specialization: teacherData.specialization || 'Специализация не указана',
+                experience_years: parseInt(teacherData.experience) || 0,
+                location: teacherData.location || 'Не указано',
+                available: true,
+                profiles: {
+                  id: teacherData.id || `teacher_${Date.now()}_${Math.random()}`,
+                  full_name: teacherData.name || teacherData.full_name || 'Имя не указано',
+                  avatar_url: photoValue,
+                  email: teacherData.email || '',
+                  role: 'teacher'
+                },
+                bio: teacherData.about || teacherData.bio || 'Информация о себе не указана',
+                education: teacherData.education || 'Образование не указано',
+                languages: teacherData.languages || ['Кыргызский', 'Русский'],
+                source: 'global_published'
+              });
+            }
+          }
+        } catch (parseError) {
+          console.error(`Error parsing ${key}:`, parseError);
+        }
       }
-    });
+    }
   } catch (error) {
     console.error('Error loading global published teachers:', error);
   }
