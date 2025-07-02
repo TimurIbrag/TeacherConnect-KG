@@ -362,9 +362,28 @@ const SchoolsPage: React.FC = () => {
       {/* Schools Grid */}
       {filteredSchools.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSchools.map((school) => (
-            <SchoolCard key={`${school.id}-${school.name}`} {...school} />
-          ))}
+          {filteredSchools.map((school) => {
+            // Ensure proper data mapping for SchoolCard
+            const schoolData = {
+              id: school.id,
+              name: school.name || 'Школа',
+              photo: school.photo || '/placeholder.svg',
+              address: school.address || 'Адрес не указан',
+              type: school.type || 'Государственная',
+              specialization: school.specialization || 'Общее образование',
+              openPositions: school.openPositions || [],
+              ratings: school.ratings || 4.0,
+              views: school.views || 0,
+              housing: school.housing || false,
+              distance: school.distance,
+              locationVerified: school.locationVerified || false,
+              city: school.city || 'Бишкек'
+            };
+            
+            return (
+              <SchoolCard key={`${school.id}-${school.name}`} {...schoolData} />
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-12">

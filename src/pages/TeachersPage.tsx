@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import TeacherCard from '@/components/TeacherCard';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -426,144 +427,27 @@ const TeachersPage = () => {
         // Teachers Grid
         filteredTeachers && filteredTeachers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeachers.map((teacher) => (
-              <Card 
-                key={teacher.id} 
-                className="hover:shadow-lg transition-shadow overflow-hidden"
-              >
-                <CardContent className="p-0">
-                  <div className="p-4">
-                    <div className="flex items-center gap-4">
-                      {/* Main Avatar - Show for all users including guests */}
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {getInitials(teacher.profiles?.full_name || '')}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            {/* Show full name for all users including guests */}
-                            <h3 className="text-lg font-medium">
-                              {teacher.profiles?.full_name || 'Имя не указано'}
-                            </h3>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              <Badge variant="secondary">
-                                {teacher.specialization || 'Специализация не указана'}
-                              </Badge>
-                              {teacher.experience_years && (
-                                <span className="text-sm text-muted-foreground">
-                                  {teacher.experience_years} лет опыта
-                                </span>
-                              )}
-                            </div>
-                            {teacher.location && (
-                              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                                <MapPin className="w-3 h-3" />
-                                <span>{teacher.location}</span>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Top-right corner avatar - Show for all users */}
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={teacher.profiles?.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {getInitials(teacher.profiles?.full_name || '')}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bio - Show for all users */}
-                    {teacher.bio && (
-                      <p className="text-gray-600 mt-4 line-clamp-3">
-                        {teacher.bio}
-                      </p>
-                    )}
-
-                    {/* Skills - Show for all users */}
-                    {teacher.skills && teacher.skills.length > 0 && (
-                      <div className="mt-4">
-                        <div className="flex flex-wrap gap-1">
-                          {teacher.skills.slice(0, 3).map((skill, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {teacher.skills.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{teacher.skills.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Languages - Show for all users */}
-                    {teacher.languages && teacher.languages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs text-gray-500">
-                          Языки: {teacher.languages.slice(0, 2).join(', ')}
-                          {teacher.languages.length > 2 && ` +${teacher.languages.length - 2}`}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-
-                {/* Footer with stats and buttons */}
-                <div className="flex justify-between items-center border-t p-4 bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1" title="Profile views">
-                      <span className="text-sm text-muted-foreground">
-                        {teacher.verification_status === 'verified' ? 'Подтвержден' : 'На проверке'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {/* Show contact button differently based on auth status */}
-                    {user ? (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleContactTeacher(teacher)}
-                      >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Связаться
-                      </Button>
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          toast({
-                            title: 'Требуется авторизация',
-                            description: 'Войдите в систему для связи с преподавателем',
-                            variant: 'destructive',
-                          });
-                          navigate('/login');
-                        }}
-                      >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Войти для связи
-                      </Button>
-                    )}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleViewProfile(teacher)}
-                    >
-                      <User className="h-4 w-4 mr-1" />
-                      Профиль
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
+            {filteredTeachers.map((teacher) => {
+              // Properly map teacher data for TeacherCard component
+              const teacherData = {
+                id: teacher.id,
+                name: teacher.profiles?.full_name || 'Имя не указано',
+                photo: teacher.profiles?.avatar_url || '/placeholder.svg',
+                specialization: teacher.specialization || 'Специализация не указана',
+                experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
+                location: teacher.location || 'Местоположение не указано',
+                ratings: 4.5, // Mock value
+                views: 0, // Mock value
+                source: teacher.source || 'supabase'
+              };
+              
+              return (
+                <TeacherCard 
+                  key={teacher.id}
+                  {...teacherData}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
