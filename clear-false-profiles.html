@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear False Profiles</title>
+</head>
+<body>
+    <h1>Clearing False Profiles</h1>
+    <script>
+        // Clear all localStorage keys related to published profiles
+        const keysToCheck = [
+            'teacherProfileData',
+            'teacherProfilePublished', 
+            'schoolProfileData',
+            'schoolProfilePublished',
+            'publishedTeachers',
+            'publishedSchools',
+            'allPublishedSchools',
+            'allPublishedTeachers'
+        ];
+        
+        keysToCheck.forEach(key => {
+            const data = localStorage.getItem(key);
+            if (data) {
+                console.log(`Found data in ${key}:`, data);
+                localStorage.removeItem(key);
+                console.log(`Removed ${key}`);
+            }
+        });
+        
+        // Clear any keys that might contain "Aydin" or "ILIM"
+        Object.keys(localStorage).forEach(key => {
+            const data = localStorage.getItem(key);
+            if (data && (data.includes('Aydin') || data.includes('ILIM') || data.includes('Илим'))) {
+                console.log(`Found suspicious data in ${key}:`, data);
+                localStorage.removeItem(key);
+                console.log(`Removed ${key}`);
+            }
+        });
+        
+        console.log('All false profiles cleared from localStorage');
+        alert('False profiles have been cleared. Please refresh the page.');
+    </script>
+</body>
+</html>
