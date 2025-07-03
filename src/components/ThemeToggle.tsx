@@ -4,18 +4,35 @@ import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
 
 const ThemeToggle = () => {
-  // Check if user has a theme preference in localStorage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+  const [mounted, setMounted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Initialize theme after component mounts (client-side only)
+  useEffect(() => {
+    setMounted(true);
+    
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    if (savedTheme === 'dark') return true;
-    if (savedTheme === 'light') return false;
-    return prefersDark;
-  });
+    let shouldBeDark = false;
+    if (savedTheme === 'dark') shouldBeDark = true;
+    else if (savedTheme === 'light') shouldBeDark = false;
+    else shouldBeDark = prefersDark;
+    
+    setIsDarkMode(shouldBeDark);
+    
+    // Apply theme immediately
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
-  // Apply theme on mount and when isDarkMode changes
+  // Apply theme changes after initial mount
   useEffect(() => {
+    if (!mounted) return;
+    
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -23,11 +40,24 @@ const ThemeToggle = () => {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, mounted]);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        aria-label="Toggle theme"
+      >
+        <Moon className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   return (
     <Button 

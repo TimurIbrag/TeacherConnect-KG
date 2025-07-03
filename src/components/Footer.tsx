@@ -13,7 +13,8 @@ import {
 const Footer: React.FC = () => {
   const { t } = useLanguage();
   
-  const currentYear = new Date().getFullYear();
+  // Use a static year to prevent hydration mismatch
+  const currentYear = 2025;
 
   return (
     <footer className="bg-muted py-8 mt-12">
