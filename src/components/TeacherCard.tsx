@@ -14,7 +14,7 @@ import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 interface TeacherCardProps {
   id: number | string;
   name: string;
-  photo: string;
+  photo: string | null;
   specialization: string;
   experience: string;
   location: string;
@@ -121,9 +121,9 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       <CardContent className="p-0">
         <div className="p-4">
           <div className="flex items-center gap-4">
-            {/* Main Avatar - Always visible to all users including guests */}
+            {/* Main Avatar - Show fallback if no photo */}
             <Avatar className="h-16 w-16">
-              <AvatarImage src={photo} alt={name} />
+              {photo ? <AvatarImage src={photo} alt={name} /> : null}
               <AvatarFallback>{getInitials(name)}</AvatarFallback>
             </Avatar>
             
@@ -147,9 +147,9 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
                   </div>
                 </div>
                 
-                {/* Top-right corner avatar - Always visible to all users */}
+                {/* Top-right corner avatar - Show fallback if no photo */}
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={photo} alt={name} />
+                  {photo ? <AvatarImage src={photo} alt={name} /> : null}
                   <AvatarFallback>{getInitials(name)}</AvatarFallback>
                 </Avatar>
               </div>

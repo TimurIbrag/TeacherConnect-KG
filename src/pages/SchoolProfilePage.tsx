@@ -128,7 +128,7 @@ const SchoolProfilePage: React.FC = () => {
   const displaySchool: DisplaySchool = supabaseSchool ? {
     id: supabaseSchool.id,
     name: supabaseSchool.school_name || 'Школа',
-    photo: supabaseSchool.photo_urls?.[0] || '/placeholder.svg',
+    photo: supabaseSchool.photo_urls?.[0] || null,
     address: supabaseSchool.address || 'Адрес не указан',
     type: supabaseSchool.school_type || 'Государственная',
     specialization: supabaseSchool.description || 'Общее образование',
@@ -143,7 +143,7 @@ const SchoolProfilePage: React.FC = () => {
   } : publishedSchool ? {
     id: publishedSchool.id,
     name: publishedSchool.name,
-    photo: publishedSchool.photo?.value || publishedSchool.photo || '/placeholder.svg',
+    photo: publishedSchool.photo?.value || publishedSchool.photo || null,
     address: publishedSchool.address || 'Адрес не указан',
     type: publishedSchool.type || 'Частная',
     specialization: publishedSchool.specialization || 'Общее образование',

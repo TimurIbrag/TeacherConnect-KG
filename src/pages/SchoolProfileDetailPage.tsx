@@ -110,7 +110,7 @@ const SchoolProfileDetailPage: React.FC = () => {
             const schoolData = {
               id: supabaseSchool.id,
               name: supabaseSchool.school_name || 'Школа',
-              photo: supabaseSchool.photo_urls?.[0] || '/placeholder.svg',
+              photo: supabaseSchool.photo_urls?.[0] || null,
               address: supabaseSchool.address || 'Адрес не указан',
               type: supabaseSchool.school_type || 'Государственная',
               specialization: supabaseSchool.description || 'Общее образование',
@@ -143,7 +143,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         // Handle published school data with proper photo handling
         foundSchool = {
           ...foundSchool,
-          photo: foundSchool.photo?.value || foundSchool.photo || '/placeholder.svg', // Handle both base64 and regular URLs
+          photo: foundSchool.photo?.value || foundSchool.photo || null, // Handle both base64 and regular URLs
           city: foundSchool.address?.split(',')[0] || 'Бишкек',
           housing: foundSchool.housing || false,
           about: foundSchool.about || foundSchool.description || 'Информация о школе не предоставлена.',

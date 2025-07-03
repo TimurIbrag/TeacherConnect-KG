@@ -307,7 +307,7 @@ const TeachersPage = () => {
               const teacherData = {
                 id: teacher.id,
                 name: teacher.profiles?.full_name || 'Имя не указано',
-                photo: teacher.profiles?.avatar_url || '/placeholder.svg',
+                photo: teacher.profiles?.avatar_url || null,
                 specialization: teacher.specialization || 'Специализация не указана',
                 experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
                 location: teacher.location || 'Местоположение не указано',

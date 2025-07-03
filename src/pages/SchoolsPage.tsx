@@ -69,7 +69,7 @@ const SchoolsPage: React.FC = () => {
       return {
         id: school.id,
         name: school.school_name || school.profiles?.full_name || 'School',
-        photo: school.photo_urls?.[0] || '/placeholder.svg',
+        photo: school.photo_urls?.[0] || null,
         address: school.address || 'Address not provided',
         type: school.school_type || 'Государственная',
         specialization: school.description || 'General Education',
@@ -283,7 +283,7 @@ const SchoolsPage: React.FC = () => {
             const schoolData = {
               id: school.id,
               name: school.name || 'Школа',
-              photo: school.photo || '/placeholder.svg',
+              photo: school.photo || null,
               address: school.address || 'Адрес не указан',
               type: school.type || 'Государственная',
               specialization: school.specialization || 'Общее образование',

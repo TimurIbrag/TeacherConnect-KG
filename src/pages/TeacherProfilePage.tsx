@@ -62,7 +62,7 @@ const TeacherProfilePage: React.FC = () => {
           teachers.push({
             id: `teacher_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: profile.fullName,
-            photo: profile.photoUrl || '/placeholder.svg',
+            photo: profile.photoUrl || null,
             specialization: profile.specialization,
             experience: (profile.experience || '0') + ' лет',
             location: profile.location || 'Не указано',
@@ -92,7 +92,7 @@ const TeacherProfilePage: React.FC = () => {
           teachers.push({
             id: teacher.id,
             name: teacher.name,
-            photo: teacher.photo || '/placeholder.svg',
+            photo: teacher.photo || null,
             specialization: teacher.specialization || 'Специализация не указана',
             experience: (teacher.experience || '0') + ' лет',
             location: teacher.location || 'Не указано',
@@ -153,7 +153,7 @@ const TeacherProfilePage: React.FC = () => {
   const teacher = supabaseTeacher ? {
     id: supabaseTeacher.id,
     name: supabaseTeacher.profiles?.full_name || 'Учитель',
-    photo: supabaseTeacher.profiles?.avatar_url || '/placeholder.svg',
+    photo: supabaseTeacher.profiles?.avatar_url || null,
     specialization: supabaseTeacher.specialization || 'Специализация не указана',
     experience: `${supabaseTeacher.experience_years || 0} лет`,
     location: supabaseTeacher.location || 'Местоположение не указано',

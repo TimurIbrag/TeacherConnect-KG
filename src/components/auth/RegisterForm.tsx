@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -49,31 +50,27 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLo
     }
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Store user type for profile creation
+      sessionStorage.setItem('confirmed_user_type', userType);
+      localStorage.setItem('confirmed_user_type', userType);
       
-      localStorage.setItem('user', JSON.stringify({
-        email,
-        type: userType,
-        name
-      }));
+      // Use Supabase auth for real registration
+      const { secureRegister } = useSecureAuth();
       
-      window.dispatchEvent(new Event('login'));
+      await secureRegister(email, password, name, userType);
       
       toast({
         title: "Регистрация успешна",
-        description: "Добро пожаловать в личный кабинет",
+        description: "Проверьте email для подтверждения аккаунта",
       });
       
-      if (userType === 'school') {
-        navigate('/school-dashboard');
-      } else {
-        navigate('/teacher-dashboard');
-      }
+      // Don't navigate immediately - let auth context handle it after confirmation
       
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось создать аккаунт. Попробуйте позже.",
+        description: error.message || "Не удалось создать аккаунт. Попробуйте позже.",
         variant: "destructive",
       });
     }

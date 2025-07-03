@@ -174,7 +174,7 @@ const VacanciesPage = () => {
     school_profiles: {
       school_name: `Репетитор: ${service.profiles?.full_name || 'Преподаватель'}`,
       address: service.location || 'Не указано',
-      photo_urls: [service.profiles?.avatar_url || '/placeholder.svg'],
+      photo_urls: service.profiles?.avatar_url ? [service.profiles.avatar_url] : [],
       profiles: {
         full_name: service.profiles?.full_name || 'Преподаватель'
       }
