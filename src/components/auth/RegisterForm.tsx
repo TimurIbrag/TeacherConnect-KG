@@ -22,6 +22,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLo
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { secureRegister } = useSecureAuth(); // ✅ Move hook call to component level
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -55,8 +56,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLo
       localStorage.setItem('confirmed_user_type', userType);
       
       // Use Supabase auth for real registration
-      const { secureRegister } = useSecureAuth();
-      
       await secureRegister(email, password, name, userType);
       
       toast({
