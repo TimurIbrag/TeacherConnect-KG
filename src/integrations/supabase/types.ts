@@ -314,6 +314,7 @@ export type Database = {
           founded_year: number | null
           housing_provided: boolean | null
           id: string
+          is_published: boolean | null
           latitude: number | null
           location_verified: boolean | null
           longitude: number | null
@@ -334,6 +335,7 @@ export type Database = {
           founded_year?: number | null
           housing_provided?: boolean | null
           id: string
+          is_published?: boolean | null
           latitude?: number | null
           location_verified?: boolean | null
           longitude?: number | null
@@ -354,6 +356,7 @@ export type Database = {
           founded_year?: number | null
           housing_provided?: boolean | null
           id?: string
+          is_published?: boolean | null
           latitude?: number | null
           location_verified?: boolean | null
           longitude?: number | null
