@@ -43,12 +43,21 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative h-48 w-full">
-        {/* School photo - Always visible to all users including guests */}
-        <img 
-          src={photo} 
-          alt={name} 
-          className="h-full w-full object-cover" 
-        />
+        {/* School photo - Show placeholder if no photo */}
+        {photo ? (
+          <img 
+            src={photo} 
+            alt={name} 
+            className="h-full w-full object-cover" 
+          />
+        ) : (
+          <div className="h-full w-full bg-muted flex items-center justify-center">
+            <div className="text-center">
+              <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Фото не добавлено</p>
+            </div>
+          </div>
+        )}
         <div className="absolute top-2 right-2 flex gap-2">
           {housing && (
             <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">

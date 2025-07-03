@@ -35,7 +35,7 @@ const emptySchoolData = {
   city: 'Бишкек',
   about: '',
   website: '',
-  infrastructure: ['Компьютерный класс', 'Спортзал', 'Библиотека', 'Столовая'],
+  infrastructure: [], // No default infrastructure items
   locationVerified: false,
   coordinates: null as { lat: number; lng: number } | null,
   housing: false
@@ -54,7 +54,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [newInfrastructure, setNewInfrastructure] = useState('');
-  const [isProfilePublic, setIsProfilePublic] = useState(false);
+  const [isProfilePublic, setIsProfilePublic] = useState(false); // Always start unpublished
   const [showLocationVerification, setShowLocationVerification] = useState(false);
   
   // Initialize with empty data from localStorage or use defaults
@@ -113,9 +113,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     }
     
     const savedVisibility = localStorage.getItem('schoolProfilePublic');
-    if (savedVisibility) {
-      setIsProfilePublic(JSON.parse(savedVisibility));
-    }
+    // Only set as public if explicitly saved as true, otherwise remain unpublished
+    setIsProfilePublic(savedVisibility ? JSON.parse(savedVisibility) : false);
   }, []);
 
   // Update stats when profile becomes public/private
@@ -140,7 +139,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onNavigateToVacancies }) => {
     return {
       id: Date.now(), // Generate a unique ID based on timestamp
       name: schoolData.name,
-      photo: profilePhoto || '/placeholder.svg',
+      photo: profilePhoto || null, // No default placeholder image
       address: schoolData.address,
       type: schoolData.type,
       city: schoolData.city,
