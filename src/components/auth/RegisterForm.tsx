@@ -63,6 +63,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
         description: "Проверьте email для подтверждения аккаунта",
       });
       
+      // Redirect to user type selection
+      navigate('/user-type-selection');
+      
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({

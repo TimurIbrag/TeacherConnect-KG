@@ -33,6 +33,7 @@ import FAQPage from "./pages/FAQPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import VacanciesPage from '@/pages/VacanciesPage';
+import UserTypeSelectionPage from './pages/UserTypeSelectionPage';
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ function App() {
                     <Route path="/privacy" element={<PrivacyPolicyPage />} />
                     <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="/vacancies" element={<VacanciesPage />} />
+                    <Route path="/user-type-selection" element={<UserTypeSelectionPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </main>
