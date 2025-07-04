@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 const UserTypeSelectionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { toast } = useToast();
+  const [isWaitingForAuth, setIsWaitingForAuth] = useState(true);
 
   const handleRoleSelection = async (role: 'teacher' | 'school') => {
     if (!user) {
@@ -69,15 +70,47 @@ const UserTypeSelectionPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Wait a moment for authentication to settle
+    const timer = setTimeout(() => {
+      setIsWaitingForAuth(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading state while waiting for auth
+  if (loading || isWaitingForAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-2">Завершение регистрации...</h1>
+          <p className="text-muted-foreground">
+            Пожалуйста, подождите, мы настраиваем ваш аккаунт
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If still no user after waiting, show error with helpful message
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Доступ запрещен</h1>
-          <p className="text-muted-foreground mb-4">Для доступа к этой странице необходимо войти в систему</p>
-          <Button onClick={() => navigate('/login')}>
-            Войти
-          </Button>
+          <h1 className="text-2xl font-bold mb-4">Требуется вход в систему</h1>
+          <p className="text-muted-foreground mb-4">
+            Для выбора роли необходимо войти в систему или подтвердить email
+          </p>
+          <div className="space-y-2">
+            <Button onClick={() => navigate('/login')} className="w-full">
+              Войти
+            </Button>
+            <Button onClick={() => navigate('/register')} variant="outline" className="w-full">
+              Зарегистрироваться
+            </Button>
+          </div>
         </div>
       </div>
     );

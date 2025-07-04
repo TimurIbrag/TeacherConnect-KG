@@ -59,12 +59,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
       if (error) throw error;
       
       toast({
-        title: "Регистрация успешна",
-        description: "Проверьте email для подтверждения аккаунта",
+        title: "Регистрация успешна!",
+        description: "Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте почту и кликните по ссылке для завершения регистрации.",
       });
-      
-      // Redirect to user type selection
-      navigate('/user-type-selection');
       
     } catch (error: any) {
       console.error('Registration error:', error);
