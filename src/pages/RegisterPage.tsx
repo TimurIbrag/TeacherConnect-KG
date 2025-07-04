@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -19,16 +18,6 @@ import RegisterFooter from '@/components/auth/RegisterFooter';
 
 const RegisterPage: React.FC = () => {
   const { t } = useLanguage();
-  const location = useLocation();
-  
-  const queryParams = new URLSearchParams(location.search);
-  const typeFromQuery = queryParams.get('type');
-  
-  const [userType, setUserType] = useState<'teacher' | 'school'>(
-    typeFromQuery === 'teacher' || typeFromQuery === 'school'
-      ? typeFromQuery
-      : 'teacher'
-  );
   const [isLoading, setIsLoading] = useState(false);
   
   return (
@@ -44,7 +33,6 @@ const RegisterPage: React.FC = () => {
           <div className="grid gap-4">
             {/* Google Registration Button */}
             <RegisterSocialAuth 
-              userType={userType}
               isLoading={isLoading}
               setIsLoading={setIsLoading}
             />
@@ -61,8 +49,6 @@ const RegisterPage: React.FC = () => {
             </div>
 
             <RegisterForm 
-              userType={userType}
-              setUserType={setUserType}
               isLoading={isLoading}
             />
           </div>

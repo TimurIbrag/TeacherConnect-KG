@@ -2,27 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
-import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  RadioGroup, 
-  RadioGroupItem 
-} from '@/components/ui/radio-group';
-import { User, Building2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RegisterFormProps {
-  userType: 'teacher' | 'school';
-  setUserType: (value: 'teacher' | 'school') => void;
   isLoading: boolean;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLoading }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { secureRegister } = useSecureAuth(); // ✅ Move hook call to component level
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,19 +43,25 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLo
     }
     
     try {
-      // Store user type for profile creation
-      sessionStorage.setItem('confirmed_user_type', userType);
-      localStorage.setItem('confirmed_user_type', userType);
+      const redirectUrl = `${window.location.origin}/user-type-selection`;
       
-      // Use Supabase auth for real registration
-      await secureRegister(email, password, name, userType);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: name,
+          }
+        }
+      });
+      
+      if (error) throw error;
       
       toast({
         title: "Регистрация успешна",
         description: "Проверьте email для подтверждения аккаунта",
       });
-      
-      // Don't navigate immediately - let auth context handle it after confirmation
       
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -78,37 +76,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ userType, setUserType, isLo
   return (
     <form onSubmit={handleRegister} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="userType">{t('auth.userType')}</Label>
-        <RadioGroup
-          id="userType"
-          value={userType}
-          onValueChange={(value) => setUserType(value as 'teacher' | 'school')}
-          className="flex gap-4"
-        >
-          <div className="flex items-center space-x-2 flex-1">
-            <RadioGroupItem value="teacher" id="teacher" />
-            <Label htmlFor="teacher" className="flex items-center cursor-pointer">
-              <User className="h-4 w-4 mr-2" />
-              {t('auth.userType.teacher')}
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2 flex-1">
-            <RadioGroupItem value="school" id="school" />
-            <Label htmlFor="school" className="flex items-center cursor-pointer">
-              <Building2 className="h-4 w-4 mr-2" />
-              {t('auth.userType.school')}
-            </Label>
-          </div>
-        </RadioGroup>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="name">
-          {userType === 'teacher' ? t('auth.name') : 'Название школы'}
-        </Label>
+        <Label htmlFor="name">Полное имя</Label>
         <Input 
           id="name" 
-          placeholder={userType === 'teacher' ? "Иван Иванов" : "Школа №1"} 
+          placeholder="Иван Иванов" 
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
