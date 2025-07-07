@@ -35,7 +35,7 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
 
     setIsLoading(true);
     try {
-      console.log('🎯 Manual user type selection:', selectedType);
+      console.log('🎯 UserTypeSelectionModal - Setting user type:', selectedType);
       
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -43,36 +43,58 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
         throw new Error('No user found');
       }
 
-      // Check if profile exists, if not create it
-      const { data: existingProfile } = await supabase
+      // Update the profile with the selected role
+      const { data: updatedProfile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .update({ role: selectedType })
         .eq('id', user.id)
-        .maybeSingle();
+        .select()
+        .single();
 
-      if (existingProfile) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('profiles')
-          .update({ role: selectedType })
-          .eq('id', user.id);
+      if (error) throw error;
+      
+      console.log('✅ Profile role updated to:', updatedProfile.role);
 
-        if (error) throw error;
+      // Create role-specific profile
+      if (selectedType === 'school') {
+        const { data: existingSchool } = await supabase
+          .from('school_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!existingSchool) {
+          const { error: schoolError } = await supabase
+            .from('school_profiles')
+            .insert({
+              id: user.id,
+              school_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Новая школа',
+              photo_urls: null,
+              is_published: false
+            });
+          
+          if (schoolError) throw schoolError;
+          console.log('✅ Created school profile');
+        }
       } else {
-        // Create new profile
-        const { error } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-            role: selectedType
-          });
+        const { data: existingTeacher } = await supabase
+          .from('teacher_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        if (error) throw error;
+        if (!existingTeacher) {
+          const { error: teacherError } = await supabase
+            .from('teacher_profiles')
+            .insert({
+              id: user.id,
+              available: true
+            });
+          
+          if (teacherError) throw teacherError;
+          console.log('✅ Created teacher profile');
+        }
       }
-
-      console.log('✅ User type updated via modal to:', selectedType);
 
       // Store the confirmed user type
       localStorage.setItem('confirmed_user_type', selectedType);
@@ -85,6 +107,16 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
 
       onUserTypeSelected(selectedType);
       onClose();
+      
+      // Navigate to appropriate dashboard
+      setTimeout(() => {
+        if (selectedType === 'school') {
+          window.location.href = '/school-dashboard';
+        } else {
+          window.location.href = '/teacher-dashboard';
+        }
+      }, 500);
+      
     } catch (error: any) {
       console.error('❌ Error updating user type:', error);
       toast({

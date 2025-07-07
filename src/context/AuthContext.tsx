@@ -263,47 +263,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               } else {
                 console.log('👤 EXISTING USER found with role:', existingProfile.role);
                 
-                // If existing profile has no role or wrong role, update it
-                if (!existingProfile.role && intendedUserType) {
-                  console.log('⚠️ Existing profile missing role - updating to:', intendedUserType);
-                  
-                  const { data: updatedProfile, error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ role: intendedUserType })
-                    .eq('id', session.user.id)
-                    .select()
-                    .single();
-                    
-                  if (updateError) {
-                    console.error('❌ Error updating profile role:', updateError);
-                    setShowUserTypeModal(true);
-                  } else {
-                    console.log('✅ Profile role updated to:', updatedProfile.role);
-                    setProfile(updatedProfile);
-                    storeUserType(intendedUserType, 'existing_profile_update');
-                  }
-                } else if (existingProfile.role !== intendedUserType && intendedUserType) {
-                  console.log('🔄 Role mismatch - existing:', existingProfile.role, 'intended:', intendedUserType);
-                  
-                  // Update to intended role
-                  const { data: updatedProfile, error: updateError } = await supabase
-                    .from('profiles')
-                    .update({ role: intendedUserType })
-                    .eq('id', session.user.id)
-                    .select()
-                    .single();
-                    
-                  if (updateError) {
-                    console.error('❌ Error updating profile role:', updateError);
-                  } else {
-                    console.log('✅ Profile role corrected to:', updatedProfile.role);
-                    setProfile(updatedProfile);
-                    storeUserType(intendedUserType, 'role_correction');
-                  }
-                } else {
-                  console.log('✅ Using existing profile with role:', existingProfile.role);
+                // If existing profile has no role, show role selection
+                if (!existingProfile.role) {
+                  console.log('⚠️ Existing profile missing role - showing selection modal');
+                  setShowUserTypeModal(true);
                   setProfile(existingProfile);
+                  setLoading(false);
+                  return;
                 }
+                
+                // If existing profile has role but intended type is different, show selection
+                if (intendedUserType && existingProfile.role !== intendedUserType) {
+                  console.log('🔄 Role mismatch - existing:', existingProfile.role, 'intended:', intendedUserType);
+                  setShowUserTypeModal(true);
+                  setProfile(existingProfile);
+                  setLoading(false);
+                  return;
+                }
+                
+                console.log('✅ Using existing profile with role:', existingProfile.role);
+                setProfile(existingProfile);
               }
             } catch (error) {
               console.error('❌ Error in auth flow:', error);
