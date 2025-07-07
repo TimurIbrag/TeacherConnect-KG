@@ -31,27 +31,44 @@ const UserTypeSelectionPage: React.FC = () => {
 
       if (profileError) throw profileError;
 
-      // Create role-specific profile
+      // Check if role-specific profile already exists to avoid duplicates
       if (role === 'school') {
-        const { error: schoolError } = await supabase
+        const { data: existingSchool } = await supabase
           .from('school_profiles')
-          .insert({
-            id: user.id,
-            school_name: user.user_metadata?.full_name || 'Новая школа',
-            is_published: false
-          });
-        
-        if (schoolError) throw schoolError;
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!existingSchool) {
+          const { error: schoolError } = await supabase
+            .from('school_profiles')
+            .insert({
+              id: user.id,
+              school_name: user.user_metadata?.full_name || 'Новая школа',
+              photo_urls: null, // Explicitly no photos
+              is_published: false // Unpublished by default
+            });
+          
+          if (schoolError) throw schoolError;
+        }
         navigate('/school-dashboard');
       } else {
-        const { error: teacherError } = await supabase
+        const { data: existingTeacher } = await supabase
           .from('teacher_profiles')
-          .insert({
-            id: user.id,
-            available: true
-          });
-        
-        if (teacherError) throw teacherError;
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!existingTeacher) {
+          const { error: teacherError } = await supabase
+            .from('teacher_profiles')
+            .insert({
+              id: user.id,
+              available: true
+            });
+          
+          if (teacherError) throw teacherError;
+        }
         navigate('/teacher-dashboard');
       }
 
