@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { schoolsData, vacanciesData } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
-import { useSchool } from '@/hooks/useSupabaseData';
+import { useSchool } from '@/hooks/useSchools';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';

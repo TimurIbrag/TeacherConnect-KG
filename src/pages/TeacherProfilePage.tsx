@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useTeacher } from '@/hooks/useSupabaseData';
+import { useTeacher } from '@/hooks/useTeachers';
 import { teachersData } from '@/data/mockData';
 import { 
   Card, 

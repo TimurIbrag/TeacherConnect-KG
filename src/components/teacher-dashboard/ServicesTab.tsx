@@ -10,7 +10,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import CreateTeacherVacancyDialog from './CreateTeacherVacancyDialog';
-import { useMyTeacherVacancies } from '@/hooks/useSupabaseData';
+import { useMyTeacherVacancies } from '@/hooks/useTeacherVacancies';
 
 const ServicesTab = () => {
   const { toast } = useToast();

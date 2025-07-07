@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTeachers, useTeacherVacancies } from '@/hooks/useSupabaseData';
+import { useTeachers } from '@/hooks/useTeachers';
+import { useTeacherVacancies } from '@/hooks/useTeacherVacancies';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import TeacherCard from '@/components/TeacherCard';

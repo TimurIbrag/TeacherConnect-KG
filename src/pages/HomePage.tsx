@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
-import { useActiveVacancies, useTeachers, useSchools } from '@/hooks/useSupabaseData';
+import { useTeachers } from '@/hooks/useTeachers';
+import { useSchools } from '@/hooks/useSchools';
+import { useActiveVacancies } from '@/hooks/useVacancies';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
