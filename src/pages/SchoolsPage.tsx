@@ -40,10 +40,9 @@ const SchoolsPage: React.FC = () => {
     },
   });
 
-  // Load published schools from localStorage and listen for changes
+  // Load and display schools from Supabase - published schools only
   useEffect(() => {
-    // DISABLED - No longer loading any localStorage data for schools
-    // Force clear any existing localStorage data that might contain false profiles
+    // Clean up old localStorage data - no longer needed
     const keysToRemove = [
       'publishedSchools',
       'allPublishedSchools', 
@@ -58,33 +57,28 @@ const SchoolsPage: React.FC = () => {
     setPublishedSchools([]);
   }, []);
 
-  // Only show published schools from localStorage and Supabase schools (no mock data)
-  const allSchools = [
-    // Published schools from dashboard (localStorage)
-    ...publishedSchools,
-    // Supabase schools
-    ...supabaseSchools.map((school: any) => {
-      const vacancyCount = allVacancies.filter(v => v.school_id === school.id).length;
-      
-      return {
-        id: school.id,
-        name: school.school_name || school.profiles?.full_name || 'School',
-        photo: school.photo_urls?.[0] || null,
-        address: school.address || 'Address not provided',
-        type: school.school_type || 'Государственная',
-        specialization: school.description || 'General Education',
-        openPositions: Array.from({ length: vacancyCount }, (_, i) => ({
-          id: i,
-          title: `Vacancy ${i + 1}`,
-        })),
-        ratings: 4.0,
-        views: 0,
-        housing: school.housing_provided || false,
-        locationVerified: school.location_verified || false,
-        city: school.city || 'Бишкек'
-      };
-    })
-  ];
+  // Show schools from Supabase only (published schools)
+  const allSchools = supabaseSchools.map((school: any) => {
+    const vacancyCount = allVacancies.filter(v => v.school_id === school.id).length;
+    
+    return {
+      id: school.id,
+      name: school.school_name || school.profiles?.full_name || 'School',
+      photo: school.photo_urls?.[0] || null, // No default photos
+      address: school.address || 'Address not provided',
+      type: school.school_type || 'Государственная',
+      specialization: school.description || 'General Education',
+      openPositions: Array.from({ length: vacancyCount }, (_, i) => ({
+        id: i,
+        title: `Vacancy ${i + 1}`,
+      })),
+      ratings: 4.0,
+      views: 0,
+      housing: school.housing_provided || false,
+      locationVerified: school.location_verified || false,
+      city: school.city || 'Бишкек'
+    };
+  });
 
   const districts = [
     'Ленинский район',
@@ -291,7 +285,7 @@ const SchoolsPage: React.FC = () => {
               ratings: school.ratings || 4.0,
               views: school.views || 0,
               housing: school.housing || false,
-              distance: school.distance,
+              distance: undefined, // Distance not calculated
               locationVerified: school.locationVerified || false,
               city: school.city || 'Бишкек'
             };

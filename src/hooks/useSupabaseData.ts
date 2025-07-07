@@ -93,7 +93,8 @@ export const useSchools = () => {
         .select(`
           *,
           profiles (*)
-        `);
+        `)
+        .eq('is_published', true); // Only show published schools
 
       if (error) throw error;
       return data as School[];

@@ -23,15 +23,40 @@ const UserTypeSelectionPage: React.FC = () => {
     }
 
     try {
-      // Update user profile with selected role
-      const { error: profileError } = await supabase
+      console.log('🎯 UserTypeSelectionPage - Starting role selection:', role);
+      
+      // First, check if profile exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .update({ role })
-        .eq('id', user.id);
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (existingProfile) {
+        // Update existing profile role
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ role })
+          .eq('id', user.id);
 
-      // Check if role-specific profile already exists to avoid duplicates
+        if (profileError) throw profileError;
+        console.log('✅ Updated existing profile role to:', role);
+      } else {
+        // Create new profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+            role: role
+          });
+
+        if (profileError) throw profileError;
+        console.log('✅ Created new profile with role:', role);
+      }
+
+      // Create role-specific profile only if it doesn't exist
       if (role === 'school') {
         const { data: existingSchool } = await supabase
           .from('school_profiles')
@@ -44,13 +69,18 @@ const UserTypeSelectionPage: React.FC = () => {
             .from('school_profiles')
             .insert({
               id: user.id,
-              school_name: user.user_metadata?.full_name || 'Новая школа',
-              photo_urls: null, // Explicitly no photos
+              school_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Новая школа',
+              photo_urls: null, // No default photos
               is_published: false // Unpublished by default
             });
           
           if (schoolError) throw schoolError;
+          console.log('✅ Created school profile');
         }
+        
+        // Store the confirmed user type and navigate
+        localStorage.setItem('confirmed_user_type', 'school');
+        sessionStorage.setItem('confirmed_user_type', 'school');
         navigate('/school-dashboard');
       } else {
         const { data: existingTeacher } = await supabase
@@ -68,7 +98,12 @@ const UserTypeSelectionPage: React.FC = () => {
             });
           
           if (teacherError) throw teacherError;
+          console.log('✅ Created teacher profile');
         }
+        
+        // Store the confirmed user type and navigate
+        localStorage.setItem('confirmed_user_type', 'teacher');
+        sessionStorage.setItem('confirmed_user_type', 'teacher');
         navigate('/teacher-dashboard');
       }
 
@@ -78,7 +113,7 @@ const UserTypeSelectionPage: React.FC = () => {
       });
 
     } catch (error: any) {
-      console.error('Role selection error:', error);
+      console.error('❌ Role selection error:', error);
       toast({
         title: "Ошибка",
         description: error.message || "Не удалось установить роль",

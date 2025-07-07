@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, MessageSquare, Star, Home } from 'lucide-react';
+import { MapPin, MessageSquare, Star, Home, Settings } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface DisplaySchool {
   id: string | number;
@@ -19,10 +20,15 @@ interface DisplaySchool {
 
 interface SchoolHeaderProps {
   school: DisplaySchool;
+  isOwner?: boolean;
 }
 
-const SchoolHeader: React.FC<SchoolHeaderProps> = ({ school }) => {
+const SchoolHeader: React.FC<SchoolHeaderProps> = ({ school, isOwner = false }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  
+  // Check if current user is the owner of this school profile
+  const isProfileOwner = isOwner || (user?.id === school.id);
 
   return (
     <Card>
@@ -55,10 +61,19 @@ const SchoolHeader: React.FC<SchoolHeaderProps> = ({ school }) => {
             </div>
           </div>
           <div className="flex gap-2 md:self-start">
-            <Button>
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {t('button.message')}
-            </Button>
+            {isProfileOwner ? (
+              <Button asChild>
+                <Link to="/school-dashboard">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Настройки
+                </Link>
+              </Button>
+            ) : (
+              <Button>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                {t('button.message')}
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
