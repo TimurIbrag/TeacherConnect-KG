@@ -53,6 +53,7 @@ export const useTeachers = () => {
           *,
           profiles (*)
         `)
+        .eq('is_published', true)  // Only show published teachers
         .eq('available', true);
 
       if (error) throw error;
@@ -135,12 +136,13 @@ export const useVacancies = () => {
         .from('vacancies')
         .select(`
           *,
-          school_profiles (
+          school_profiles!inner (
             *,
             profiles (*)
           )
         `)
         .eq('is_active', true)
+        .eq('school_profiles.is_published', true)  // Only show vacancies from published schools
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -199,7 +201,7 @@ export const useActiveVacancies = (limit?: number) => {
         .from('vacancies')
         .select(`
           *,
-          school_profiles (
+          school_profiles!inner (
             school_name,
             address,
             profiles (
@@ -208,6 +210,7 @@ export const useActiveVacancies = (limit?: number) => {
           )
         `)
         .eq('is_active', true)
+        .eq('school_profiles.is_published', true)  // Only show vacancies from published schools
         .order('created_at', { ascending: false });
 
       if (limit) {
@@ -250,16 +253,35 @@ export const useTeacherVacancies = () => {
   return useQuery({
     queryKey: ['teacher-vacancies'],
     queryFn: async () => {
+      // First get published teacher IDs
+      const { data: publishedTeachers, error: teacherError } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('is_published', true);
+
+      if (teacherError) {
+        console.error('Error fetching published teachers:', teacherError);
+        throw teacherError;
+      }
+
+      const publishedTeacherIds = (publishedTeachers || []).map(t => t.id);
+
+      if (publishedTeacherIds.length === 0) {
+        return []; // No published teachers
+      }
+
+      // Then get vacancies from those teachers
       const { data, error } = await supabase
         .from('teacher_vacancies')
         .select(`
           *,
-          profiles!teacher_vacancies_teacher_id_fkey (
+          profiles (
             full_name,
             avatar_url
           )
         `)
         .eq('is_active', true)
+        .in('teacher_id', publishedTeacherIds)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -267,7 +289,7 @@ export const useTeacherVacancies = () => {
         throw error;
       }
       
-      return (data || []) as TeacherVacancy[];
+      return (data || []) as any[];
     },
   });
 };
@@ -363,7 +385,7 @@ export const usePublicVacancies = (limit?: number) => {
         .from('vacancies')
         .select(`
           *,
-          school_profiles (
+          school_profiles!inner (
             school_name,
             address,
             profiles (
@@ -372,6 +394,7 @@ export const usePublicVacancies = (limit?: number) => {
           )
         `)
         .eq('is_active', true)
+        .eq('school_profiles.is_published', true)  // Only show vacancies from published schools
         .order('created_at', { ascending: false });
 
       if (limit) {

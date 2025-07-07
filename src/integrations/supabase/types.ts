@@ -393,6 +393,7 @@ export type Database = {
           education: string | null
           experience_years: number | null
           id: string
+          is_published: boolean | null
           languages: string[] | null
           location: string | null
           skills: string[] | null
@@ -409,6 +410,7 @@ export type Database = {
           education?: string | null
           experience_years?: number | null
           id: string
+          is_published?: boolean | null
           languages?: string[] | null
           location?: string | null
           skills?: string[] | null
@@ -425,6 +427,7 @@ export type Database = {
           education?: string | null
           experience_years?: number | null
           id?: string
+          is_published?: boolean | null
           languages?: string[] | null
           location?: string | null
           skills?: string[] | null

@@ -28,8 +28,14 @@ const SchoolsPage: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('vacancies')
-        .select('school_id')
-        .eq('is_active', true);
+        .select(`
+          school_id,
+          school_profiles!inner (
+            is_published
+          )
+        `)
+        .eq('is_active', true)
+        .eq('school_profiles.is_published', true);  // Only count vacancies from published schools
 
       if (error) {
         console.error('Error fetching vacancies:', error);

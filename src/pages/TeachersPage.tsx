@@ -65,12 +65,9 @@ const TeachersPage = () => {
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
-  const [publishedTeachers, setPublishedTeachers] = useState<any[]>([]);
-
-  // Load published teachers on component mount and poll for changes
+  
+  // Clean up old localStorage data - no longer used
   useEffect(() => {
-    // DISABLED - No longer loading any localStorage data for teachers
-    // Force clear any existing localStorage data that might contain false profiles
     const keysToRemove = [
       'teacherProfileData',
       'teacherProfilePublished', 
@@ -80,13 +77,10 @@ const TeachersPage = () => {
     keysToRemove.forEach(key => {
       localStorage.removeItem(key);
     });
-    
-    setPublishedTeachers([]);
   }, []);
 
-  // Combine Supabase teachers with published local teachers
-  const supabaseTeachers = teachers || [];
-  const allTeachers = [...supabaseTeachers, ...publishedTeachers];
+  // All teachers now come from Supabase only (published teachers)
+  const allTeachers = teachers || [];
 
   console.log('All teachers:', allTeachers);
 
@@ -172,7 +166,7 @@ const TeachersPage = () => {
       .toUpperCase();
   };
 
-  if (isLoading && publishedTeachers.length === 0) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
@@ -313,7 +307,6 @@ const TeachersPage = () => {
                 location: teacher.location || 'Местоположение не указано',
                 ratings: 4.5, // Mock value
                 views: 0, // Mock value
-                source: teacher.source || 'supabase'
               };
               
               return (

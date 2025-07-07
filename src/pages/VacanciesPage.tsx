@@ -60,7 +60,7 @@ const VacanciesPage = () => {
         .from('vacancies')
         .select(`
           *,
-          school_profiles (
+          school_profiles!inner (
             school_name,
             address,
             photo_urls,
@@ -70,6 +70,7 @@ const VacanciesPage = () => {
           )
         `)
         .eq('is_active', true)
+        .eq('school_profiles.is_published', true)  // Only show vacancies from published schools
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -81,10 +82,27 @@ const VacanciesPage = () => {
     },
   });
 
-  // Get teacher services/vacancies
   const { data: teacherVacancies = [], isLoading: isLoadingTeacherVacancies } = useQuery({
     queryKey: ['teacher-services-public'],
     queryFn: async () => {
+      // First get published teacher IDs
+      const { data: publishedTeachers, error: teacherError } = await supabase
+        .from('teacher_profiles')
+        .select('id')
+        .eq('is_published', true);
+
+      if (teacherError) {
+        console.error('Error fetching published teachers:', teacherError);
+        return [];
+      }
+
+      const publishedTeacherIds = (publishedTeachers || []).map(t => t.id);
+
+      if (publishedTeacherIds.length === 0) {
+        return []; // No published teachers
+      }
+
+      // Then get services from published teachers
       const { data, error } = await supabase
         .from('teacher_vacancies')
         .select(`
@@ -95,6 +113,7 @@ const VacanciesPage = () => {
           )
         `)
         .eq('is_active', true)
+        .in('teacher_id', publishedTeacherIds)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -106,52 +125,8 @@ const VacanciesPage = () => {
     },
   });
 
-  // Get published schools and their vacancies from localStorage
-  const getPublishedSchoolVacancies = () => {
-    try {
-      const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-      console.log('DEBUG: Published schools for vacancies:', publishedSchools);
-      
-      const vacancies: ExtendedVacancy[] = [];
-      
-      publishedSchools.forEach((school: any) => {
-        if (school.openPositions && school.openPositions.length > 0) {
-          school.openPositions.forEach((position: any, index: number) => {
-            vacancies.push({
-              id: `published-${school.id}-${index}`,
-              title: position.title || position.subject || 'Учитель',
-              description: position.description || position.additionalInfo || '',
-              employment_type: position.schedule || 'full-time',
-              location: school.address || 'Не указано',
-              salary_min: undefined,
-              salary_max: undefined,
-              salary_currency: 'som',
-              created_at: new Date().toISOString(),
-              is_active: true,
-              school_id: school.id,
-              school_profiles: {
-                school_name: school.name,
-                address: school.address,
-                photo_urls: school.photos || [school.photo?.value || school.photo],
-                profiles: {
-                  full_name: school.name
-                }
-              }
-            });
-          });
-        }
-      });
-      
-      return vacancies;
-    } catch (error) {
-      console.error('Error loading published school vacancies:', error);
-      return [];
-    }
-  };
-
-  // Combine all vacancy sources
-  const publishedVacancies = getPublishedSchoolVacancies();
-  const allVacancies = [...supabaseVacancies, ...publishedVacancies];
+  // No more localStorage functionality - all data comes from published profiles only
+  const allVacancies = [...supabaseVacancies]; // Only Supabase vacancies from published schools
   
   // Convert teacher services to vacation format for display
   const teacherServicesAsVacancies: ExtendedVacancy[] = teacherVacancies.map((service: any) => ({

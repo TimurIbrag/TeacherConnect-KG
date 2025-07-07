@@ -32,11 +32,12 @@ const TeacherDashboardPage = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [pendingDraftChanges, setPendingDraftChanges] = useState<Partial<ProfileData>>({});
 
-  // Load published status from localStorage on mount
+  // Load published status from database on mount
   useEffect(() => {
-    const publishedStatus = localStorage.getItem('teacherProfilePublished');
-    setIsPublished(publishedStatus === 'true');
-  }, []);
+    if (teacherProfile) {
+      setIsPublished(teacherProfile.is_published || false);
+    }
+  }, [teacherProfile]);
 
   // Auto-save every 30 seconds if there are pending changes
   useEffect(() => {
@@ -125,23 +126,7 @@ const TeacherDashboardPage = () => {
         bio: data.bio
       });
 
-      // Save profile data to localStorage for published profiles
-      if (isPublished) {
-        const profileForPublish = {
-          fullName: data.name,
-          specialization: data.specialization,
-          education: data.education,
-          experience: data.experience,
-          location: data.location,
-          locationDetails: data.locationDetails, // Keep this for localStorage only
-          bio: data.bio,
-          schedule: data.schedule,
-          photoUrl: data.photoUrl,
-          skills: teacherProfile?.skills || [],
-          languages: teacherProfile?.languages || []
-        };
-        localStorage.setItem('teacherProfileData', JSON.stringify(profileForPublish));
-      }
+      // No need to save to localStorage anymore - data is in database
 
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
@@ -163,35 +148,31 @@ const TeacherDashboardPage = () => {
   };
 
   // Handle publish/unpublish toggle
-  const handlePublishToggle = (checked: boolean) => {
-    setIsPublished(checked);
-    localStorage.setItem('teacherProfilePublished', checked.toString());
-
-    if (checked) {
-      // Save current profile data for publishing
-      const profileForPublish = {
-        fullName: profile?.full_name || '',
-        specialization: teacherProfile?.specialization || '',
-        education: teacherProfile?.education || '',
-        experience: teacherProfile?.experience_years?.toString() || '',
-        location: teacherProfile?.location || '',
-        bio: teacherProfile?.bio || '',
-        schedule: 'full-time',
-        photoUrl: profile?.avatar_url || '',
-        skills: teacherProfile?.skills || [],
-        languages: teacherProfile?.languages || []
-      };
-      localStorage.setItem('teacherProfileData', JSON.stringify(profileForPublish));
-      
-      toast({
-        title: 'Профиль опубликован',
-        description: 'Ваш профиль теперь виден на странице преподавателей',
+  const handlePublishToggle = async (checked: boolean) => {
+    try {
+      // Update the database
+      await updateTeacherProfile({
+        is_published: checked
       });
-    } else {
-      localStorage.removeItem('teacherProfileData');
+
+      setIsPublished(checked);
+      
+      if (checked) {
+        toast({
+          title: 'Профиль опубликован',
+          description: 'Ваш профиль теперь виден на странице преподавателей',
+        });
+      } else {
+        toast({
+          title: 'Профиль скрыт',
+          description: 'Ваш профиль больше не отображается публично',
+        });
+      }
+    } catch (error) {
       toast({
-        title: 'Профиль скрыт',
-        description: 'Ваш профиль больше не отображается публично',
+        title: 'Ошибка',
+        description: 'Не удалось изменить видимость профиля',
+        variant: 'destructive',
       });
     }
   };
