@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Images, Upload, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { validateImageFile, readFileAsDataURL } from '@/utils/imageUtils';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -24,22 +26,80 @@ interface SchoolPhoto {
 
 const SchoolPhotoGallery = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [photos, setPhotos] = useState<SchoolPhoto[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<SchoolPhoto | null>(null);
 
-  // Load photos from localStorage on component mount
+  // Load photos from Supabase and localStorage on component mount
   useEffect(() => {
+    loadPhotos();
+  }, [user]);
+
+  const loadPhotos = async () => {
+    if (!user) return;
+
+    try {
+      // First try to load from Supabase
+      const { data: schoolProfile, error } = await supabase
+        .from('school_profiles')
+        .select('photo_urls')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && schoolProfile?.photo_urls) {
+        const supabasePhotos: SchoolPhoto[] = schoolProfile.photo_urls.map((url, index) => ({
+          id: `supabase-${index}`,
+          url,
+          name: `Photo ${index + 1}`,
+          uploadedAt: new Date().toISOString(),
+        }));
+        setPhotos(supabasePhotos);
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading photos from Supabase:', error);
+    }
+
+    // Fallback to localStorage
     const savedPhotos = localStorage.getItem('schoolPhotos');
     if (savedPhotos) {
       setPhotos(JSON.parse(savedPhotos));
     }
-  }, []);
+  };
 
-  // Save photos to localStorage whenever photos change
-  const savePhotos = (newPhotos: SchoolPhoto[]) => {
+  // Save photos to both Supabase and localStorage
+  const savePhotos = async (newPhotos: SchoolPhoto[]) => {
     setPhotos(newPhotos);
     localStorage.setItem('schoolPhotos', JSON.stringify(newPhotos));
+
+    if (user) {
+      try {
+        const photoUrls = newPhotos.map(photo => photo.url);
+        
+        // Get existing school profile to preserve other fields
+        const { data: existingProfile } = await supabase
+          .from('school_profiles')
+          .select('school_name')
+          .eq('id', user.id)
+          .single();
+
+        await supabase
+          .from('school_profiles')
+          .upsert({
+            id: user.id,
+            school_name: existingProfile?.school_name || '',
+            photo_urls: photoUrls
+          });
+      } catch (error) {
+        console.error('Error saving photos to Supabase:', error);
+        toast({
+          title: "Ошибка сохранения",
+          description: "Не удалось сохранить фотографии в базе данных",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +161,7 @@ const SchoolPhotoGallery = () => {
 
       if (newPhotos.length > 0) {
         const updatedPhotos = [...photos, ...newPhotos];
-        savePhotos(updatedPhotos);
+        await savePhotos(updatedPhotos);
         toast({
           title: "Фотографии загружены",
           description: `Успешно загружено ${newPhotos.length} фотографий`,
@@ -114,9 +174,9 @@ const SchoolPhotoGallery = () => {
     }
   };
 
-  const handleDeletePhoto = (photoId: string) => {
+  const handleDeletePhoto = async (photoId: string) => {
     const updatedPhotos = photos.filter(photo => photo.id !== photoId);
-    savePhotos(updatedPhotos);
+    await savePhotos(updatedPhotos);
     toast({
       title: "Фотография удалена",
       description: "Фотография была удалена из галереи",
