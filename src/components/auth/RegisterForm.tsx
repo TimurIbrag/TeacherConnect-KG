@@ -72,6 +72,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
         description: "Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте почту и кликните по ссылке для завершения регистрации.",
       });
       
+      // Navigate to login page after successful registration
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
