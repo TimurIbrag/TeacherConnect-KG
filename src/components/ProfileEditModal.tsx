@@ -82,21 +82,26 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setFormData(initialData);
   }, [initialData]);
 
+  // Debounced autosave - only save after user stops typing for 2 seconds
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (onDraftSave && formData !== initialData) {
+        onDraftSave(formData);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, onDraftSave, initialData]);
+
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     const updatedData = { ...formData, [field]: value };
     setFormData(updatedData);
-    
-    // Auto-save draft if function is provided
-    if (onDraftSave) {
-      onDraftSave({ [field]: value });
-    }
+    // Removed immediate autosave - now handled by debounced effect above
   };
 
   const handleAdditionalSpecializationChange = (value: string) => {
     setAdditionalSpecialization(value);
-    if (onDraftSave) {
-      onDraftSave({ additionalSpecialization: value });
-    }
+    // Removed immediate autosave - now handled by debounced effect above
   };
 
   const handleSave = async () => {
