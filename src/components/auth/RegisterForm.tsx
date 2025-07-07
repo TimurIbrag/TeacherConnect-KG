@@ -21,6 +21,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
     if (confirmPassword && password !== confirmPassword) {
@@ -42,21 +43,29 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
+      console.log('📧 Starting email registration process...');
       const redirectUrl = `${window.location.origin}/user-type-selection`;
       
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.toLowerCase().trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: name,
+            full_name: name.trim(),
           }
         }
       });
       
-      if (error) throw error;
+      console.log('📧 Registration response:', { data, error });
+      
+      if (error) {
+        console.error('Registration error details:', error);
+        throw error;
+      }
       
       toast({
         title: "Регистрация успешна!",
@@ -70,6 +79,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
         description: error.message || "Не удалось создать аккаунт. Попробуйте позже.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -128,9 +139,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isLoading || !!passwordError}
+        disabled={isLoading || isSubmitting || !!passwordError}
       >
-        {isLoading ? 'Регистрация...' : t('auth.register.submit')}
+        {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}
       </Button>
     </form>
   );

@@ -127,6 +127,7 @@ const translations = {
     'auth.school': 'Школа',
     'auth.email': 'Email',
     'auth.submit': 'Войти',
+    'auth.register.submit': 'Зарегистрироваться',
     
     // Dashboard
     'dashboard.profile': 'Профиль',
