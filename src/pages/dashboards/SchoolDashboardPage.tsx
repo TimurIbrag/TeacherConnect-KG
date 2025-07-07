@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ProfileTabWithSupabase from '@/components/school-dashboard/ProfileTabWithSupabase';
+import ProfileTab from '@/components/school-dashboard/ProfileTab';
 import VacanciesTab from '@/components/school-dashboard/VacanciesTab';
 import ApplicationsTab from '@/components/school-dashboard/ApplicationsTab';
 import TeachersTab from '@/components/school-dashboard/TeachersTab';
@@ -35,7 +35,7 @@ const SchoolDashboardPage: React.FC = () => {
         </TabsList>
         
         <TabsContent value="profile">
-          <ProfileTabWithSupabase onNavigateToVacancies={handleNavigateToVacancies} />
+          <ProfileTab onNavigateToVacancies={handleNavigateToVacancies} />
         </TabsContent>
         
         <TabsContent value="vacancies">
