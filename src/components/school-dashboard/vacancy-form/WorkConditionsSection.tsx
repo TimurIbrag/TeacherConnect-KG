@@ -119,9 +119,8 @@ const WorkConditionsSection: React.FC<WorkConditionsSectionProps> = ({ form }) =
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="rub">₽ (Рубль)</SelectItem>
+                    <SelectItem value="rub">с (Сом)</SelectItem>
                     <SelectItem value="usd">$ (Доллар)</SelectItem>
-                    <SelectItem value="eur">€ (Евро)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

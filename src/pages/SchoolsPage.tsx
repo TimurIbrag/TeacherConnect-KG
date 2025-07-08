@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, MapPin, Filter, Building, Home } from 'lucide-react';
+import { Search, MapPin, Filter, Building, Home, BookOpen } from 'lucide-react';
 import SchoolCard from '@/components/SchoolCard';
 import SchoolSkeletonLoader from '@/components/SchoolSkeletonLoader';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +20,7 @@ const SchoolsPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedHousing, setSelectedHousing] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
   const [publishedSchools, setPublishedSchools] = useState<any[]>([]);
 
   // Get all vacancies to count them per school
@@ -30,6 +31,7 @@ const SchoolsPage: React.FC = () => {
         .from('vacancies')
         .select(`
           school_id,
+          subject,
           school_profiles!inner (
             is_published
           )
@@ -129,6 +131,39 @@ const SchoolsPage: React.FC = () => {
     'Шопоков'
   ];
 
+  const subjects = [
+    'Русский язык',
+    'Русская литература',
+    'Кыргызский язык',
+    'Кыргызская литература',
+    'Английский язык',
+    'Немецкий язык',
+    'Турецкий язык',
+    'Китайский язык',
+    'Математика',
+    'Алгебра и геометрия',
+    'Физика',
+    'Химия',
+    'Биология',
+    'География',
+    'История',
+    'Обществознание',
+    'Информатика',
+    'Физическая культура',
+    'Изобразительное искусство',
+    'Музыка',
+    'Технология',
+    'ОБЖ'
+  ];
+
+  // Get vacancy subjects for this school
+  const getSchoolVacancySubjects = (schoolId: string) => {
+    return allVacancies
+      .filter(v => v.school_id === schoolId)
+      .map(v => v.subject)
+      .filter(Boolean);
+  };
+
   const filteredSchools = allSchools.filter(school => {
     const matchesSearch = school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          school.address.toLowerCase().includes(searchTerm.toLowerCase());
@@ -139,7 +174,13 @@ const SchoolsPage: React.FC = () => {
       (selectedHousing === 'true' && school.housing) || 
       (selectedHousing === 'false' && !school.housing);
     
-    return matchesSearch && matchesDistrict && matchesType && matchesCity && matchesHousing;
+    // Filter by subject - check if school has vacancies with the selected subject
+    const matchesSubject = !selectedSubject || 
+      getSchoolVacancySubjects(school.id).some(subject => 
+        subject && subject.toLowerCase().includes(selectedSubject.toLowerCase())
+      );
+    
+    return matchesSearch && matchesDistrict && matchesType && matchesCity && matchesHousing && matchesSubject;
   });
 
   if (isLoading) {
@@ -235,10 +276,25 @@ const SchoolsPage: React.FC = () => {
             <SelectItem value="false">Без жилья</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+          <SelectTrigger className="w-full md:w-48">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <SelectValue placeholder="Предметы" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Все предметы</SelectItem>
+            {subjects.map(subject => (
+              <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Active Filters */}
-      {(selectedDistrict || selectedType || selectedCity || selectedHousing) && (
+      {(selectedDistrict || selectedType || selectedCity || selectedHousing || selectedSubject) && (
         <div className="flex flex-wrap gap-2 mb-6">
           {selectedCity && (
             <Badge variant="secondary" className="gap-1">
@@ -268,6 +324,14 @@ const SchoolsPage: React.FC = () => {
             <Badge variant="secondary" className="gap-1">
               {selectedHousing === 'true' ? 'С жильем' : 'Без жилья'}
               <button onClick={() => setSelectedHousing('')} className="ml-1 hover:text-destructive">
+                ×
+              </button>
+            </Badge>
+          )}
+          {selectedSubject && (
+            <Badge variant="secondary" className="gap-1">
+              {selectedSubject}
+              <button onClick={() => setSelectedSubject('')} className="ml-1 hover:text-destructive">
                 ×
               </button>
             </Badge>
@@ -315,6 +379,7 @@ const SchoolsPage: React.FC = () => {
               setSelectedType('');
               setSelectedCity('');
               setSelectedHousing('');
+              setSelectedSubject('');
             }}
           >
             Сбросить фильтры

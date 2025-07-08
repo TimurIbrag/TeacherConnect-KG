@@ -37,9 +37,9 @@ const HomePage = () => {
   const limitedSchools = featuredSchools?.slice(0, 3) || [];
   const formatSalary = (min?: number, max?: number) => {
     if (!min && !max) return 'По договоренности';
-    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ₽`;
-    if (min) return `от ${min.toLocaleString()} ₽`;
-    if (max) return `до ${max.toLocaleString()} ₽`;
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} с`;
+    if (min) return `от ${min.toLocaleString()} с`;
+    if (max) return `до ${max.toLocaleString()} с`;
     return 'Не указана';
   };
   const handleAddVacancy = () => {
@@ -246,8 +246,18 @@ const HomePage = () => {
                 </Card>)}
             </div> : <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               {limitedSchools.map(school => <Card key={school.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white text-4xl font-bold">
-                    {school.school_name?.charAt(0) || 'S'}
+                  <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                    {school.photo_urls && school.photo_urls[0] ? (
+                      <img 
+                        src={school.photo_urls[0]} 
+                        alt={school.school_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-white text-4xl font-bold">
+                        {school.school_name?.charAt(0) || 'S'}
+                      </div>
+                    )}
                   </div>
                   <CardHeader>
                     <CardTitle className="text-lg">{school.school_name}</CardTitle>

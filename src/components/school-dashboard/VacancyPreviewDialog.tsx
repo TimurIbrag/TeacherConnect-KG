@@ -40,11 +40,10 @@ const VacancyPreviewDialog: React.FC<VacancyPreviewDialogProps> = ({
 
   const getCurrencySymbol = (currency: string) => {
     const symbols = {
-      rub: '₽',
-      usd: '$',
-      eur: '€'
+      rub: 'с',
+      usd: '$'
     };
-    return symbols[currency as keyof typeof symbols] || '₽';
+    return symbols[currency as keyof typeof symbols] || 'с';
   };
 
   const formatSalary = () => {

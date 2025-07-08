@@ -101,7 +101,7 @@ export const vacancySchema = z.object({
   salary_max: z.number()
     .min(0, 'Максимальная зарплата не может быть отрицательной')
     .optional(),
-  salary_currency: z.enum(['rub', 'usd', 'eur']).default('rub'),
+  salary_currency: z.enum(['rub', 'usd']).default('rub'),
   description: z.string()
     .min(50, 'Описание должно содержать минимум 50 символов')
     .max(2000, 'Описание слишком длинное'),

@@ -81,8 +81,8 @@ const SchoolProfileDetailPage: React.FC = () => {
 
   const formatSalary = (vacancy: ExtendedVacancy) => {
     const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
-    const symbols = { rub: '₽', usd: '$', eur: '€' };
-    const symbol = symbols[salary_currency as keyof typeof symbols] || '₽';
+    const symbols = { rub: 'с', usd: '$' };
+    const symbol = symbols[salary_currency as keyof typeof symbols] || 'с';
     
     if (!salary_min && !salary_max) return 'По договоренности';
     if (salary_min && salary_max) return `${salary_min.toLocaleString()} - ${salary_max.toLocaleString()} ${symbol}`;
