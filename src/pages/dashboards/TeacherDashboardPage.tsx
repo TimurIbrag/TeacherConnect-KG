@@ -39,13 +39,15 @@ const TeacherDashboardPage = () => {
     }
   }, [teacherProfile]);
 
-  // Auto-save every 30 seconds if there are pending changes
+  // Auto-save every 30 seconds if there are pending changes - disabled to prevent conflicts
   useEffect(() => {
     const autoSaveInterval = setInterval(() => {
       if (Object.keys(pendingDraftChanges).length > 0 && hasUnsavedChanges) {
+        // Only save to localStorage, not to database to prevent conflicts
         saveDraftToLocalStorage(pendingDraftChanges);
         setPendingDraftChanges({}); // Clear pending changes after saving
         setLastSaved(new Date());
+        setHasUnsavedChanges(false); // Mark as saved
       }
     }, 30000); // 30 seconds
 
@@ -192,10 +194,13 @@ const TeacherDashboardPage = () => {
     }
   };
 
-  // Updated draft save handler that accumulates changes instead of immediate saving
+  // Updated draft save handler that only saves to localStorage
   const handleDraftSave = (data: Partial<ProfileData>) => {
+    // Save immediately to localStorage to prevent data loss
+    saveDraftToLocalStorage(data);
     setPendingDraftChanges(prev => ({ ...prev, ...data }));
     setHasUnsavedChanges(true);
+    setLastSaved(new Date());
   };
 
   // Load draft from localStorage
@@ -528,7 +533,7 @@ const TeacherDashboardPage = () => {
                   variant="ghost" 
                   className="w-full justify-start text-left p-2" 
                   size="sm"
-                  onClick={() => setActiveTab('messages')}
+                  onClick={handleMessages}
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
                   <div className="flex justify-between items-center w-full">
@@ -544,7 +549,7 @@ const TeacherDashboardPage = () => {
                   variant="ghost" 
                   className="w-full justify-start text-left p-2" 
                   size="sm"
-                  onClick={() => setActiveTab('saved')}
+                  onClick={() => navigate('/saved')}
                 >
                   <Bookmark className="mr-2 h-4 w-4" />
                   Сохраненные
