@@ -3,11 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Star, Eye, Briefcase, Globe, Home, CheckCircle, Building, Clock } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Eye, Briefcase, Globe, Home, CheckCircle, Building, Clock, MessageSquare, Send } from 'lucide-react';
 import { schoolsData } from '@/data/mockData';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
+import { useToast } from '@/hooks/use-toast';
+import SchoolPhotoGallery from '@/components/school-profile/SchoolPhotoGallery';
 
 // Extended vacancy type with new fields
 type ExtendedVacancy = {
@@ -32,6 +36,9 @@ const SchoolProfileDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [school, setSchool] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { user, profile } = useAuth();
+  const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
+  const { toast } = useToast();
 
   // Add query for school's active vacancies - handle both UUID and numeric IDs
   const { data: schoolVacancies = [] } = useQuery({
@@ -89,6 +96,90 @@ const SchoolProfileDetailPage: React.FC = () => {
     if (salary_min) return `от ${salary_min.toLocaleString()} ${symbol}`;
     if (salary_max) return `до ${salary_max.toLocaleString()} ${symbol}`;
     return 'Не указана';
+  };
+
+  // Increment view count when page loads
+  useEffect(() => {
+    if (id && school) {
+      const incrementViews = async () => {
+        try {
+          const profileType = id.includes('-') ? 'school' : 'school';
+          await supabase.rpc('increment_profile_views', {
+            profile_id_param: id,
+            profile_type_param: profileType,
+            viewer_id_param: user?.id || null,
+            ip_address_param: null,
+            user_agent_param: navigator.userAgent
+          });
+        } catch (error) {
+          console.error('Error incrementing view count:', error);
+        }
+      };
+      incrementViews();
+    }
+  }, [id, school, user?.id]);
+
+  // Handle chat functionality
+  const handleSendMessage = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему для отправки сообщений",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!profile || profile.role !== 'teacher') {
+      toast({
+        title: "Доступ ограничен",
+        description: "Только учителя могут связаться со школами",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const chatRoomId = await createChatRoom(school.id);
+      toast({
+        title: "Чат создан",
+        description: "Переходим к общению со школой",
+      });
+      navigate(`/messages/${chatRoomId}`);
+    } catch (error: any) {
+      console.error('Failed to start chat:', error);
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось создать чат",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle application functionality
+  const handleApplyToSchool = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Требуется авторизация",
+        description: "Войдите в систему для подачи заявки",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!profile || profile.role !== 'teacher') {
+      toast({
+        title: "Доступ ограничен",
+        description: "Только учителя могут подавать заявки",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For now, redirect to vacancies page with school filter
+    navigate(`/vacancies?school=${school.id}`);
   };
 
   useEffect(() => {
@@ -415,26 +506,10 @@ const SchoolProfileDetailPage: React.FC = () => {
 
           {/* Photo Gallery */}
           {school.photos && school.photos.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Фотогалерея школы</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {school.photos.map((photo: string, index: number) => (
-                    <div key={index} className="relative aspect-video overflow-hidden rounded-lg border">
-                      {/* School gallery photos - Always visible to all users including guests */}
-                      <img 
-                        src={photo} 
-                        alt={`${school.name} - фото ${index + 1}`}
-                        className="h-full w-full object-cover hover:scale-105 transition-transform duration-200 cursor-pointer"
-                        onClick={() => window.open(photo, '_blank')}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <SchoolPhotoGallery 
+              photos={school.photos} 
+              schoolName={school.name} 
+            />
           )}
 
           {/* Facilities */}
@@ -493,10 +568,12 @@ const SchoolProfileDetailPage: React.FC = () => {
               <CardTitle>Связаться со школой</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleSendMessage}>
+                <MessageSquare className="h-4 w-4 mr-2" />
                 Отправить сообщение
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={handleApplyToSchool}>
+                <Send className="h-4 w-4 mr-2" />
                 Подать заявку
               </Button>
             </CardContent>
@@ -508,10 +585,10 @@ const SchoolProfileDetailPage: React.FC = () => {
               <CardTitle>Статистика</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Просмотры:</span>
-                <span className="text-sm font-medium">{school.views}</span>
-              </div>
+               <div className="flex justify-between">
+                 <span className="text-sm text-muted-foreground">Просмотры:</span>
+                 <span className="text-sm font-medium">{school.view_count || school.views || 0}</span>
+               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Активные вакансии:</span>
                 <span className="text-sm font-medium">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>

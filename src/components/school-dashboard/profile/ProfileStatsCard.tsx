@@ -20,7 +20,7 @@ const ProfileStatsCard: React.FC<ProfileStatsCardProps> = ({ stats }) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Просмотры профиля:</span>
+          <span className="text-muted-foreground">Просмотры:</span>
           <div className="flex items-center">
             <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
             <span className="font-medium">{stats.profileViews}</span>

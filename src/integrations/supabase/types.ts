@@ -278,6 +278,36 @@ export type Database = {
           },
         ]
       }
+      profile_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          profile_id: string
+          profile_type: string
+          user_agent: string | null
+          view_timestamp: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          profile_id: string
+          profile_type: string
+          user_agent?: string | null
+          view_timestamp?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          profile_id?: string
+          profile_type?: string
+          user_agent?: string | null
+          view_timestamp?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -331,6 +361,7 @@ export type Database = {
           verification_status:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count: number | null
           website_url: string | null
         }
         Insert: {
@@ -352,6 +383,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count?: number | null
           website_url?: string | null
         }
         Update: {
@@ -373,6 +405,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count?: number | null
           website_url?: string | null
         }
         Relationships: [
@@ -402,6 +435,7 @@ export type Database = {
           verification_status:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count: number | null
         }
         Insert: {
           available?: boolean | null
@@ -419,6 +453,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count?: number | null
         }
         Update: {
           available?: boolean | null
@@ -436,6 +471,7 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -611,6 +647,16 @@ export type Database = {
       get_user_role: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
+      }
+      increment_profile_views: {
+        Args: {
+          profile_id_param: string
+          profile_type_param: string
+          viewer_id_param?: string
+          ip_address_param?: unknown
+          user_agent_param?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

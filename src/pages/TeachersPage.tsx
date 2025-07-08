@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useTeacherVacancies } from '@/hooks/useTeacherVacancies';
@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Predefined subjects list
 const TEACHER_SUBJECTS = [
@@ -62,6 +63,21 @@ const TeachersPage = () => {
   const { data: teachers, isLoading: teachersLoading } = useTeachers();
   const { data: teacherVacancies, isLoading: vacanciesLoading } = useTeacherVacancies();
   
+  // Track view counts for teachers
+  const trackTeacherView = async (teacherId: string) => {
+    try {
+      await supabase.rpc('increment_profile_views', {
+        profile_id_param: teacherId,
+        profile_type_param: 'teacher',
+        viewer_id_param: user?.id || null,
+        ip_address_param: null,
+        user_agent_param: navigator.userAgent
+      });
+    } catch (error) {
+      console.error('Error tracking teacher view:', error);
+    }
+  };
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -85,36 +101,44 @@ const TeachersPage = () => {
 
   console.log('All teachers:', allTeachers);
 
-  // Filter teachers based on search criteria
-  const filteredTeachers = allTeachers?.filter(teacher => {
-    const matchesSearch = !searchTerm || 
-      teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Optimize filtering with useMemo
+  const filteredTeachers = useMemo(() => {
+    if (!allTeachers) return [];
     
-    const matchesSubject = !subjectFilter || 
-      teacher.specialization?.includes(subjectFilter);
-    
-    const matchesLocation = !locationFilter || 
-      teacher.location?.includes(locationFilter);
+    return allTeachers.filter(teacher => {
+      const matchesSearch = !searchTerm || 
+        teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSubject = !subjectFilter || 
+        teacher.specialization?.includes(subjectFilter);
+      
+      const matchesLocation = !locationFilter || 
+        teacher.location?.includes(locationFilter);
 
-    return matchesSearch && matchesSubject && matchesLocation;
-  });
+      return matchesSearch && matchesSubject && matchesLocation;
+    });
+  }, [allTeachers, searchTerm, subjectFilter, locationFilter]);
 
-  // Filter teacher vacancies based on search criteria
-  const filteredVacancies = teacherVacancies?.filter(vacancy => {
-    const matchesSearch = !searchTerm || 
-      vacancy.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vacancy.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vacancy.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Optimize vacancy filtering with useMemo
+  const filteredVacancies = useMemo(() => {
+    if (!teacherVacancies) return [];
     
-    const matchesSubject = !subjectFilter || 
-      vacancy.subject?.includes(subjectFilter);
-    
-    const matchesLocation = !locationFilter || 
-      vacancy.location?.includes(locationFilter);
+    return teacherVacancies.filter(vacancy => {
+      const matchesSearch = !searchTerm || 
+        vacancy.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vacancy.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vacancy.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSubject = !subjectFilter || 
+        vacancy.subject?.includes(subjectFilter);
+      
+      const matchesLocation = !locationFilter || 
+        vacancy.location?.includes(locationFilter);
 
-    return matchesSearch && matchesSubject && matchesLocation;
-  });
+      return matchesSearch && matchesSubject && matchesLocation;
+    });
+  }, [teacherVacancies, searchTerm, subjectFilter, locationFilter]);
 
   const isLoading = teachersLoading || vacanciesLoading;
 
@@ -298,7 +322,7 @@ const TeachersPage = () => {
         filteredTeachers && filteredTeachers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTeachers.map((teacher) => {
-              // Properly map teacher data for TeacherCard component
+              // Properly map teacher data for TeacherCard component with actual view count
               const teacherData = {
                 id: teacher.id,
                 name: teacher.profiles?.full_name || 'Имя не указано',
@@ -307,14 +331,15 @@ const TeachersPage = () => {
                 experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
                 location: teacher.location || 'Местоположение не указано',
                 ratings: 4.5, // Mock value
-                views: 0, // Mock value
+                views: teacher.view_count || 0, // Use actual view count from database
               };
               
               return (
-                <TeacherCard 
-                  key={teacher.id}
-                  {...teacherData}
-                />
+                <div key={teacher.id} onClick={() => trackTeacherView(teacher.id)}>
+                  <TeacherCard 
+                    {...teacherData}
+                  />
+                </div>
               );
             })}
           </div>

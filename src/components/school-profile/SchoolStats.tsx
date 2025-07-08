@@ -21,7 +21,7 @@ const SchoolStats: React.FC<SchoolStatsProps> = ({ school, vacancyCount }) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Просмотры профиля:</span>
+          <span className="text-muted-foreground">Просмотры:</span>
           <div className="flex items-center">
             <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
             <span className="font-medium">{school.views}</span>
