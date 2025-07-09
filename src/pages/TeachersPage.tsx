@@ -83,7 +83,7 @@ const TeachersPage = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
   
-  // Clean up old localStorage data - no longer used
+  // Clean up old localStorage data on mount only (optimization)
   useEffect(() => {
     const keysToRemove = [
       'teacherProfileData',
@@ -92,29 +92,32 @@ const TeachersPage = () => {
     ];
     
     keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+      }
     });
-  }, []);
+  }, []); // Run only once on mount
 
   // All teachers now come from Supabase only (published teachers)
   const allTeachers = teachers || [];
-
-  console.log('All teachers:', allTeachers);
 
   // Optimize filtering with useMemo
   const filteredTeachers = useMemo(() => {
     if (!allTeachers) return [];
     
     return allTeachers.filter(teacher => {
+      const teacherName = teacher.profiles?.full_name || '';
+      const teacherSpec = teacher.specialization || '';
+      
       const matchesSearch = !searchTerm || 
-        teacher.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
+        teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacherSpec.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSubject = !subjectFilter || 
-        teacher.specialization?.includes(subjectFilter);
+        teacherSpec.toLowerCase().includes(subjectFilter.toLowerCase());
       
       const matchesLocation = !locationFilter || 
-        teacher.location?.includes(locationFilter);
+        teacher.location?.toLowerCase().includes(locationFilter.toLowerCase());
 
       return matchesSearch && matchesSubject && matchesLocation;
     });
@@ -200,7 +203,7 @@ const TeachersPage = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[1, 2, 3].map((i) => (
             <Card key={i}>
               <CardHeader>
                 <div className="flex items-center gap-4">
@@ -212,11 +215,7 @@ const TeachersPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-20 w-full mb-4" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                </div>
+                <Skeleton className="h-4 w-full" />
               </CardContent>
             </Card>
           ))}

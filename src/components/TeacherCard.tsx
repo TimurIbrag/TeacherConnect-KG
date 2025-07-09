@@ -43,6 +43,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
   const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
   
   const getInitials = (name: string) => {
+    if (!name || name === 'Имя не указано') return 'У';
     return name
       .split(' ')
       .map(n => n[0])
@@ -130,7 +131,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">{name}</h3>
+                  <h3 className="text-lg font-medium">{name && name !== 'Имя не указано' ? name : 'Учитель'}</h3>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <Badge variant="secondary">{specialization}</Badge>
                     <span className="text-sm text-muted-foreground">{experience}</span>
