@@ -152,13 +152,13 @@ const TeacherProfilePage: React.FC = () => {
   // Determine which teacher data to use
   const teacher = supabaseTeacher ? {
     id: supabaseTeacher.id,
-    name: supabaseTeacher.profiles?.full_name || 'Учитель',
+    name: supabaseTeacher.profiles?.full_name || 'Имя не указано',
     photo: supabaseTeacher.profiles?.avatar_url || null,
     specialization: supabaseTeacher.specialization || 'Специализация не указана',
     experience: `${supabaseTeacher.experience_years || 0} лет`,
     location: supabaseTeacher.location || 'Местоположение не указано',
     ratings: 5.0,
-    views: 0,
+    views: supabaseTeacher.view_count || 0,
     about: supabaseTeacher.bio || 'Информация о себе не указана',
     education: supabaseTeacher.education || 'Образование не указано',
     languages: supabaseTeacher.languages || ['Кыргызский', 'Русский'],
@@ -253,6 +253,7 @@ const TeacherProfilePage: React.FC = () => {
   };
   
   const getInitials = (name: string) => {
+    if (!name || name === 'Имя не указано') return 'У';
     return name
       .split(' ')
       .map(n => n[0])
@@ -274,7 +275,9 @@ const TeacherProfilePage: React.FC = () => {
                     <AvatarFallback>{getInitials(teacher.name)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-2xl">{teacher.name}</CardTitle>
+                    <CardTitle className="text-2xl">
+                      {teacher.name && teacher.name !== 'Имя не указано' ? teacher.name : 'Учитель'}
+                    </CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <BookOpen className="h-4 w-4" />
                       <span>{teacher.specialization}</span>

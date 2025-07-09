@@ -20,6 +20,7 @@ export interface ProfileData {
   bio: string;
   photoUrl: string;
   additionalSpecialization?: string;
+  languages?: Array<{language: string; level: string;}>;
 }
 
 interface ProfileEditModalProps {
@@ -65,6 +66,70 @@ const DISTRICTS = [
   'Свердловский район'
 ];
 
+const LANGUAGE_LEVELS = [
+  'Beginner',
+  'Pre-Intermediate', 
+  'Intermediate',
+  'Upper-Intermediate',
+  'Advanced',
+  'Native'
+];
+
+const POPULAR_LANGUAGES = [
+  { code: 'en', name: 'English', native: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷' },
+  { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇵🇹' },
+  { code: 'ru', name: 'Russian', native: 'Русский', flag: '🇷🇺' },
+  { code: 'zh', name: 'Chinese', native: '中文', flag: '🇨🇳' },
+  { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵' },
+  { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷' },
+  { code: 'ar', name: 'Arabic', native: 'العربية', flag: '🇸🇦' },
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'th', name: 'Thai', native: 'ไทย', flag: '🇹🇭' },
+  { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'tr', name: 'Turkish', native: 'Türkçe', flag: '🇹🇷' },
+  { code: 'pl', name: 'Polish', native: 'Polski', flag: '🇵🇱' },
+  { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱' },
+  { code: 'sv', name: 'Swedish', native: 'Svenska', flag: '🇸🇪' },
+  { code: 'da', name: 'Danish', native: 'Dansk', flag: '🇩🇰' },
+  { code: 'no', name: 'Norwegian', native: 'Norsk', flag: '🇳🇴' },
+  { code: 'fi', name: 'Finnish', native: 'Suomi', flag: '🇫🇮' },
+  { code: 'he', name: 'Hebrew', native: 'עברית', flag: '🇮🇱' },
+  { code: 'hu', name: 'Hungarian', native: 'Magyar', flag: '🇭🇺' },
+  { code: 'cs', name: 'Czech', native: 'Čeština', flag: '🇨🇿' },
+  { code: 'sk', name: 'Slovak', native: 'Slovenčina', flag: '🇸🇰' },
+  { code: 'ro', name: 'Romanian', native: 'Română', flag: '🇷🇴' },
+  { code: 'bg', name: 'Bulgarian', native: 'Български', flag: '🇧🇬' },
+  { code: 'hr', name: 'Croatian', native: 'Hrvatski', flag: '🇭🇷' },
+  { code: 'sr', name: 'Serbian', native: 'Српски', flag: '🇷🇸' },
+  { code: 'sl', name: 'Slovenian', native: 'Slovenščina', flag: '🇸🇮' },
+  { code: 'lv', name: 'Latvian', native: 'Latviešu', flag: '🇱🇻' },
+  { code: 'lt', name: 'Lithuanian', native: 'Lietuvių', flag: '🇱🇹' },
+  { code: 'et', name: 'Estonian', native: 'Eesti', flag: '🇪🇪' },
+  { code: 'mt', name: 'Maltese', native: 'Malti', flag: '🇲🇹' },
+  { code: 'ga', name: 'Irish', native: 'Gaeilge', flag: '🇮🇪' },
+  { code: 'cy', name: 'Welsh', native: 'Cymraeg', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+  { code: 'is', name: 'Icelandic', native: 'Íslenska', flag: '🇮🇸' },
+  { code: 'mk', name: 'Macedonian', native: 'Македонски', flag: '🇲🇰' },
+  { code: 'sq', name: 'Albanian', native: 'Shqip', flag: '🇦🇱' },
+  { code: 'el', name: 'Greek', native: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'be', name: 'Belarusian', native: 'Беларуская', flag: '🇧🇾' },
+  { code: 'uk', name: 'Ukrainian', native: 'Українська', flag: '🇺🇦' },
+  { code: 'kk', name: 'Kazakh', native: 'Қазақша', flag: '🇰🇿' },
+  { code: 'ky', name: 'Kyrgyz', native: 'Кыргызча', flag: '🇰🇬' },
+  { code: 'uz', name: 'Uzbek', native: 'Oʻzbekcha', flag: '🇺🇿' },
+  { code: 'fa', name: 'Persian/Farsi', native: 'فارسی', flag: '🇮🇷' },
+  { code: 'tg', name: 'Tajik', native: 'Тоҷикӣ', flag: '🇹🇯' },
+  { code: 'tm', name: 'Turkmen', native: 'Türkmençe', flag: '🇹🇲' },
+  { code: 'mn', name: 'Mongolian', native: 'Монгол', flag: '🇲🇳' },
+  { code: 'ka', name: 'Georgian', native: 'ქართული', flag: '🇬🇪' },
+  { code: 'hy', name: 'Armenian', native: 'Հայերեն', flag: '🇦🇲' },
+  { code: 'az', name: 'Azerbaijani', native: 'Azərbaycan', flag: '🇦🇿' }
+];
+
 const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   isOpen,
   onClose,
@@ -77,9 +142,15 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [formData, setFormData] = useState<ProfileData>(initialData);
   const [additionalSpecialization, setAdditionalSpecialization] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [customLanguage, setCustomLanguage] = useState('');
 
   useEffect(() => {
-    setFormData(initialData);
+    setFormData({
+      ...initialData,
+      languages: initialData.languages || []
+    });
   }, [initialData]);
 
   // Debounced autosave - only save after user stops typing for 2 seconds
@@ -156,6 +227,49 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     } else {
       handleInputChange('photoUrl', '');
     }
+  };
+
+  const addLanguage = () => {
+    const languageToAdd = customLanguage.trim() || selectedLanguage;
+    if (!languageToAdd || !selectedLevel) {
+      toast({
+        title: 'Ошибка',
+        description: 'Выберите язык и уровень',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const currentLanguages = formData.languages || [];
+    const languageExists = currentLanguages.some(lang => lang.language === languageToAdd);
+    
+    if (languageExists) {
+      toast({
+        title: 'Ошибка',
+        description: 'Этот язык уже добавлен',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const updatedLanguages = [...currentLanguages, { language: languageToAdd, level: selectedLevel }];
+    setFormData({ ...formData, languages: updatedLanguages });
+    setSelectedLanguage('');
+    setSelectedLevel('');
+    setCustomLanguage('');
+  };
+
+  const removeLanguage = (index: number) => {
+    const updatedLanguages = formData.languages?.filter((_, i) => i !== index) || [];
+    setFormData({ ...formData, languages: updatedLanguages });
+  };
+
+  const getLanguageDisplay = (languageName: string) => {
+    const foundLang = POPULAR_LANGUAGES.find(lang => lang.name === languageName || lang.native === languageName);
+    if (foundLang) {
+      return `${foundLang.flag} ${foundLang.native}`;
+    }
+    return languageName;
   };
 
   return (
@@ -311,6 +425,97 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               rows={4}
             />
           </div>
+
+          {/* Languages Section - Only for teachers */}
+          {userType === 'teacher' && (
+            <div className="space-y-4">
+              <Label>Языки</Label>
+              
+              {/* Current Languages */}
+              {formData.languages && formData.languages.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Добавленные языки:</div>
+                  <div className="space-y-2">
+                    {formData.languages.map((lang, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                        <span className="flex items-center gap-2">
+                          {getLanguageDisplay(lang.language)} ({lang.level})
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeLanguage(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Удалить
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Language Form */}
+              <div className="border rounded-lg p-4 space-y-3">
+                <div className="text-sm font-medium">Добавить язык</div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="language">Язык</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите язык" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {POPULAR_LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.name}>
+                            {lang.flag} {lang.native}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="level">Уровень</Label>
+                    <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите уровень" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGE_LEVELS.map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="customLanguage">Или введите другой язык</Label>
+                  <Input
+                    id="customLanguage"
+                    value={customLanguage}
+                    onChange={(e) => setCustomLanguage(e.target.value)}
+                    placeholder="Например: Киргизский"
+                    disabled={!!selectedLanguage}
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={addLanguage}
+                  disabled={(!selectedLanguage && !customLanguage.trim()) || !selectedLevel}
+                  className="w-full"
+                >
+                  Добавить язык
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Schedule */}
           <div className="space-y-2">
