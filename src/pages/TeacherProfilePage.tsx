@@ -161,7 +161,10 @@ const TeacherProfilePage: React.FC = () => {
     views: supabaseTeacher.view_count || 0,
     about: supabaseTeacher.bio || 'Информация о себе не указана',
     education: supabaseTeacher.education || 'Образование не указано',
-    languages: supabaseTeacher.languages || ['Кыргызский', 'Русский'],
+    languages: Array.isArray(supabaseTeacher.languages) ? supabaseTeacher.languages : 
+      (supabaseTeacher.languages ? (Array.isArray(supabaseTeacher.languages) ? 
+        supabaseTeacher.languages.map((l: any) => typeof l === 'object' ? `${l.language} (${l.level})` : l) : 
+        [supabaseTeacher.languages]) : ['Кыргызский', 'Русский']),
     achievements: 'Верифицированный преподаватель',
     preferredSchedule: 'Полный день',
     desiredSalary: '25,000 - 30,000 сом',

@@ -426,23 +426,23 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             />
           </div>
 
-          {/* Languages Section - Only for teachers */}
-          {userType === 'teacher' && (
-            <div className="space-y-4">
-              <Label>Языки</Label>
-              
-              {/* Current Languages */}
-              {formData.languages && formData.languages.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Добавленные языки:</div>
-                  <div className="space-y-2">
-                    {formData.languages.map((lang, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                        <span className="flex items-center gap-2">
-                          {getLanguageDisplay(lang.language)} ({lang.level})
-                        </span>
-                        <Button
-                          type="button"
+              {/* Languages Section - Only for teachers */}
+           {userType === 'teacher' && (
+             <div className="space-y-4">
+               <Label>Языки</Label>
+               
+               {/* Current Languages */}
+               {formData.languages && formData.languages.length > 0 && (
+                 <div className="space-y-2">
+                   <div className="text-sm font-medium">Добавленные языки:</div>
+                   <div className="space-y-2">
+                     {formData.languages.map((lang, index) => (
+                       <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                         <span className="flex items-center gap-2">
+                           {getLanguageDisplay(lang.language)} ({lang.level})
+                         </span>
+                         <Button
+                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => removeLanguage(index)}

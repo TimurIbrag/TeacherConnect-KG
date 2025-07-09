@@ -427,7 +427,7 @@ export type Database = {
           experience_years: number | null
           id: string
           is_published: boolean | null
-          languages: string[] | null
+          languages: Json | null
           location: string | null
           skills: string[] | null
           specialization: string | null
@@ -445,7 +445,7 @@ export type Database = {
           experience_years?: number | null
           id: string
           is_published?: boolean | null
-          languages?: string[] | null
+          languages?: Json | null
           location?: string | null
           skills?: string[] | null
           specialization?: string | null
@@ -463,7 +463,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           is_published?: boolean | null
-          languages?: string[] | null
+          languages?: Json | null
           location?: string | null
           skills?: string[] | null
           specialization?: string | null
