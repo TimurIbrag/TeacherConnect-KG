@@ -53,7 +53,7 @@ export const useTeacherVacancies = () => {
         .from('teacher_vacancies')
         .select(`
           *,
-          profiles (
+          profiles!fk_teacher_vacancies_teacher (
             full_name,
             avatar_url
           )
