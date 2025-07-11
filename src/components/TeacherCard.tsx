@@ -124,8 +124,8 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
           <div className="flex items-center gap-4">
             {/* Main Avatar - Always show image if available, then fallback */}
             <Avatar className="h-16 w-16">
-              <AvatarImage src={photo || undefined} alt={name} />
-              <AvatarFallback>{getInitials(name)}</AvatarFallback>
+              <AvatarImage src={photo && photo.trim() !== '' ? photo : undefined} alt={name && name.trim() !== '' ? name : 'Учитель'} />
+              <AvatarFallback>{getInitials(name && name.trim() !== '' ? name : 'Учитель')}</AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
@@ -150,8 +150,8 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
                 
                 {/* Top-right corner avatar - Always show image if available, then fallback */}
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={photo || undefined} alt={name} />
-                  <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                  <AvatarImage src={photo && photo.trim() !== '' ? photo : undefined} alt={name && name.trim() !== '' ? name : 'Учитель'} />
+                  <AvatarFallback>{getInitials(name && name.trim() !== '' ? name : 'Учитель')}</AvatarFallback>
                 </Avatar>
               </div>
             </div>

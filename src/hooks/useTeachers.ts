@@ -57,10 +57,10 @@ export const useTeacher = (id: string) => {
           profiles (*)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as Teacher;
+      return data as Teacher | null;
     },
     enabled: !!id,
   });

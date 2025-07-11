@@ -152,8 +152,12 @@ const TeacherProfilePage: React.FC = () => {
   // Determine which teacher data to use
   const teacher = supabaseTeacher ? {
     id: supabaseTeacher.id,
-    name: supabaseTeacher.profiles?.full_name || 'Имя не указано',
-    photo: supabaseTeacher.profiles?.avatar_url || null,
+    name: (supabaseTeacher.profiles?.full_name && supabaseTeacher.profiles.full_name.trim() !== '') 
+      ? supabaseTeacher.profiles.full_name 
+      : 'Учитель',
+    photo: (supabaseTeacher.profiles?.avatar_url && supabaseTeacher.profiles.avatar_url.trim() !== '') 
+      ? supabaseTeacher.profiles.avatar_url 
+      : null,
     specialization: supabaseTeacher.specialization || 'Специализация не указана',
     experience: `${supabaseTeacher.experience_years || 0} лет`,
     location: supabaseTeacher.location || 'Местоположение не указано',
