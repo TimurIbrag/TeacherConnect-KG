@@ -324,8 +324,8 @@ const TeachersPage = () => {
               // Properly map teacher data for TeacherCard component with actual view count
               const teacherData = {
                 id: teacher.id,
-                name: teacher.profiles?.full_name || 'Имя не указано',
-                photo: teacher.profiles?.avatar_url || null,
+                name: teacher.profiles?.full_name && teacher.profiles.full_name.trim() !== '' ? teacher.profiles.full_name : 'Имя не указано',
+                photo: teacher.profiles?.avatar_url && teacher.profiles.avatar_url.trim() !== '' ? teacher.profiles.avatar_url : null,
                 specialization: teacher.specialization || 'Специализация не указана',
                 experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
                 location: teacher.location || 'Местоположение не указано',

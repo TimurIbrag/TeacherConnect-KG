@@ -154,6 +154,10 @@ const translations = {
     'error.fileUpload': 'Ошибка загрузки файла',
     'error.fileTooLarge': 'Файл слишком большой',
     'error.invalidFileType': 'Недопустимый тип файла',
+    
+    // CTA Section
+    'cta.title': 'Присоединяйтесь к TeacherConnect!',
+    'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
   },
   
   en: {
@@ -300,6 +304,10 @@ const translations = {
     'error.fileUpload': 'File upload error',
     'error.fileTooLarge': 'File too large',
     'error.invalidFileType': 'Invalid file type',
+    
+    // CTA Section
+    'cta.title': 'Присоединяйтесь к TeacherConnect!',
+    'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
   },
   
   ky: {
@@ -446,6 +454,10 @@ const translations = {
     'error.fileUpload': 'Файл жүктөө катасы',
     'error.fileTooLarge': 'Файл өтө чоң',
     'error.invalidFileType': 'Жараксыз файл түрү',
+    
+    // CTA Section
+    'cta.title': 'Присоединяйтесь к TeacherConnect!',
+    'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
   }
 };
 

@@ -274,12 +274,12 @@ const TeacherProfilePage: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={teacher.photo} alt={teacher.name} />
-                    <AvatarFallback>{getInitials(teacher.name)}</AvatarFallback>
+                    <AvatarImage src={teacher.photo && teacher.photo.trim() !== '' ? teacher.photo : undefined} alt={teacher.name && teacher.name.trim() !== '' ? teacher.name : 'Учитель'} />
+                    <AvatarFallback>{getInitials(teacher.name && teacher.name.trim() !== '' ? teacher.name : 'Учитель')}</AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="text-2xl">
-                      {teacher.name && teacher.name !== 'Имя не указано' ? teacher.name : 'Учитель'}
+                      {teacher.name && teacher.name.trim() !== '' && teacher.name !== 'Имя не указано' ? teacher.name : 'Учитель'}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <BookOpen className="h-4 w-4" />
