@@ -41,23 +41,28 @@ export const profileUpdateSchema = z.object({
 
 export const teacherProfileSchema = z.object({
   bio: z.string()
-    .max(1000, 'Описание слишком длинное')
-    .optional(),
+    .min(1, 'Описание обязательно для заполнения')
+    .max(1000, 'Описание слишком длинное'),
   specialization: z.string()
-    .max(100, 'Специализация слишком длинная')
-    .optional(),
+    .min(1, 'Специализация обязательна для заполнения')
+    .max(100, 'Специализация слишком длинная'),
   experience_years: z.number()
     .min(0, 'Опыт не может быть отрицательным')
-    .max(50, 'Неверное количество лет опыта')
-    .optional(),
+    .max(50, 'Неверное количество лет опыта'),
   education: z.string()
-    .max(500, 'Образование слишком длинное')
-    .optional(),
+    .min(1, 'Образование обязательно для заполнения')
+    .max(500, 'Образование слишком длинное'),
   location: z.string()
-    .max(100, 'Местоположение слишком длинное')
+    .min(1, 'Местоположение обязательно для заполнения')
+    .max(100, 'Местоположение слишком длинное'),
+  date_of_birth: z.string()
+    .min(1, 'Дата рождения обязательна для заполнения')
     .optional(),
   languages: z.array(z.string().max(50)).max(10, 'Слишком много языков').optional(),
   skills: z.array(z.string().max(50)).max(20, 'Слишком много навыков').optional(),
+  certificates: z.array(z.string()).max(20, 'Слишком много сертификатов').optional(),
+  resume_url: z.string().url('Неверный URL резюме').optional(),
+  schedule_details: z.record(z.any()).optional(),
 });
 
 export const schoolProfileSchema = z.object({

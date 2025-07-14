@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText, Save, Clock, Globe, Lock } from 'lucide-react';
 import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
 import ProfileEditModal, { ProfileData } from '@/components/ProfileEditModal';
+import ScheduleDisplay from '@/components/teacher-dashboard/ScheduleDisplay';
 
 const TeacherDashboardPage = () => {
   const { t } = useLanguage();
@@ -119,13 +120,18 @@ const TeacherDashboardPage = () => {
         avatar_url: data.photoUrl
       });
 
-      // Update teacher profile (without locationDetails as it's not in the schema)
+      // Update teacher profile with all new fields
       await updateTeacherProfile({
         specialization: data.specialization,
         education: data.education,
         experience_years: parseInt(data.experience) || 0,
         location: data.location,
-        bio: data.bio
+        bio: data.bio,
+        date_of_birth: data.dateOfBirth,
+        certificates: data.certificates,
+        resume_url: data.resumeUrl,
+        schedule_details: data.scheduleDetails,
+        languages: data.languages
       });
 
       // No need to save to localStorage anymore - data is in database
@@ -267,10 +273,15 @@ const TeacherDashboardPage = () => {
     location: draft?.location || teacherProfile?.location || '',
     locationDetails: draft?.locationDetails || '',
     bio: draft?.bio || teacherProfile?.bio || '',
-    photoUrl: draft?.photoUrl || profile?.avatar_url || ''
+    photoUrl: draft?.photoUrl || profile?.avatar_url || '',
+    dateOfBirth: draft?.dateOfBirth || teacherProfile?.date_of_birth || '',
+    certificates: draft?.certificates || teacherProfile?.certificates || [],
+    resumeUrl: draft?.resumeUrl || teacherProfile?.resume_url || '',
+    scheduleDetails: draft?.scheduleDetails || (teacherProfile?.schedule_details as any) || {},
+    languages: draft?.languages || (teacherProfile?.languages as any) || []
   };
 
-  const isProfileComplete = profile?.full_name && teacherProfile?.specialization && teacherProfile?.bio;
+  const isProfileComplete = teacherProfile?.is_profile_complete || false;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -360,16 +371,6 @@ const TeacherDashboardPage = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">График работы</p>
-                        <p className="text-gray-900">Полный день</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
                       <Briefcase className="h-5 w-5 text-purple-600" />
                       <div>
                         <p className="text-sm font-medium text-gray-500">Опыт работы</p>
@@ -386,6 +387,76 @@ const TeacherDashboardPage = () => {
                         <p className="text-gray-900">{teacherProfile?.location || "Не указано"}</p>
                       </div>
                     </div>
+
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Дата рождения</p>
+                        <p className="text-gray-900">
+                          {teacherProfile?.date_of_birth ? new Date(teacherProfile.date_of_birth).toLocaleDateString('ru-RU') : "Не указано"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Languages */}
+                    {teacherProfile?.languages && Array.isArray(teacherProfile.languages) && teacherProfile.languages.length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-indigo-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Языки</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {teacherProfile.languages.map((lang: any, index: number) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {lang.language} ({lang.level})
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Resume */}
+                    {teacherProfile?.resume_url && (
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-orange-600" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Резюме</p>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto text-blue-600"
+                            onClick={() => window.open(teacherProfile.resume_url, '_blank')}
+                          >
+                            Просмотреть резюме
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Certificates */}
+                    {teacherProfile?.certificates && teacherProfile.certificates.length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <Award className="h-5 w-5 text-yellow-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Сертификаты</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {teacherProfile.certificates.map((cert: string, index: number) => (
+                              <Button
+                                key={index}
+                                variant="outline"
+                                size="sm"
+                                className="text-xs"
+                                onClick={() => window.open(cert, '_blank')}
+                              >
+                                Сертификат {index + 1}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -398,6 +469,9 @@ const TeacherDashboardPage = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Schedule Display */}
+                <ScheduleDisplay scheduleDetails={teacherProfile?.schedule_details as any} />
 
                 {!profile?.full_name && !teacherProfile?.specialization && (
                   <div className="text-center py-8 text-gray-500">
@@ -436,7 +510,7 @@ const TeacherDashboardPage = () => {
                   {!isProfileComplete && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                       <p className="text-sm text-yellow-800">
-                        Заполните обязательные поля профиля (имя, специализация, описание) для публикации
+                        Заполните все обязательные поля профиля для публикации: имя, специализация, образование, опыт работы, местоположение, описание, дата рождения
                       </p>
                     </div>
                   )}
