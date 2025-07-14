@@ -19,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Predefined subjects list
 const TEACHER_SUBJECTS = [
   'Русский язык',
-  'Русская литература',
+  'Русская литература', 
   'Кыргызский язык',
   'Кыргызская литература',
   'Английский язык',
@@ -51,9 +51,6 @@ const DISTRICTS = [
   'Октябрьский район',
   'Свердловский район'
 ];
-
-// DISABLED - No longer using localStorage for published teachers
-// All teacher data will only come from Supabase database
 
 const TeachersPage = () => {
   const navigate = useNavigate();
@@ -324,8 +321,8 @@ const TeachersPage = () => {
               // Properly map teacher data for TeacherCard component with actual view count
               const teacherData = {
                 id: teacher.id,
-                name: teacher.profiles?.full_name && teacher.profiles.full_name.trim() !== '' ? teacher.profiles.full_name : 'Имя не указано',
-                photo: teacher.profiles?.avatar_url && teacher.profiles.avatar_url.trim() !== '' ? teacher.profiles.avatar_url : null,
+                name: teacher.profiles?.full_name || 'Преподаватель',
+                photo: teacher.profiles?.avatar_url || null,
                 specialization: teacher.specialization || 'Специализация не указана',
                 experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
                 location: teacher.location || 'Местоположение не указано',

@@ -43,7 +43,7 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
   const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
   
   const getInitials = (name: string) => {
-    if (!name || name === 'Имя не указано') return 'У';
+    if (!name || name === 'Преподаватель') return 'П';
     return name
       .split(' ')
       .map(n => n[0])
@@ -117,21 +117,25 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
     navigate(`/teachers/${id}`);
   };
 
+  // Always display the actual name and photo if available, no fallbacks to defaults
+  const displayName = name || 'Преподаватель';
+  const displayPhoto = photo || null;
+
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-0">
         <div className="p-4">
           <div className="flex items-center gap-4">
-            {/* Main Avatar - Always show image if available, then fallback */}
+            {/* Main Avatar - Always show image if available */}
             <Avatar className="h-16 w-16">
-              <AvatarImage src={photo || undefined} alt={name} />
-              <AvatarFallback>{getInitials(name)}</AvatarFallback>
+              <AvatarImage src={displayPhoto || undefined} alt={displayName} />
+              <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">{name && name !== 'Имя не указано' ? name : 'Учитель'}</h3>
+                  <h3 className="text-lg font-medium">{displayName}</h3>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <Badge variant="secondary">{specialization}</Badge>
                     <span className="text-sm text-muted-foreground">{experience}</span>
@@ -148,10 +152,10 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
                   </div>
                 </div>
                 
-                {/* Top-right corner avatar - Always show image if available, then fallback */}
+                {/* Top-right corner avatar - Always show image if available */}
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={photo || undefined} alt={name} />
-                  <AvatarFallback>{getInitials(name)}</AvatarFallback>
+                  <AvatarImage src={displayPhoto || undefined} alt={displayName} />
+                  <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
               </div>
             </div>

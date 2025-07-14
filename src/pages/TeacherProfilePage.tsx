@@ -149,10 +149,10 @@ const TeacherProfilePage: React.FC = () => {
     return allTeachers.find(t => t.id === searchId || t.id.toString() === searchId);
   };
   
-  // Determine which teacher data to use
+  // Determine which teacher data to use - always show actual data from Supabase
   const teacher = supabaseTeacher ? {
     id: supabaseTeacher.id,
-    name: supabaseTeacher.profiles?.full_name || 'Имя не указано',
+    name: supabaseTeacher.profiles?.full_name || 'Преподаватель',
     photo: supabaseTeacher.profiles?.avatar_url || null,
     specialization: supabaseTeacher.specialization || 'Специализация не указана',
     experience: `${supabaseTeacher.experience_years || 0} лет`,
@@ -256,13 +256,17 @@ const TeacherProfilePage: React.FC = () => {
   };
   
   const getInitials = (name: string) => {
-    if (!name || name === 'Имя не указано') return 'У';
+    if (!name || name === 'Преподаватель') return 'П';
     return name
       .split(' ')
       .map(n => n[0])
       .join('')
       .toUpperCase();
   };
+
+  // Always use the actual teacher data without fallbacks
+  const displayName = teacher.name || 'Преподаватель';
+  const displayPhoto = teacher.photo || null;
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -274,13 +278,11 @@ const TeacherProfilePage: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={teacher.photo && teacher.photo.trim() !== '' ? teacher.photo : undefined} alt={teacher.name && teacher.name.trim() !== '' ? teacher.name : 'Учитель'} />
-                    <AvatarFallback>{getInitials(teacher.name && teacher.name.trim() !== '' ? teacher.name : 'Учитель')}</AvatarFallback>
+                    <AvatarImage src={displayPhoto || undefined} alt={displayName} />
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-2xl">
-                      {teacher.name && teacher.name.trim() !== '' && teacher.name !== 'Имя не указано' ? teacher.name : 'Учитель'}
-                    </CardTitle>
+                    <CardTitle className="text-2xl">{displayName}</CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <BookOpen className="h-4 w-4" />
                       <span>{teacher.specialization}</span>
