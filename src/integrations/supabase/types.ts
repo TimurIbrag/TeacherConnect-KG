@@ -318,6 +318,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
+          last_seen_at?: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -328,6 +329,7 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
+          last_seen_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -338,6 +340,7 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
+          last_seen_at?: string | null
         }
         Relationships: []
       }
@@ -422,13 +425,18 @@ export type Database = {
         Row: {
           available: boolean | null
           bio: string | null
+          certificates: string[] | null
           cv_url: string | null
+          date_of_birth: string | null
           education: string | null
           experience_years: number | null
           id: string
+          is_profile_complete: boolean | null
           is_published: boolean | null
           languages: Json | null
           location: string | null
+          resume_url: string | null
+          schedule_details: Json | null
           skills: string[] | null
           specialization: string | null
           verification_documents: string[] | null
@@ -440,13 +448,18 @@ export type Database = {
         Insert: {
           available?: boolean | null
           bio?: string | null
+          certificates?: string[] | null
           cv_url?: string | null
+          date_of_birth?: string | null
           education?: string | null
           experience_years?: number | null
           id: string
+          is_profile_complete?: boolean | null
           is_published?: boolean | null
           languages?: Json | null
           location?: string | null
+          resume_url?: string | null
+          schedule_details?: Json | null
           skills?: string[] | null
           specialization?: string | null
           verification_documents?: string[] | null
@@ -458,13 +471,18 @@ export type Database = {
         Update: {
           available?: boolean | null
           bio?: string | null
+          certificates?: string[] | null
           cv_url?: string | null
+          date_of_birth?: string | null
           education?: string | null
           experience_years?: number | null
           id?: string
+          is_profile_complete?: boolean | null
           is_published?: boolean | null
           languages?: Json | null
           location?: string | null
+          resume_url?: string | null
+          schedule_details?: Json | null
           skills?: string[] | null
           specialization?: string | null
           verification_documents?: string[] | null
