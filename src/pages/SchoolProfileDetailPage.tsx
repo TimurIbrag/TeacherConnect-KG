@@ -534,21 +534,21 @@ const SchoolProfileDetailPage: React.FC = () => {
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-white">Статистика</CardTitle>
+              <CardTitle>Статистика</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
                <div className="flex justify-between">
-                 <span className="text-sm text-white">Просмотры:</span>
-                 <span className="text-sm font-medium text-white">{school.view_count || school.views || 0}</span>
+                 <span className="text-sm text-black">Просмотры:</span>
+                 <span className="text-sm font-medium text-black">{school.view_count || school.views || 0}</span>
                </div>
               <div className="flex justify-between">
-                <span className="text-sm text-white">Активные вакансии:</span>
-                <span className="text-sm font-medium text-white">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>
+                <span className="text-sm text-black">Активные вакансии:</span>
+                <span className="text-sm font-medium text-black">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>
               </div>
               {school.applications !== undefined && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-white">Заявки:</span>
-                  <span className="text-sm font-medium text-white">{school.applications}</span>
+                  <span className="text-sm text-black">Заявки:</span>
+                  <span className="text-sm font-medium text-black">{school.applications}</span>
                 </div>
               )}
             </CardContent>
