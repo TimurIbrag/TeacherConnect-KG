@@ -30,51 +30,61 @@ type ExtendedVacancy = {
   is_active?: boolean;
   created_at: string;
 };
-
 const SchoolProfileDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
   const [school, setSchool] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { user, profile } = useAuth();
-  const { createChatRoom, isAuthenticated } = useSecurePrivateChat();
-  const { toast } = useToast();
+  const {
+    user,
+    profile
+  } = useAuth();
+  const {
+    createChatRoom,
+    isAuthenticated
+  } = useSecurePrivateChat();
+  const {
+    toast
+  } = useToast();
 
   // Add query for school's active vacancies - handle both UUID and numeric IDs
-  const { data: schoolVacancies = [] } = useQuery({
+  const {
+    data: schoolVacancies = []
+  } = useQuery({
     queryKey: ['school-vacancies', id],
     queryFn: async () => {
       if (!id) return [];
-      
+
       // For UUID format (Supabase schools), query the database
       if (id.includes('-')) {
-        const { data, error } = await supabase
-          .from('vacancies')
-          .select(`
+        const {
+          data,
+          error
+        } = await supabase.from('vacancies').select(`
             *,
             school_profiles (
               school_name,
               address
             )
-          `)
-          .eq('school_id', id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
+          `).eq('school_id', id).eq('is_active', true).order('created_at', {
+          ascending: false
+        });
         if (error) {
           console.error('Error fetching school vacancies:', error);
           return [];
         }
-
         return (data || []) as ExtendedVacancy[];
       }
-      
+
       // For numeric IDs (mock schools), return empty array - we'll show openPositions instead
       return [];
     },
-    enabled: !!id,
+    enabled: !!id
   });
-
   const getVacancyTypeLabel = (type: string) => {
     const types = {
       teacher: 'Учитель',
@@ -85,12 +95,17 @@ const SchoolProfileDetailPage: React.FC = () => {
     };
     return types[type as keyof typeof types] || type;
   };
-
   const formatSalary = (vacancy: ExtendedVacancy) => {
-    const { salary_min, salary_max, salary_currency = 'rub' } = vacancy;
-    const symbols = { rub: 'с', usd: '$' };
+    const {
+      salary_min,
+      salary_max,
+      salary_currency = 'rub'
+    } = vacancy;
+    const symbols = {
+      rub: 'с',
+      usd: '$'
+    };
     const symbol = symbols[salary_currency as keyof typeof symbols] || 'с';
-    
     if (!salary_min && !salary_max) return 'По договоренности';
     if (salary_min && salary_max) return `${salary_min.toLocaleString()} - ${salary_max.toLocaleString()} ${symbol}`;
     if (salary_min) return `от ${salary_min.toLocaleString()} ${symbol}`;
@@ -125,26 +140,24 @@ const SchoolProfileDetailPage: React.FC = () => {
       toast({
         title: "Требуется авторизация",
         description: "Войдите в систему для отправки сообщений",
-        variant: "destructive",
+        variant: "destructive"
       });
       navigate('/login');
       return;
     }
-
     if (!profile || profile.role !== 'teacher') {
       toast({
         title: "Доступ ограничен",
         description: "Только учителя могут связаться со школами",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
       const chatRoomId = await createChatRoom(school.id);
       toast({
         title: "Чат создан",
-        description: "Переходим к общению со школой",
+        description: "Переходим к общению со школой"
       });
       navigate(`/messages/${chatRoomId}`);
     } catch (error: any) {
@@ -152,7 +165,7 @@ const SchoolProfileDetailPage: React.FC = () => {
       toast({
         title: "Ошибка",
         description: error.message || "Не удалось создать чат",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -163,17 +176,16 @@ const SchoolProfileDetailPage: React.FC = () => {
       toast({
         title: "Требуется авторизация",
         description: "Войдите в систему для подачи заявки",
-        variant: "destructive",
+        variant: "destructive"
       });
       navigate('/login');
       return;
     }
-
     if (!profile || profile.role !== 'teacher') {
       toast({
         title: "Доступ ограничен",
         description: "Только учителя могут подавать заявки",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -181,22 +193,19 @@ const SchoolProfileDetailPage: React.FC = () => {
     // For now, redirect to vacancies page with school filter
     navigate(`/vacancies?school=${school.id}`);
   };
-
   useEffect(() => {
     const loadSchoolData = async () => {
       console.log('DEBUG: Loading school data for ID:', id);
       // Try to find school in Supabase first
       if (id && id.includes('-')) {
         try {
-          const { data: supabaseSchool, error } = await supabase
-            .from('school_profiles')
-            .select(`
+          const {
+            data: supabaseSchool,
+            error
+          } = await supabase.from('school_profiles').select(`
               *,
               profiles (*)
-            `)
-            .eq('id', id)
-            .single();
-
+            `).eq('id', id).single();
           if (!error && supabaseSchool) {
             const schoolData = {
               id: supabaseSchool.id,
@@ -205,14 +214,17 @@ const SchoolProfileDetailPage: React.FC = () => {
               address: supabaseSchool.address || 'Адрес не указан',
               type: supabaseSchool.school_type || 'Государственная',
               specialization: supabaseSchool.description || 'Общее образование',
-              views: 150, // Mock value
+              views: 150,
+              // Mock value
               housing: supabaseSchool.housing_provided || false,
               about: supabaseSchool.description || 'Информация о школе не предоставлена.',
               website: supabaseSchool.website_url || '',
               facilities: supabaseSchool.facilities || [],
-              applications: 0, // Mock value
+              applications: 0,
+              // Mock value
               city: supabaseSchool.address?.split(',')[0] || 'Бишкек',
-              photos: supabaseSchool.photo_urls || [], // Display all photos from school profile
+              photos: supabaseSchool.photo_urls || [],
+              // Display all photos from school profile
               locationVerified: supabaseSchool.location_verified || false
             };
             setSchool(schoolData);
@@ -229,12 +241,12 @@ const SchoolProfileDetailPage: React.FC = () => {
       console.log('DEBUG: All published schools from localStorage:', publishedSchools);
       let foundSchool = publishedSchools.find((s: any) => s.id.toString() === id);
       console.log('DEBUG: Found school for ID', id, ':', foundSchool);
-
       if (foundSchool) {
         // Handle published school data with proper photo handling
         foundSchool = {
           ...foundSchool,
-          photo: foundSchool.photo?.value || foundSchool.photo || null, // Handle both base64 and regular URLs
+          photo: foundSchool.photo?.value || foundSchool.photo || null,
+          // Handle both base64 and regular URLs
           city: foundSchool.address?.split(',')[0] || 'Бишкек',
           housing: foundSchool.housing || false,
           about: foundSchool.about || foundSchool.description || 'Информация о школе не предоставлена.',
@@ -242,19 +254,18 @@ const SchoolProfileDetailPage: React.FC = () => {
           facilities: foundSchool.facilities || [],
           applications: foundSchool.applications || 0,
           // Extract photos for gallery - include main photo and any additional photos
-          photos: [
-            ...(foundSchool.photos || []), // Additional photos if they exist
-            ...(foundSchool.photo_urls || []), // Photo URLs if they exist
-            ...(foundSchool.photo?.value ? [foundSchool.photo.value] : []), // Main photo as base64
-            ...(foundSchool.photo && typeof foundSchool.photo === 'string' ? [foundSchool.photo] : []) // Main photo as string
-          ].filter(Boolean), // Remove any null/undefined values
+          photos: [...(foundSchool.photos || []),
+          // Additional photos if they exist
+          ...(foundSchool.photo_urls || []),
+          // Photo URLs if they exist
+          ...(foundSchool.photo?.value ? [foundSchool.photo.value] : []),
+          // Main photo as base64
+          ...(foundSchool.photo && typeof foundSchool.photo === 'string' ? [foundSchool.photo] : []) // Main photo as string
+          ].filter(Boolean),
+          // Remove any null/undefined values
           locationVerified: foundSchool.locationVerified || false,
           // Include open positions from published school data - combine all possible vacancy sources
-          openPositions: [
-            ...(foundSchool.openPositions || []),
-            ...(foundSchool.vacancies || []),
-            ...(foundSchool.positions || [])
-          ]
+          openPositions: [...(foundSchool.openPositions || []), ...(foundSchool.vacancies || []), ...(foundSchool.positions || [])]
         };
         console.log('DEBUG: Processed published school photos:', foundSchool.photos);
       } else {
@@ -268,22 +279,19 @@ const SchoolProfileDetailPage: React.FC = () => {
             website: foundSchool.website || '',
             facilities: foundSchool.facilities || [],
             applications: foundSchool.applications || 0,
-            photos: [], // Mock schools don't have photos
+            photos: [],
+            // Mock schools don't have photos
             locationVerified: false
           };
         }
       }
-
       setSchool(foundSchool);
       setLoading(false);
     };
-
     loadSchoolData();
   }, [id]);
-
   if (loading) {
-    return (
-      <div className="container px-4 py-8 max-w-4xl mx-auto">
+    return <div className="container px-4 py-8 max-w-4xl mx-auto">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded mb-6"></div>
@@ -292,13 +300,10 @@ const SchoolProfileDetailPage: React.FC = () => {
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!school) {
-    return (
-      <div className="container px-4 py-8 max-w-4xl mx-auto">
+    return <div className="container px-4 py-8 max-w-4xl mx-auto">
         <Button variant="outline" onClick={() => navigate('/schools')} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Вернуться к школам
@@ -307,12 +312,9 @@ const SchoolProfileDetailPage: React.FC = () => {
           <h1 className="text-2xl font-bold mb-4">Школа не найдена</h1>
           <p className="text-muted-foreground">Запрашиваемая школа не существует или была удалена.</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container px-4 py-8 max-w-4xl mx-auto">
+  return <div className="container px-4 py-8 max-w-4xl mx-auto">
       <Button variant="outline" onClick={() => navigate('/schools')} className="mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Вернуться к школам
@@ -324,49 +326,34 @@ const SchoolProfileDetailPage: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-full md:w-64 h-48 rounded-lg overflow-hidden border">
               {/* School photo - Always visible to all users including guests */}
-              <img 
-                src={school.photo} 
-                alt={school.name} 
-                className="w-full h-full object-cover" 
-              />
+              <img src={school.photo} alt={school.name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-3">{school.name}</h1>
               
               <div className="flex flex-wrap gap-2 mb-4">
                 {school.type && <Badge variant="outline">{school.type}</Badge>}
-                {school.specialization && <Badge variant="secondary">{school.specialization}</Badge>}
+                {school.specialization}
                 {school.city && <Badge variant="outline">{school.city}</Badge>}
-                {school.housing && (
-                  <Badge variant="default" className="bg-blue-100 text-blue-800">
+                {school.housing && <Badge variant="default" className="bg-blue-100 text-blue-800">
                     <Home className="w-3 h-3 mr-1" />
                     С жильем
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
                   <span>{school.address}</span>
-                  {school.locationVerified && (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  )}
+                  {school.locationVerified && <CheckCircle className="w-4 h-4 text-green-600" />}
                 </div>
                 
-                {school.website && (
-                  <div className="flex items-center gap-2 text-sm">
+                {school.website && <div className="flex items-center gap-2 text-sm">
                     <Globe className="w-4 h-4 text-muted-foreground" />
-                    <a 
-                      href={school.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-primary hover:underline"
-                    >
+                    <a href={school.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                       {school.website}
                     </a>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               <div className="flex items-center gap-6 text-sm">
@@ -387,8 +374,7 @@ const SchoolProfileDetailPage: React.FC = () => {
       </Card>
 
       {/* Show Supabase vacancies or mock school positions */}
-      {(schoolVacancies.length > 0 || (school.openPositions && school.openPositions.length > 0)) && (
-        <Card className="mb-6">
+      {(schoolVacancies.length > 0 || school.openPositions && school.openPositions.length > 0) && <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Briefcase className="h-5 w-5" />
@@ -398,8 +384,7 @@ const SchoolProfileDetailPage: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               {/* Show Supabase vacancies if available */}
-              {schoolVacancies.map((vacancy) => (
-                <div key={vacancy.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+              {schoolVacancies.map(vacancy => <div key={vacancy.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h4 className="font-semibold text-lg">{vacancy.title}</h4>
@@ -416,25 +401,19 @@ const SchoolProfileDetailPage: React.FC = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
-                    {vacancy.location && (
-                      <div className="flex items-center gap-1">
+                    {vacancy.location && <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         <span>{vacancy.location}</span>
-                      </div>
-                    )}
-                    {vacancy.employment_type && (
-                      <div className="flex items-center gap-1">
+                      </div>}
+                    {vacancy.employment_type && <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>{vacancy.employment_type}</span>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   
-                  {vacancy.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {vacancy.description && <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                       {vacancy.description}
-                    </p>
-                  )}
+                    </p>}
                   
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">
@@ -444,12 +423,10 @@ const SchoolProfileDetailPage: React.FC = () => {
                       Откликнуться
                     </Button>
                   </div>
-                </div>
-              ))}
+                </div>)}
               
               {/* Show mock school positions if no Supabase vacancies */}
-              {schoolVacancies.length === 0 && school.openPositions && school.openPositions.map((position: any) => (
-                <div key={position.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
+              {schoolVacancies.length === 0 && school.openPositions && school.openPositions.map((position: any) => <div key={position.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h4 className="font-semibold text-lg">{position.title}</h4>
@@ -462,32 +439,26 @@ const SchoolProfileDetailPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {position.schedule && (
-                    <div className="text-sm text-muted-foreground mb-3">
+                  {position.schedule && <div className="text-sm text-muted-foreground mb-3">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>{position.schedule}</span>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                   
-                  {position.additionalInfo && (
-                    <p className="text-sm text-gray-600 mb-3">
+                  {position.additionalInfo && <p className="text-sm text-gray-600 mb-3">
                       {position.additionalInfo}
-                    </p>
-                  )}
+                    </p>}
                   
                   <div className="flex justify-end">
                     <Button size="sm">
                       Откликнуться
                     </Button>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
@@ -505,59 +476,42 @@ const SchoolProfileDetailPage: React.FC = () => {
           </Card>
 
           {/* Photo Gallery */}
-          {school.photos && school.photos.length > 0 && (
-            <SchoolPhotoGallery 
-              photos={school.photos} 
-              schoolName={school.name} 
-            />
-          )}
+          {school.photos && school.photos.length > 0 && <SchoolPhotoGallery photos={school.photos} schoolName={school.name} />}
 
           {/* Facilities */}
-          {school.facilities && school.facilities.length > 0 && (
-            <Card>
+          {school.facilities && school.facilities.length > 0 && <Card>
               <CardHeader>
                 <CardTitle>Инфраструктура</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
-                  {school.facilities.map((facility: string, index: number) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                  {school.facilities.map((facility: string, index: number) => <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
                       <Building className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm">{facility}</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
           {/* Open Positions */}
-          {school.openPositions && school.openPositions.length > 0 && (
-            <Card>
+          {school.openPositions && school.openPositions.length > 0 && <Card>
               <CardHeader>
                 <CardTitle>Открытые вакансии</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {school.openPositions.map((position: any) => (
-                    <div key={position.id} className="p-3 border rounded-md">
+                  {school.openPositions.map((position: any) => <div key={position.id} className="p-3 border rounded-md">
                       <h4 className="font-medium">{position.title}</h4>
-                      {position.schedule && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                      {position.schedule && <p className="text-sm text-muted-foreground mt-1">
                           График: {position.schedule}
-                        </p>
-                      )}
-                      {position.salary && (
-                        <p className="text-sm text-muted-foreground">
+                        </p>}
+                      {position.salary && <p className="text-sm text-muted-foreground">
                           Зарплата: {position.salary}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                        </p>}
+                    </div>)}
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
 
         {/* Sidebar */}
@@ -593,18 +547,14 @@ const SchoolProfileDetailPage: React.FC = () => {
                 <span className="text-sm text-muted-foreground">Активные вакансии:</span>
                 <span className="text-sm font-medium">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>
               </div>
-              {school.applications !== undefined && (
-                <div className="flex justify-between">
+              {school.applications !== undefined && <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Заявки:</span>
                   <span className="text-sm font-medium">{school.applications}</span>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default SchoolProfileDetailPage;
