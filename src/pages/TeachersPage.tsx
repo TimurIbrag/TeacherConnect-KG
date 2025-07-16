@@ -183,38 +183,24 @@ export default function TeachersPage() {
               // Parse schedule_details properly
               const scheduleDetails = teacher.schedule_details as Record<string, any> | null;
               
-              // Transform teacher data to match TeacherCard expectations
-              const teacherData = {
-                id: teacher.id,
-                name: profile?.full_name || 'Anonymous Teacher',
-                photo: profile?.avatar_url || '/placeholder.svg',
-                specialization: teacher.specialization || 'General',
-                experience: teacher.experience_years ? `${teacher.experience_years} years` : 'Not specified',
-                location: teacher.location || 'Location not specified',
-                ratings: 4.5, // Default rating
-                views: teacher.view_count || 0,
-                about: teacher.bio || 'No description available',
-                education: teacher.education || 'Not specified',
-                languages: ['English'], // Default language
-                achievements: 'Professional Teacher',
-                preferredSchedule: scheduleDetails ? 
-                  `${scheduleDetails.preferred_time || 'Flexible'} - ${scheduleDetails.days_available || 'Any day'}` : 
-                  'Flexible schedule',
-                desiredSalary: 'Contact for details',
-                preferredDistricts: [teacher.location || 'Any location'],
-                applications: 0,
-                // Add fields that might be used elsewhere
-                date_of_birth: teacher.date_of_birth,
-                certificates: teacher.certificates || [],
-                resume_url: teacher.resume_url,
-                schedule_details: teacher.schedule_details,
-                last_seen_at: profile?.last_seen_at
-              };
+              // Parse languages properly
+              const languagesData = teacher.languages as Array<{ language: string; level: string }> | null;
 
               return (
                 <TeacherCard
                   key={teacher.id}
-                  teacher={teacherData}
+                  id={teacher.id}
+                  name={profile?.full_name || 'Anonymous Teacher'}
+                  photo={profile?.avatar_url || null}
+                  specialization={teacher.specialization || 'General'}
+                  experience={teacher.experience_years ? `${teacher.experience_years} years` : 'Not specified'}
+                  location={teacher.location || 'Location not specified'}
+                  ratings={4.5}
+                  views={teacher.view_count || 0}
+                  date_of_birth={teacher.date_of_birth}
+                  languages={languagesData}
+                  schedule_details={scheduleDetails}
+                  last_seen_at={profile?.last_seen_at}
                 />
               );
             })}
