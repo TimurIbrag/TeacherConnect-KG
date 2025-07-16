@@ -477,8 +477,8 @@ const SchoolProfileDetailPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
-                  {school.facilities.map((facility: string, index: number) => <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                      <Building className="w-4 h-4 text-muted-foreground" />
+                  {school.facilities.map((facility: string, index: number) => <div key={index} className="flex items-center gap-2 p-2 rounded bg-blue-600">
+                      <Building className="w-4 h-4 text-muted-foreground bg-blue-600" />
                       <span className="text-sm">{facility}</span>
                     </div>)}
                 </div>
