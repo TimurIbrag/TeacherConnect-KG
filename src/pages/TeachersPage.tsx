@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { TeacherCard } from '@/components/TeacherCard';
-import { TeacherSkeletonLoader } from '@/components/TeacherSkeletonLoader';
+import TeacherCard from '@/components/TeacherCard';
+import TeacherSkeletonLoader from '@/components/TeacherSkeletonLoader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -180,6 +180,9 @@ export default function TeachersPage() {
             {paginatedTeachers.map((teacher) => {
               const profile = teacher.profiles;
               
+              // Parse schedule_details properly
+              const scheduleDetails = teacher.schedule_details as Record<string, any> | null;
+              
               // Transform teacher data to match TeacherCard expectations
               const teacherData = {
                 id: teacher.id,
@@ -194,8 +197,8 @@ export default function TeachersPage() {
                 education: teacher.education || 'Not specified',
                 languages: ['English'], // Default language
                 achievements: 'Professional Teacher',
-                preferredSchedule: teacher.schedule_details ? 
-                  `${teacher.schedule_details.preferred_time || 'Flexible'} - ${teacher.schedule_details.days_available || 'Any day'}` : 
+                preferredSchedule: scheduleDetails ? 
+                  `${scheduleDetails.preferred_time || 'Flexible'} - ${scheduleDetails.days_available || 'Any day'}` : 
                   'Flexible schedule',
                 desiredSalary: 'Contact for details',
                 preferredDistricts: [teacher.location || 'Any location'],

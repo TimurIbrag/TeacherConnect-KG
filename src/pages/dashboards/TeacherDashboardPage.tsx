@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
 import { User, BookOpen, MapPin, Clock, Award, FileText, Eye, Heart, MessageSquare, Settings, Upload, Download } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
-import { ServicesTab } from '@/components/teacher-dashboard/ServicesTab';
+import ServicesTab from '@/components/teacher-dashboard/ServicesTab';
 
 type TeacherProfile = Database['public']['Tables']['teacher_profiles']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
