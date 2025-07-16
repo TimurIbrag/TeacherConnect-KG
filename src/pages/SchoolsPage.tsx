@@ -73,9 +73,11 @@ const SchoolsPage: React.FC = () => {
       id: school.id,
       name: school.school_name || school.profiles?.full_name || 'School',
       photo: school.photo_urls?.[0] || null, // No default photos
+      photos: school.photo_urls || [],
       address: school.address || 'Address not provided',
       type: school.school_type || 'Государственная',
       specialization: school.description || 'General Education',
+      description: school.description || '',
       openPositions: Array.from({ length: vacancyCount }, (_, i) => ({
         id: i,
         title: `Vacancy ${i + 1}`,
@@ -348,9 +350,11 @@ const SchoolsPage: React.FC = () => {
               id: school.id,
               name: school.name || 'Школа',
               photo: school.photo || null,
+              photos: school.photos || [],
               address: school.address || 'Адрес не указан',
               type: school.type || 'Государственная',
               specialization: school.specialization || 'Общее образование',
+              description: school.description || '',
               openPositions: school.openPositions || [],
               ratings: school.ratings || 4.0,
               views: school.views || 0,
