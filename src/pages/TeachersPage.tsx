@@ -1,469 +1,283 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTeachers } from '@/hooks/useTeachers';
-import { useTeacherVacancies } from '@/hooks/useTeacherVacancies';
-import { useLanguage } from '@/context/LanguageContext';
-import { useAuth } from '@/context/AuthContext';
-import TeacherCard from '@/components/TeacherCard';
-import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
+
+import { useState, useEffect } from 'react';
+import { TeacherCard } from '@/components/TeacherCard';
+import { TeacherSkeletonLoader } from '@/components/TeacherSkeletonLoader';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Search, MapPin, BookOpen, Star, Clock, DollarSign, MessageCircle, User } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Search, Filter, MapPin, Star, Clock, BookOpen, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTeachers } from '@/hooks/useTeachers';
 
-// Predefined subjects list
-const TEACHER_SUBJECTS = [
-  'Русский язык',
-  'Русская литература', 
-  'Кыргызский язык',
-  'Кыргызская литература',
-  'Английский язык',
-  'Немецкий язык',
-  'Турецкий язык',
-  'Китайский язык',
-  'Математика',
-  'Алгебра и геометрия',
-  'Физика',
-  'Химия',
-  'Биология',
-  'География',
-  'История',
-  'Общественные и духовные дисциплины',
-  'Человек и общество',
-  'Основы религиозной культуры',
-  'Информатика',
-  'Труд / Технология',
-  'ИЗО (изобразительное искусство)',
-  'Музыка',
-  'Физическая культура',
-  'Предмет по выбору'
-];
+const ITEMS_PER_PAGE = 12;
 
-// Predefined districts list
-const DISTRICTS = [
-  'Ленинский район',
-  'Первомайский район',
-  'Октябрьский район',
-  'Свердловский район'
-];
-
-const TeachersPage = () => {
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { data: teachers, isLoading: teachersLoading } = useTeachers();
-  const { data: teacherVacancies, isLoading: vacanciesLoading } = useTeacherVacancies();
-  
-  // Track view counts for teachers
-  const trackTeacherView = async (teacherId: string) => {
-    try {
-      await supabase.rpc('increment_profile_views', {
-        profile_id_param: teacherId,
-        profile_type_param: 'teacher',
-        viewer_id_param: user?.id || null,
-        ip_address_param: null,
-        user_agent_param: navigator.userAgent
-      });
-    } catch (error) {
-      console.error('Error tracking teacher view:', error);
-    }
-  };
-  
+export default function TeachersPage() {
+  const { data: teachers, isLoading, error } = useTeachers();
   const [searchTerm, setSearchTerm] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
-  
-  // Clean up old localStorage data on mount only (optimization)
+  const [selectedSpecialization, setSelectedSpecialization] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [selectedExperience, setSelectedExperience] = useState('all');
+  const [sortBy, setSortBy] = useState('rating');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Filter and sort teachers
+  const filteredTeachers = teachers?.filter(teacher => {
+    const profile = teacher.profiles;
+    const matchesSearch = !searchTerm || 
+      profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSpecialization = selectedSpecialization === 'all' || 
+      teacher.specialization === selectedSpecialization;
+    
+    const matchesLocation = selectedLocation === 'all' || 
+      teacher.location?.includes(selectedLocation);
+    
+    const matchesExperience = selectedExperience === 'all' || 
+      (teacher.experience_years && teacher.experience_years >= parseInt(selectedExperience));
+
+    return matchesSearch && matchesSpecialization && matchesLocation && matchesExperience;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'rating':
+        return (b.view_count || 0) - (a.view_count || 0);
+      case 'experience':
+        return (b.experience_years || 0) - (a.experience_years || 0);
+      case 'name':
+        return (a.profiles?.full_name || '').localeCompare(b.profiles?.full_name || '');
+      default:
+        return 0;
+    }
+  }) || [];
+
+  // Pagination
+  const totalPages = Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTeachers = filteredTeachers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Get unique values for filters
+  const specializations = [...new Set(teachers?.map(t => t.specialization).filter(Boolean))];
+  const locations = [...new Set(teachers?.map(t => t.location).filter(Boolean))];
+
+  // Reset page when filters change
   useEffect(() => {
-    const keysToRemove = [
-      'teacherProfileData',
-      'teacherProfilePublished', 
-      'publishedTeachers'
-    ];
-    
-    keysToRemove.forEach(key => {
-      if (localStorage.getItem(key)) {
-        localStorage.removeItem(key);
-      }
-    });
-  }, []); // Run only once on mount
+    setCurrentPage(1);
+  }, [searchTerm, selectedSpecialization, selectedLocation, selectedExperience, sortBy]);
 
-  // All teachers now come from Supabase only (published teachers)
-  const allTeachers = teachers || [];
-
-  // Optimize filtering with useMemo
-  const filteredTeachers = useMemo(() => {
-    if (!allTeachers) return [];
-    
-    return allTeachers.filter(teacher => {
-      const teacherName = teacher.profiles?.full_name || '';
-      const teacherSpec = teacher.specialization || '';
-      
-      const matchesSearch = !searchTerm || 
-        teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacherSpec.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesSubject = !subjectFilter || 
-        teacherSpec.toLowerCase().includes(subjectFilter.toLowerCase());
-      
-      const matchesLocation = !locationFilter || 
-        teacher.location?.toLowerCase().includes(locationFilter.toLowerCase());
-
-      return matchesSearch && matchesSubject && matchesLocation;
-    });
-  }, [allTeachers, searchTerm, subjectFilter, locationFilter]);
-
-  // Optimize vacancy filtering with useMemo
-  const filteredVacancies = useMemo(() => {
-    if (!teacherVacancies) return [];
-    
-    return teacherVacancies.filter(vacancy => {
-      const matchesSearch = !searchTerm || 
-        vacancy.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vacancy.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vacancy.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesSubject = !subjectFilter || 
-        vacancy.subject?.includes(subjectFilter);
-      
-      const matchesLocation = !locationFilter || 
-        vacancy.location?.includes(locationFilter);
-
-      return matchesSearch && matchesSubject && matchesLocation;
-    });
-  }, [teacherVacancies, searchTerm, subjectFilter, locationFilter]);
-
-  const isLoading = teachersLoading || vacanciesLoading;
-
-  // Handle contact teacher - redirect to messages page or show login prompt
-  const handleContactTeacher = (teacher: any) => {
-    if (!user) {
-      toast({
-        title: 'Требуется авторизация',
-        description: 'Войдите в систему, чтобы связаться с преподавателем',
-        variant: 'destructive',
-      });
-      navigate('/login');
-      return;
-    }
-
-    // Create a unique chat room ID based on both user IDs
-    const currentUserId = user.email || user.id || 'current_user';
-    const teacherId = teacher.user_id || teacher.id;
-    const chatRoomId = `chat_${[currentUserId, teacherId].sort().join('_')}`;
-    
-    // Store teacher info in localStorage for the chat
-    const teacherInfo = {
-      id: teacherId,
-      name: teacher.profiles?.full_name || 'Преподаватель',
-      avatar: teacher.profiles?.avatar_url,
-      specialization: teacher.specialization
-    };
-    localStorage.setItem(`teacher_${teacherId}`, JSON.stringify(teacherInfo));
-    
-    console.log('Attempting to navigate to chat:', chatRoomId);
-    
-    // Navigate to messages page with the specific chat room
-    navigate(`/messages/${chatRoomId}`);
-  };
-
-  // Handle view teacher profile
-  const handleViewProfile = (teacher: any) => {
-    console.log('Viewing profile for teacher:', teacher);
-    const teacherId = teacher.id;
-    navigate(`/teachers/${teacherId}`);
-  };
-
-  // Get teacher initials for avatar fallback
-  const getInitials = (name: string) => {
-    if (!name) return 'T';
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
-  };
-
-  const normalizeLanguages = (langs: any): Array<{ language: string; level: string }> => {
-    if (!langs) return [];
-    if (Array.isArray(langs)) {
-      return langs.filter(l => l && typeof l === 'object' && l.language).map(l => ({ language: l.language, level: l.level || '' }));
-    }
-    return [];
-  };
-
-  const normalizeSchedule = (schedule: any): Record<string, any> => {
-    if (!schedule || typeof schedule !== 'object' || Array.isArray(schedule)) return {};
-    return schedule;
-  };
-
-  if (isLoading) {
+  if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <Skeleton className="h-10 w-64 mx-auto mb-4" />
-          <Skeleton className="h-6 w-96 mx-auto" />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-16 w-16 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Error Loading Teachers</h2>
+          <p className="text-gray-600">Sorry, we couldn't load the teachers. Please try again later.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Преподаватели и услуги
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Найдите квалифицированных преподавателей и их услуги
-        </p>
-      </div>
-
-      {/* View Mode Toggle */}
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <Button
-            variant={viewMode === 'teachers' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('teachers')}
-            className="rounded-md"
-          >
-            Преподаватели
-          </Button>
-          <Button
-            variant={viewMode === 'services' ? 'default' : 'ghost'}
-            onClick={() => setViewMode('services')}
-            className="rounded-md"
-          >
-            Услуги
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Find Your Perfect Teacher
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Discover qualified educators ready to help you achieve your learning goals
+          </p>
         </div>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder={viewMode === 'teachers' ? "Поиск по имени или специализации..." : "Поиск услуг..."}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search teachers or subjects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Specialization Filter */}
+            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+              <SelectTrigger>
+                <SelectValue placeholder="Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {specializations.map(spec => (
+                  <SelectItem key={spec} value={spec || ''}>{spec}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Location Filter */}
+            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              <SelectTrigger>
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map(loc => (
+                  <SelectItem key={loc} value={loc || ''}>{loc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Experience Filter */}
+            <Select value={selectedExperience} onValueChange={setSelectedExperience}>
+              <SelectTrigger>
+                <SelectValue placeholder="Experience" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Experience</SelectItem>
+                <SelectItem value="1">1+ Years</SelectItem>
+                <SelectItem value="3">3+ Years</SelectItem>
+                <SelectItem value="5">5+ Years</SelectItem>
+                <SelectItem value="10">10+ Years</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Most Popular</SelectItem>
+                <SelectItem value="experience">Most Experienced</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Предмет" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Все предметы</SelectItem>
-              {TEACHER_SUBJECTS.map((subject) => (
-                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Местоположение" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Все районы</SelectItem>
-              {DISTRICTS.map((district) => (
-                <SelectItem key={district} value={district}>{district}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {(searchTerm || subjectFilter || locationFilter) && (
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchTerm('');
-                setSubjectFilter('');
-                setLocationFilter('');
-              }}
-            >
-              Сбросить
-            </Button>
-          )}
         </div>
-      </div>
 
-      {/* Results count */}
-      <div className="mb-6">
-        <p className="text-gray-600">
-          {viewMode === 'teachers' 
-            ? `Найдено ${filteredTeachers?.length || 0} преподавателей`
-            : `Найдено ${filteredVacancies?.length || 0} услуг`
-          }
-        </p>
-      </div>
+        {/* Results Summary */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-gray-600">
+            {isLoading ? 'Loading...' : `${filteredTeachers.length} teachers found`}
+          </p>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-500">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+        </div>
 
-      {/* Content */}
-      {viewMode === 'teachers' ? (
-        // Teachers Grid
-        filteredTeachers && filteredTeachers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeachers.map((teacher) => {
-              // Properly map teacher data for TeacherCard component with actual view count
+        {/* Teachers Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <TeacherSkeletonLoader key={index} />
+            ))}
+          </div>
+        ) : paginatedTeachers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {paginatedTeachers.map((teacher) => {
+              const profile = teacher.profiles;
+              
+              // Transform teacher data to match TeacherCard expectations
               const teacherData = {
                 id: teacher.id,
-                name: teacher.profiles?.full_name || 'Преподаватель',
-                photo: teacher.profiles?.avatar_url || null,
-                specialization: teacher.specialization || 'Специализация не указана',
-                experience: teacher.experience_years ? `${teacher.experience_years} лет опыта` : 'Опыт не указан',
-                location: teacher.location || 'Местоположение не указано',
-                ratings: 4.5, // Mock value
-                views: teacher.view_count || 0, // Use actual view count from database
-                date_of_birth: teacher.date_of_birth || null,
-                languages: normalizeLanguages(teacher.languages),
-                schedule_details: typeof teacher.schedule_details === 'object' && !Array.isArray(teacher.schedule_details) ? teacher.schedule_details : {},
-                last_seen_at: teacher.profiles?.last_seen_at || null,
+                name: profile?.full_name || 'Anonymous Teacher',
+                photo: profile?.avatar_url || '/placeholder.svg',
+                specialization: teacher.specialization || 'General',
+                experience: teacher.experience_years ? `${teacher.experience_years} years` : 'Not specified',
+                location: teacher.location || 'Location not specified',
+                ratings: 4.5, // Default rating
+                views: teacher.view_count || 0,
+                about: teacher.bio || 'No description available',
+                education: teacher.education || 'Not specified',
+                languages: ['English'], // Default language
+                achievements: 'Professional Teacher',
+                preferredSchedule: teacher.schedule_details ? 
+                  `${teacher.schedule_details.preferred_time || 'Flexible'} - ${teacher.schedule_details.days_available || 'Any day'}` : 
+                  'Flexible schedule',
+                desiredSalary: 'Contact for details',
+                preferredDistricts: [teacher.location || 'Any location'],
+                applications: 0,
+                // Add fields that might be used elsewhere
+                date_of_birth: teacher.date_of_birth,
+                certificates: teacher.certificates || [],
+                resume_url: teacher.resume_url,
+                schedule_details: teacher.schedule_details,
+                last_seen_at: profile?.last_seen_at
               };
-              
+
               return (
-                <div key={teacher.id} onClick={() => trackTeacherView(teacher.id)}>
-                  <TeacherCard 
-                    {...teacherData}
-                  />
-                </div>
+                <TeacherCard
+                  key={teacher.id}
+                  teacher={teacherData}
+                />
               );
             })}
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-xl text-gray-500 mb-4">
-              Преподаватели не найдены
-            </p>
-            <p className="text-gray-400">
-              Попробуйте изменить параметры поиска или опубликуйте свой профиль
-            </p>
+            <div className="bg-white rounded-lg shadow-sm p-8 max-w-md mx-auto">
+              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Teachers Found</h3>
+              <p className="text-gray-600 mb-4">
+                Try adjusting your search criteria or filters
+              </p>
+              <Button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedSpecialization('all');
+                  setSelectedLocation('all');
+                  setSelectedExperience('all');
+                }}
+                variant="outline"
+              >
+                Clear Filters
+              </Button>
+            </div>
           </div>
-        )
-      ) : (
-        // Services Grid
-        filteredVacancies && filteredVacancies.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVacancies.map((vacancy) => (
-              <Card key={vacancy.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={vacancy.profiles?.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {vacancy.profiles?.full_name?.charAt(0) || 'T'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">{vacancy.title}</CardTitle>
-                      <CardDescription>
-                        {vacancy.profiles?.full_name}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {vacancy.subject && (
-                    <Badge variant="secondary" className="mb-3">
-                      {vacancy.subject}
-                    </Badge>
-                  )}
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {vacancy.description || 'Описание отсутствует'}
-                  </p>
-                  
-                  <div className="space-y-2">
-                    {(vacancy.hourly_rate || vacancy.group_rate) && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <DollarSign className="h-4 w-4" />
-                        {vacancy.hourly_rate && `${vacancy.hourly_rate} ₽/час (инд.)`}
-                        {vacancy.hourly_rate && vacancy.group_rate && ' • '}
-                        {vacancy.group_rate && `${vacancy.group_rate} ₽/час (группа)`}
-                      </div>
-                    )}
-                    
-                    {vacancy.location && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <MapPin className="h-4 w-4" />
-                        {vacancy.location}
-                      </div>
-                    )}
-                    
-                    {vacancy.employment_type && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        {vacancy.employment_type}
-                      </div>
-                    )}
-                  </div>
+        )}
 
-                  {vacancy.availability && vacancy.availability.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-xs text-gray-500 mb-2">Доступность:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {vacancy.availability.slice(0, 3).map((time, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {time}
-                          </Badge>
-                        ))}
-                        {vacancy.availability.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{vacancy.availability.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-4 pt-4 border-t">
-                    <Button className="w-full" size="sm">
-                      Связаться
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const page = i + 1;
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              );
+            })}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-xl text-gray-500 mb-4">
-              Услуги не найдены
-            </p>
-            <p className="text-gray-400">
-              Попробуйте изменить параметры поиска
-            </p>
-          </div>
-        )
-      )}
+        )}
+      </div>
     </div>
   );
-};
-
-export default TeachersPage;
+}

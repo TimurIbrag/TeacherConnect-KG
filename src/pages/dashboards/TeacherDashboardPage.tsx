@@ -1,794 +1,434 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '@/context/LanguageContext';
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { useTeacherProfile } from '@/hooks/useTeacherProfile';
-import { useTeacherApplications } from '@/hooks/useApplications';
-import { useUserMessages } from '@/hooks/useMessages';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Eye, User, MessageSquare, Bookmark, GraduationCap, Calendar, MapPin, Search, MessageCircle, Award, Phone, Mail, Briefcase, Edit, FileText, Save, Clock, Globe, Lock } from 'lucide-react';
-import EnhancedAvatarUploader from '@/components/ui/enhanced-avatar-uploader';
-import ProfileEditModal, { ProfileData } from '@/components/ProfileEditModal';
-import ScheduleDisplay from '@/components/teacher-dashboard/ScheduleDisplay';
+import { Calendar } from '@/components/ui/calendar';
+import { toast } from 'sonner';
+import { User, BookOpen, MapPin, Clock, Award, FileText, Eye, Heart, MessageSquare, Settings, Upload, Download } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+import { ServicesTab } from '@/components/teacher-dashboard/ServicesTab';
 
-const TeacherDashboardPage = () => {
-  const { t } = useLanguage();
-  const { user, profile, updateProfile } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { teacherProfile, loading: profileLoading, updateTeacherProfile } = useTeacherProfile();
-  const { data: applications = [], isLoading: applicationsLoading } = useTeacherApplications();
-  const { data: messages = [], isLoading: messagesLoading } = useUserMessages();
-  const [activeTab, setActiveTab] = useState('profile');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isPublished, setIsPublished] = useState(false);
-  const [pendingDraftChanges, setPendingDraftChanges] = useState<Partial<ProfileData>>({});
+type TeacherProfile = Database['public']['Tables']['teacher_profiles']['Row'];
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
-  // Load published status from database on mount
+export default function TeacherDashboardPage() {
+  const { user, profile } = useAuth();
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    specialization: '',
+    bio: '',
+    education: '',
+    experience_years: 0,
+    location: '',
+    skills: [] as string[],
+    languages: {} as any,
+    available: false,
+    is_published: false,
+  });
+
   useEffect(() => {
-    if (teacherProfile) {
-      setIsPublished(teacherProfile.is_published || false);
+    if (user) {
+      fetchTeacherProfile();
     }
-  }, [teacherProfile]);
+  }, [user]);
 
-  // Auto-save every 30 seconds if there are pending changes - disabled to prevent conflicts
-  useEffect(() => {
-    const autoSaveInterval = setInterval(() => {
-      if (Object.keys(pendingDraftChanges).length > 0 && hasUnsavedChanges) {
-        // Only save to localStorage, not to database to prevent conflicts
-        saveDraftToLocalStorage(pendingDraftChanges);
-        setPendingDraftChanges({}); // Clear pending changes after saving
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false); // Mark as saved
+  const fetchTeacherProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching teacher profile:', error);
+        return;
       }
-    }, 30000); // 30 seconds
 
-    return () => clearInterval(autoSaveInterval);
-  }, [pendingDraftChanges, hasUnsavedChanges]);
-
-  // Auto-save functionality
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите покинуть страницу?';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
-
-  const handleAvatarUploaded = async (url: string) => {
-    try {
-      setIsAutoSaving(true);
-      await updateProfile({ avatar_url: url });
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-      toast({
-        title: 'Фото загружено',
-        description: 'Фотография профиля успешно обновлена',
-      });
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить фотографию',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsAutoSaving(false);
-    }
-  };
-
-  const handleAvatarRemoved = async () => {
-    try {
-      setIsAutoSaving(true);
-      await updateProfile({ avatar_url: null });
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-      toast({
-        title: 'Фото удалено',
-        description: 'Фотография профиля была удалена',
-      });
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить фотографию',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsAutoSaving(false);
-    }
-  };
-
-  const handleProfileSave = async (data: ProfileData) => {
-    try {
-      setIsAutoSaving(true);
-      
-      // Update user profile
-      await updateProfile({ 
-        full_name: data.name,
-        avatar_url: data.photoUrl
-      });
-
-      // Update teacher profile with all new fields
-      await updateTeacherProfile({
-        specialization: data.specialization,
-        education: data.education,
-        experience_years: parseInt(data.experience) || 0,
-        location: data.location,
-        bio: data.bio,
-        date_of_birth: data.dateOfBirth,
-        certificates: data.certificates,
-        resume_url: data.resumeUrl,
-        schedule_details: data.scheduleDetails,
-        languages: data.languages
-      });
-
-      // No need to save to localStorage anymore - data is in database
-
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-      setPendingDraftChanges({}); // Clear pending changes
-      
-      toast({
-        title: 'Профиль обновлен',
-        description: 'Изменения успешно сохранены и отображаются немедленно',
-      });
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить изменения',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsAutoSaving(false);
-    }
-  };
-
-  // Handle publish/unpublish toggle
-  const handlePublishToggle = async (checked: boolean) => {
-    try {
-      // Update the database
-      await updateTeacherProfile({
-        is_published: checked
-      });
-
-      setIsPublished(checked);
-      
-      if (checked) {
-        toast({
-          title: 'Профиль опубликован',
-          description: 'Ваш профиль теперь виден на странице преподавателей',
-        });
-      } else {
-        toast({
-          title: 'Профиль скрыт',
-          description: 'Ваш профиль больше не отображается публично',
+      if (data) {
+        setTeacherProfile(data);
+        setFormData({
+          specialization: data.specialization || '',
+          bio: data.bio || '',
+          education: data.education || '',
+          experience_years: data.experience_years || 0,
+          location: data.location || '',
+          skills: data.skills || [],
+          languages: data.languages || {},
+          available: data.available || false,
+          is_published: data.is_published || false,
         });
       }
     } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось изменить видимость профиля',
-        variant: 'destructive',
-      });
+      console.error('Error fetching teacher profile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Auto-save draft data to localStorage (without toast notifications)
-  const saveDraftToLocalStorage = (data: Partial<ProfileData>) => {
+  const handleSave = async () => {
+    if (!user) return;
+
+    setSaving(true);
     try {
-      const existingDraft = localStorage.getItem('teacher_profile_draft');
-      const draft = existingDraft ? JSON.parse(existingDraft) : {};
-      const updatedDraft = { ...draft, ...data, lastUpdated: new Date().toISOString() };
-      localStorage.setItem('teacher_profile_draft', JSON.stringify(updatedDraft));
-      setHasUnsavedChanges(true);
-      
-      // No toast notification for auto-save
+      const updateData = {
+        ...formData,
+        date_of_birth: teacherProfile?.date_of_birth || null,
+        certificates: teacherProfile?.certificates || [],
+        resume_url: teacherProfile?.resume_url || null,
+        schedule_details: teacherProfile?.schedule_details || null,
+        is_profile_complete: teacherProfile?.is_profile_complete || false,
+      };
+
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .upsert({
+          id: user.id,
+          ...updateData,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTeacherProfile(data);
+      toast.success('Profile updated successfully!');
     } catch (error) {
-      console.error('Failed to save draft:', error);
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Updated draft save handler that only saves to localStorage
-  const handleDraftSave = (data: Partial<ProfileData>) => {
-    // Save immediately to localStorage to prevent data loss
-    saveDraftToLocalStorage(data);
-    setPendingDraftChanges(prev => ({ ...prev, ...data }));
-    setHasUnsavedChanges(true);
-    setLastSaved(new Date());
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Load draft from localStorage
-  const loadDraftFromLocalStorage = (): Partial<ProfileData> | null => {
-    try {
-      const draft = localStorage.getItem('teacher_profile_draft');
-      return draft ? JSON.parse(draft) : null;
-    } catch (error) {
-      console.error('Failed to load draft:', error);
-      return null;
-    }
-  };
-
-  // Clear draft from localStorage
-  const clearDraft = () => {
-    localStorage.removeItem('teacher_profile_draft');
-    setHasUnsavedChanges(false);
-    setPendingDraftChanges({});
-  };
-
-  // Handle action buttons
-  const handleSearchVacancies = () => {
-    navigate('/schools');
-  };
-
-  const handleMessages = () => {
-    navigate('/messages');
-  };
-
-  const handleCertificates = () => {
-    toast({
-      title: 'Скоро будет доступно',
-      description: 'Функция сертификатов находится в разработке. Следите за обновлениями!',
-    });
-  };
-
-  if (profile?.role !== 'teacher') {
+  if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">Доступ запрещен</h2>
-              <p className="text-muted-foreground">
-                Эта страница доступна только для преподавателей.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
       </div>
     );
   }
 
-  const unreadMessages = messages.filter(msg => !msg.read && msg.recipient_id === user?.id).length;
-  
-  // Prepare profile data for edit modal with draft support
-  const draft = loadDraftFromLocalStorage();
-  const currentProfileData: ProfileData = {
-    name: draft?.name || profile?.full_name || '',
-    specialization: draft?.specialization || teacherProfile?.specialization || '',
-    education: draft?.education || teacherProfile?.education || '',
-    experience: draft?.experience || teacherProfile?.experience_years?.toString() || '',
-    schedule: draft?.schedule || 'full-time',
-    location: draft?.location || teacherProfile?.location || '',
-    locationDetails: draft?.locationDetails || '',
-    bio: draft?.bio || teacherProfile?.bio || '',
-    photoUrl: draft?.photoUrl || profile?.avatar_url || '',
-    dateOfBirth: draft?.dateOfBirth || teacherProfile?.date_of_birth || '',
-    certificates: draft?.certificates || teacherProfile?.certificates || [],
-    resumeUrl: draft?.resumeUrl || teacherProfile?.resume_url || '',
-    scheduleDetails: draft?.scheduleDetails || (teacherProfile?.schedule_details as any) || {},
-    languages: draft?.languages || (teacherProfile?.languages as any) || []
-  };
-
-  const isProfileComplete = teacherProfile?.is_profile_complete || false;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header with Auto-save Status */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Личный кабинет учителя
-            </h1>
-            <div className="flex items-center gap-4">
-              {isAutoSaving && (
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Save className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Сохранение...</span>
-                </div>
-              )}
-              {lastSaved && !isAutoSaving && (
-                <div className="flex items-center gap-2 text-green-600">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">
-                    Сохранено {lastSaved.toLocaleTimeString()}
-                  </span>
-                </div>
-              )}
-              {hasUnsavedChanges && !isAutoSaving && (
-                <div className="flex items-center gap-2 text-orange-600">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">Автосохранение каждые 30 сек.</span>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage your teaching profile and connect with students
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={teacherProfile?.is_published ? "default" : "secondary"}>
+            {teacherProfile?.is_published ? "Published" : "Draft"}
+          </Badge>
+          <Badge variant={teacherProfile?.available ? "default" : "secondary"}>
+            {teacherProfile?.available ? "Available" : "Unavailable"}
+          </Badge>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Section - My Profile */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-xl font-semibold">Мой профиль</CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Edit className="h-4 w-4" />
-                  Редактировать
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Profile Header */}
-                <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
-                    {profile?.avatar_url ? (
-                      <img 
-                        src={profile.avatar_url} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <User className="h-8 w-8 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {profile?.full_name || "Заполните ваше имя"}
-                    </h3>
-                    <p className="text-gray-600 mb-2">
-                      {teacherProfile?.specialization || "Укажите вашу специализацию"}
-                    </p>
-                  </div>
-                </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Eye className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Profile Views</p>
+                <p className="text-2xl font-bold">{teacherProfile?.view_count || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Messages</p>
+                <p className="text-2xl font-bold">0</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                {/* Profile Details Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Образование</p>
-                        <p className="text-gray-900">{teacherProfile?.education || "Не указано"}</p>
-                      </div>
-                    </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-4 w-4 text-purple-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Active Students</p>
+                <p className="text-2xl font-bold">0</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                    <div className="flex items-center gap-3">
-                      <Briefcase className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Опыт работы</p>
-                        <p className="text-gray-900">
-                          {teacherProfile?.experience_years ? `${teacherProfile.experience_years} лет` : "Не указано"}
-                        </p>
-                      </div>
-                    </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Award className="h-4 w-4 text-yellow-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Rating</p>
+                <p className="text-2xl font-bold">4.8</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-red-600" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Предпочитательные районы</p>
-                        <p className="text-gray-900">{teacherProfile?.location || "Не указано"}</p>
-                      </div>
-                    </div>
+      {/* Main Content */}
+      <Tabs defaultValue="profile" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Дата рождения</p>
-                        <p className="text-gray-900">
-                          {teacherProfile?.date_of_birth ? new Date(teacherProfile.date_of_birth).toLocaleDateString('ru-RU') : "Не указано"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Languages */}
-                    {teacherProfile?.languages && Array.isArray(teacherProfile.languages) && teacherProfile.languages.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <Globe className="h-5 w-5 text-indigo-600 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Языки</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {teacherProfile.languages.map((lang: any, index: number) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {lang.language} ({lang.level})
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Resume */}
-                    {teacherProfile?.resume_url && (
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-orange-600" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Резюме</p>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="p-0 h-auto text-blue-600"
-                            onClick={() => window.open(teacherProfile.resume_url, '_blank')}
-                          >
-                            Просмотреть резюме
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Certificates */}
-                    {teacherProfile?.certificates && teacherProfile.certificates.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <Award className="h-5 w-5 text-yellow-600 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Сертификаты</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {teacherProfile.certificates.map((cert: string, index: number) => (
-                              <Button
-                                key={index}
-                                variant="outline"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => window.open(cert, '_blank')}
-                              >
-                                Сертификат {index + 1}
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* About Me Section */}
+        <TabsContent value="profile" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>
+                Update your basic teaching profile information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">О себе</h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 leading-relaxed">
-                      {teacherProfile?.bio || "Расскажите о себе, опыте работы и методах преподавания"}
-                    </p>
-                  </div>
+                  <Label htmlFor="specialization">Specialization</Label>
+                  <Input
+                    id="specialization"
+                    value={formData.specialization}
+                    onChange={(e) => handleInputChange('specialization', e.target.value)}
+                    placeholder="e.g., Mathematics, English, Physics"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="experience_years">Years of Experience</Label>
+                  <Input
+                    id="experience_years"
+                    type="number"
+                    value={formData.experience_years}
+                    onChange={(e) => handleInputChange('experience_years', parseInt(e.target.value) || 0)}
+                    placeholder="0"
+                  />
                 </div>
 
-                {/* Schedule Display */}
-                <ScheduleDisplay scheduleDetails={teacherProfile?.schedule_details as any} />
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder="City, Country"
+                  />
+                </div>
 
-                {!profile?.full_name && !teacherProfile?.specialization && (
-                  <div className="text-center py-8 text-gray-500">
-                    <p className="mb-2">Заполните все разделы профиля, чтобы повысить шансы найти подходящую школу.</p>
-                  </div>
-                )}
-
-                {/* Profile Visibility Section */}
-                <div className="border-t pt-6">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {isPublished ? (
-                        <Globe className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Lock className="h-5 w-5 text-gray-600" />
-                      )}
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {isPublished ? "Профиль опубликован" : "Профиль скрыт"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {isPublished 
-                            ? "Ваш профиль виден на странице преподавателей"
-                            : "Только вы можете видеть ваш профиль"
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={isPublished}
-                      onCheckedChange={handlePublishToggle}
-                      disabled={!isProfileComplete}
+                {teacherProfile?.date_of_birth && (
+                  <div>
+                    <Label>Date of Birth</Label>
+                    <Input
+                      type="date"
+                      value={teacherProfile.date_of_birth}
+                      readOnly
+                      className="bg-gray-50"
                     />
                   </div>
-                  
-                  {!isProfileComplete && (
-                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <p className="text-sm text-yellow-800">
-                        Заполните все обязательные поля профиля для публикации: имя, специализация, образование, опыт работы, местоположение, описание, дата рождения
-                      </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="education">Education</Label>
+                <Textarea
+                  id="education"
+                  value={formData.education}
+                  onChange={(e) => handleInputChange('education', e.target.value)}
+                  placeholder="Describe your educational background"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bio">About Me</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  placeholder="Tell students about yourself, your teaching style, and experience"
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="available"
+                  checked={formData.available}
+                  onCheckedChange={(checked) => handleInputChange('available', checked)}
+                />
+                <Label htmlFor="available">Available for new students</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="is_published"
+                  checked={formData.is_published}
+                  onCheckedChange={(checked) => handleInputChange('is_published', checked)}
+                />
+                <Label htmlFor="is_published">Publish profile (make it visible to students)</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="services">
+          <ServicesTab />
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Schedule & Availability</CardTitle>
+              <CardDescription>
+                Set your teaching schedule and availability
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>Schedule Details</Label>
+                  {teacherProfile?.schedule_details ? (
+                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                      <pre className="text-sm">
+                        {JSON.stringify(teacherProfile.schedule_details, null, 2)}
+                      </pre>
                     </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      No schedule details set yet.
+                    </p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Right Section - Statistics and Actions */}
-          <div className="space-y-6">
-            {/* Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Статистика</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Просмотры профиля:</span>
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4 text-gray-400" />
-                    <span className="font-medium">0</span>
+        <TabsContent value="documents" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents & Certificates</CardTitle>
+              <CardDescription>
+                Upload your teaching certificates and resume
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Resume</Label>
+                {teacherProfile?.resume_url ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <FileText className="h-4 w-4" />
+                    <a 
+                      href={teacherProfile.resume_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      View Resume
+                    </a>
                   </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Отклики:</span>
-                  <span className="font-medium text-blue-600">{applications.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Сообщения:</span>
-                  <span className="font-medium text-green-600">{messages.length}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Действия</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  size="sm"
-                  onClick={handleSearchVacancies}
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Искать вакансии
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  size="sm"
-                  onClick={handleMessages}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Сообщения
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  size="sm"
-                  onClick={handleCertificates}
-                >
-                  <Award className="mr-2 h-4 w-4" />
-                  Сертификаты
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Quick Navigation */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Дополнительно</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-left p-2" 
-                  size="sm"
-                  onClick={() => setActiveTab('applications')}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <div className="flex justify-between items-center w-full">
-                    <span>Отклики на вакансии</span>
-                    {applications.length > 0 && (
-                      <Badge variant="secondary" className="ml-2">
-                        {applications.length}
-                      </Badge>
-                    )}
-                  </div>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-left p-2" 
-                  size="sm"
-                  onClick={handleMessages}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <div className="flex justify-between items-center w-full">
-                    <span>Сообщения</span>
-                    {unreadMessages > 0 && (
-                      <Badge variant="destructive" className="ml-2">
-                        {unreadMessages}
-                      </Badge>
-                    )}
-                  </div>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-left p-2" 
-                  size="sm"
-                  onClick={() => navigate('/saved')}
-                >
-                  <Bookmark className="mr-2 h-4 w-4" />
-                  Сохраненные
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Additional Tabs Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
-          <TabsContent value="applications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Отклики на вакансии</CardTitle>
-                <CardDescription>
-                  Ваши отклики на вакансии школ
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {applicationsLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Загрузка...</p>
-                  </div>
-                ) : applications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">
-                      У вас пока нет откликов на вакансии
-                    </p>
-                    <Button variant="outline" onClick={handleSearchVacancies}>
-                      <Search className="h-4 w-4 mr-2" />
-                      Найти вакансии
+                ) : (
+                  <div className="mt-2">
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Resume
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {applications.map((application) => (
-                      <div key={application.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">
-                              {application.vacancies?.title || 'Без названия'}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {application.vacancies?.school_profiles?.school_name || 'Школа не указана'}
-                            </p>
-                            <div className="mt-2">
-                              <Badge 
-                                variant={
-                                  application.status === 'accepted' ? 'default' :
-                                  application.status === 'rejected' ? 'destructive' :
-                                  'secondary'
-                                }
-                              >
-                                {application.status === 'pending' && 'На рассмотрении'}
-                                {application.status === 'accepted' && 'Принят'}
-                                {application.status === 'rejected' && 'Отклонен'}
-                                {application.status === 'reviewed' && 'Рассмотрен'}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {application.applied_at && new Date(application.applied_at).toLocaleDateString()}
-                          </div>
-                        </div>
+                )}
+              </div>
+
+              <div>
+                <Label>Certificates</Label>
+                {teacherProfile?.certificates && teacherProfile.certificates.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    {teacherProfile.certificates.map((cert, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Award className="h-4 w-4" />
+                        <span>{cert}</span>
                       </div>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="messages">
-            <Card>
-              <CardHeader>
-                <CardTitle>Сообщения</CardTitle>
-                <CardDescription>
-                  Переписка с школами и администрацией
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {messagesLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Загрузка...</p>
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Нет сообщений</p>
-                  </div>
                 ) : (
-                  <div className="space-y-4">
-                    {messages.slice(0, 5).map((message) => (
-                      <div key={message.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-medium">
-                                {message.sender_id === user?.id ? 'Вы' : message.sender?.full_name}
-                              </h4>
-                              {!message.read && message.recipient_id === user?.id && (
-                                <Badge variant="destructive" className="h-2 w-2 p-0"></Badge>
-                              )}
-                            </div>
-                            {message.subject && (
-                              <p className="text-sm font-medium text-muted-foreground">
-                                {message.subject}
-                              </p>
-                            )}
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {message.content.substring(0, 100)}
-                              {message.content.length > 100 && '...'}
-                            </p>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {message.sent_at && new Date(message.sent_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="mt-2">
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Add Certificates
+                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="saved">
-            <Card>
-              <CardHeader>
-                <CardTitle>Сохраненные</CardTitle>
-                <CardDescription>
-                  Сохраненные вакансии и школы
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    Нет сохраненных элементов
-                  </p>
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Settings</CardTitle>
+              <CardDescription>
+                Manage your profile preferences and privacy settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Profile Completeness</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {teacherProfile?.is_profile_complete ? 'Complete' : 'Incomplete'}
+                    </p>
+                  </div>
+                  <Badge variant={teacherProfile?.is_profile_complete ? "default" : "secondary"}>
+                    {teacherProfile?.is_profile_complete ? 'Complete' : 'Incomplete'}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Enhanced Profile Edit Modal with Auto-save */}
-        <ProfileEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            if (!hasUnsavedChanges) {
-              clearDraft();
-            }
-          }}
-          initialData={currentProfileData}
-          onSave={(data) => {
-            handleProfileSave(data);
-            clearDraft(); // Clear draft after successful save
-          }}
-          userType="teacher"
-          onDraftSave={handleDraftSave} // Pass updated auto-save function
-        />
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
-
-export default TeacherDashboardPage;
+}
