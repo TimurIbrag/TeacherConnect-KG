@@ -134,7 +134,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         </div>
         {/* Truncated description, normal text, no green oval */}
         <div className="mt-3">
-          <p className="text-gray-700 text-sm line-clamp-2">{description || specialization}</p>
+          <p className="text-gray-700 text-sm line-clamp-2 bg-transparent" style={{background: 'transparent'}}>{description || specialization}</p>
         </div>
         <div className="mt-3">
           <div className="flex items-center gap-1 text-sm">
