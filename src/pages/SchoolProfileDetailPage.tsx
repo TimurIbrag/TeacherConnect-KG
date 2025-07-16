@@ -331,15 +331,7 @@ const SchoolProfileDetailPage: React.FC = () => {
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-3">{school.name}</h1>
               
-              <div className="flex flex-wrap gap-2 mb-4">
-                {school.type && <Badge variant="outline">{school.type}</Badge>}
-                {school.specialization}
-                {school.city && <Badge variant="outline">{school.city}</Badge>}
-                {school.housing && <Badge variant="default" className="bg-blue-100 text-blue-800">
-                    <Home className="w-3 h-3 mr-1" />
-                    С жильем
-                  </Badge>}
-              </div>
+              
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm">
