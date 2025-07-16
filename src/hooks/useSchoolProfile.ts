@@ -101,6 +101,16 @@ export const useSchoolProfile = () => {
           if (profile.photo_urls && profile.photo_urls.length > 0) {
             setProfilePhoto(profile.photo_urls[0]);
           }
+
+          // Update stats with actual view count from database
+          const currentVacancies = JSON.parse(localStorage.getItem('schoolVacancies') || '[]');
+          const activeVacanciesCount = currentVacancies.filter((v: any) => v.status === 'active').length;
+          
+          setStats({
+            profileViews: profile.view_count || 0,
+            activeVacancies: activeVacanciesCount,
+            applications: 0 // This would come from applications table in the future
+          });
         }
       } catch (error) {
         console.error('Error loading school profile:', error);

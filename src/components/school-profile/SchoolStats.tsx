@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
@@ -17,23 +18,23 @@ const SchoolStats: React.FC<SchoolStatsProps> = ({ school, vacancyCount }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Статистика</CardTitle>
+        <CardTitle className="text-white">Статистика</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Просмотры:</span>
+          <span className="text-white">Просмотры:</span>
           <div className="flex items-center">
-            <Eye className="h-4 w-4 mr-1 text-muted-foreground" />
-            <span className="font-medium">{school.views}</span>
+            <Eye className="h-4 w-4 mr-1 text-white" />
+            <span className="font-medium text-white">{school.views}</span>
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Количество вакансий:</span>
-          <span className="font-medium">{vacancyCount}</span>
+          <span className="text-white">Количество вакансий:</span>
+          <span className="font-medium text-white">{vacancyCount}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-muted-foreground">Откликов получено:</span>
-          <span className="font-medium">{school.applications || 0}</span>
+          <span className="text-white">Откликов получено:</span>
+          <span className="font-medium text-white">{school.applications || 0}</span>
         </div>
       </CardContent>
     </Card>

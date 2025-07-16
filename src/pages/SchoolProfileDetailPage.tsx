@@ -30,6 +30,7 @@ type ExtendedVacancy = {
   is_active?: boolean;
   created_at: string;
 };
+
 const SchoolProfileDetailPage: React.FC = () => {
   const {
     id
@@ -85,6 +86,7 @@ const SchoolProfileDetailPage: React.FC = () => {
     },
     enabled: !!id
   });
+
   const getVacancyTypeLabel = (type: string) => {
     const types = {
       teacher: 'Учитель',
@@ -95,6 +97,7 @@ const SchoolProfileDetailPage: React.FC = () => {
     };
     return types[type as keyof typeof types] || type;
   };
+
   const formatSalary = (vacancy: ExtendedVacancy) => {
     const {
       salary_min,
@@ -193,19 +196,22 @@ const SchoolProfileDetailPage: React.FC = () => {
     // For now, redirect to vacancies page with school filter
     navigate(`/vacancies?school=${school.id}`);
   };
+
   useEffect(() => {
     const loadSchoolData = async () => {
       console.log('DEBUG: Loading school data for ID:', id);
       // Try to find school in Supabase first
       if (id && id.includes('-')) {
         try {
-          const {
-            data: supabaseSchool,
-            error
-          } = await supabase.from('school_profiles').select(`
+          const { data: supabaseSchool, error } = await supabase
+            .from('school_profiles')
+            .select(`
               *,
               profiles (*)
-            `).eq('id', id).single();
+            `)
+            .eq('id', id)
+            .single();
+
           if (!error && supabaseSchool) {
             const schoolData = {
               id: supabaseSchool.id,
@@ -214,17 +220,14 @@ const SchoolProfileDetailPage: React.FC = () => {
               address: supabaseSchool.address || 'Адрес не указан',
               type: supabaseSchool.school_type || 'Государственная',
               specialization: supabaseSchool.description || 'Общее образование',
-              views: 150,
-              // Mock value
+              views: supabaseSchool.view_count || 0, // Use actual view count from database
               housing: supabaseSchool.housing_provided || false,
               about: supabaseSchool.description || 'Информация о школе не предоставлена.',
               website: supabaseSchool.website_url || '',
               facilities: supabaseSchool.facilities || [],
               applications: 0,
-              // Mock value
               city: supabaseSchool.address?.split(',')[0] || 'Бишкек',
               photos: supabaseSchool.photo_urls || [],
-              // Display all photos from school profile
               locationVerified: supabaseSchool.location_verified || false
             };
             setSchool(schoolData);
@@ -290,6 +293,7 @@ const SchoolProfileDetailPage: React.FC = () => {
     };
     loadSchoolData();
   }, [id]);
+
   if (loading) {
     return <div className="container px-4 py-8 max-w-4xl mx-auto">
         <div className="animate-pulse">
@@ -302,6 +306,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         </div>
       </div>;
   }
+
   if (!school) {
     return <div className="container px-4 py-8 max-w-4xl mx-auto">
         <Button variant="outline" onClick={() => navigate('/schools')} className="mb-6">
@@ -314,6 +319,7 @@ const SchoolProfileDetailPage: React.FC = () => {
         </div>
       </div>;
   }
+
   return <div className="container px-4 py-8 max-w-4xl mx-auto">
       <Button variant="outline" onClick={() => navigate('/schools')} className="mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -528,25 +534,28 @@ const SchoolProfileDetailPage: React.FC = () => {
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Статистика</CardTitle>
+              <CardTitle className="text-white">Статистика</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
                <div className="flex justify-between">
-                 <span className="text-sm text-muted-foreground">Просмотры:</span>
-                 <span className="text-sm font-medium">{school.view_count || school.views || 0}</span>
+                 <span className="text-sm text-white">Просмотры:</span>
+                 <span className="text-sm font-medium text-white">{school.view_count || school.views || 0}</span>
                </div>
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Активные вакансии:</span>
-                <span className="text-sm font-medium">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>
+                <span className="text-sm text-white">Активные вакансии:</span>
+                <span className="text-sm font-medium text-white">{school.openPositions ? school.openPositions.length : schoolVacancies.length}</span>
               </div>
-              {school.applications !== undefined && <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Заявки:</span>
-                  <span className="text-sm font-medium">{school.applications}</span>
-                </div>}
+              {school.applications !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-white">Заявки:</span>
+                  <span className="text-sm font-medium text-white">{school.applications}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     </div>;
 };
+
 export default SchoolProfileDetailPage;
