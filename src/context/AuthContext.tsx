@@ -319,6 +319,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Update last_seen_at on page load and user activity
+    const updateLastSeen = async () => {
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', user.id);
+      }
+    };
+    updateLastSeen();
+    const activityHandler = () => updateLastSeen();
+    window.addEventListener('mousemove', activityHandler);
+    window.addEventListener('keydown', activityHandler);
+    window.addEventListener('click', activityHandler);
+    return () => {
+      window.removeEventListener('mousemove', activityHandler);
+      window.removeEventListener('keydown', activityHandler);
+      window.removeEventListener('click', activityHandler);
+    };
+  }, [user]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);

@@ -191,6 +191,19 @@ const TeachersPage = () => {
       .toUpperCase();
   };
 
+  const normalizeLanguages = (langs: any): Array<{ language: string; level: string }> => {
+    if (!langs) return [];
+    if (Array.isArray(langs)) {
+      return langs.filter(l => l && typeof l === 'object' && l.language).map(l => ({ language: l.language, level: l.level || '' }));
+    }
+    return [];
+  };
+
+  const normalizeSchedule = (schedule: any): Record<string, any> => {
+    if (!schedule || typeof schedule !== 'object' || Array.isArray(schedule)) return {};
+    return schedule;
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -328,6 +341,10 @@ const TeachersPage = () => {
                 location: teacher.location || 'Местоположение не указано',
                 ratings: 4.5, // Mock value
                 views: teacher.view_count || 0, // Use actual view count from database
+                date_of_birth: teacher.date_of_birth || null,
+                languages: normalizeLanguages(teacher.languages),
+                schedule_details: typeof teacher.schedule_details === 'object' && !Array.isArray(teacher.schedule_details) ? teacher.schedule_details : {},
+                last_seen_at: teacher.profiles?.last_seen_at || null,
               };
               
               return (

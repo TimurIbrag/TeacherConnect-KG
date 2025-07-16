@@ -28,7 +28,9 @@ import {
   DollarSign,
   Building,
   Award,
-  Eye
+  Eye,
+  FileText,
+  Clock
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
@@ -267,6 +269,15 @@ const TeacherProfilePage: React.FC = () => {
   // Always use the actual teacher data without fallbacks
   const displayName = teacher.name || 'Преподаватель';
   const displayPhoto = teacher.photo || null;
+  
+  // In the teacher object, add age calculation
+  const getAge = (dateOfBirth: string | null) => {
+    if (!dateOfBirth) return null;
+    const dob = new Date(dateOfBirth);
+    const diff = Date.now() - dob.getTime();
+    const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+    return age;
+  };
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">

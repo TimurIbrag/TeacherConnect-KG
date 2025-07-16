@@ -844,10 +844,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                     <input
                       type="file"
                       id="resume-upload"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                      onChange={(e) => {
+                      accept="application/pdf,image/jpeg,image/png,image/jpg,image/webp"
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) uploadResume(file);
+                        if (file) await uploadResume(file);
                       }}
                       className="hidden"
                       disabled={uploadingResume}
@@ -920,10 +920,10 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   <input
                     type="file"
                     id="certificate-upload"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={(e) => {
+                    accept="application/pdf,image/jpeg,image/png,image/jpg,image/webp"
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
-                      if (file) uploadCertificate(file);
+                      if (file) await uploadCertificate(file);
                     }}
                     className="hidden"
                     disabled={uploadingCertificate}

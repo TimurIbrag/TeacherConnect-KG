@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Star, Eye, Navigation, MessageSquare, User } from 'lucide-react';
+import { MapPin, Star, Eye, Navigation, MessageSquare, User, Languages, Calendar as CalendarIcon, Clock, CircleDot } from 'lucide-react';
 import { useSecurePrivateChat } from '@/hooks/useSecurePrivateChat';
 
 interface TeacherCardProps {
@@ -22,6 +22,10 @@ interface TeacherCardProps {
   views: number;
   distance?: number;
   source?: string;
+  date_of_birth?: string | null;
+  languages?: Array<{ language: string; level: string }>;
+  schedule_details?: Record<string, any>;
+  last_seen_at?: string | null;
 }
 
 const TeacherCard: React.FC<TeacherCardProps> = ({
@@ -35,6 +39,10 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
   views,
   distance,
   source = 'mock',
+  date_of_birth,
+  languages,
+  schedule_details,
+  last_seen_at,
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -49,6 +57,21 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
       .map(n => n[0])
       .join('')
       .toUpperCase();
+  };
+
+  // Helper to calculate age from date_of_birth
+  const getAge = (dateOfBirth: string | null | undefined) => {
+    if (!dateOfBirth) return null;
+    const dob = new Date(dateOfBirth);
+    const diff = Date.now() - dob.getTime();
+    const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+    return age;
+  };
+  // Helper to check online status
+  const isOnline = (lastSeenAt: string | null | undefined) => {
+    if (!lastSeenAt) return false;
+    const lastSeen = new Date(lastSeenAt).getTime();
+    return Date.now() - lastSeen < 2 * 60 * 1000; // 2 minutes
   };
 
   const handleStartChat = async (e: React.MouseEvent) => {
@@ -127,31 +150,45 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
         <div className="p-4">
           <div className="flex items-center gap-4">
             {/* Main Avatar - Always show image if available */}
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={displayPhoto || undefined} alt={displayName} />
-              <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-            </Avatar>
-            
+            <div className="relative">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={displayPhoto || undefined} alt={displayName} />
+                <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+              </Avatar>
+              {/* Online status dot */}
+              {isOnline(last_seen_at) && (
+                <span className="absolute bottom-1 right-1 block w-4 h-4 rounded-full bg-green-500 border-2 border-white">
+                  <CircleDot className="w-4 h-4 text-green-500" />
+                </span>
+              )}
+            </div>
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-medium">{displayName}</h3>
+                  <h3 className="text-lg font-medium flex items-center gap-2">{displayName}</h3>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <Badge variant="secondary">{specialization}</Badge>
                     <span className="text-sm text-muted-foreground">{experience}</span>
                   </div>
-                  <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                    <MapPin className="w-3 h-3" />
-                    <span>{location}</span>
-                    {distance !== undefined && (
-                      <Badge variant="outline" className="ml-2 flex items-center gap-1 text-xs">
-                        <Navigation className="w-3 h-3" />
-                        {distance} км
-                      </Badge>
-                    )}
+                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                    <CalendarIcon className="w-4 h-4" />
+                    <span>{getAge(date_of_birth) ? `${getAge(date_of_birth)} лет` : 'Возраст не указан'}</span>
+                    <Languages className="w-4 h-4 ml-2" />
+                    <span>{Array.isArray(languages) && languages.length > 0 ? languages.map((l: any) => l.language).join(', ') : 'Языки не указаны'}</span>
                   </div>
+                  {/* Available days (schedule) */}
+                  {schedule_details && (
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      <span>
+                        {Object.entries(schedule_details)
+                          .filter(([_, v]: any) => v && v.available)
+                          .map(([day, v]: any) => day.charAt(0).toUpperCase() + day.slice(1))
+                          .join(', ') || 'Нет предпочтений'}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
                 {/* Top-right corner avatar - Always show image if available */}
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={displayPhoto || undefined} alt={displayName} />
