@@ -60,8 +60,8 @@ const LoginPage: React.FC = () => {
   return (
     <AuthContainer
       title={t('auth.login')}
-      description="Войдите в аккаунт для доступа к платформе"
-      footerText="Еще нет аккаунта?"
+      description={t('auth.loginDescription')}
+      footerText={t('auth.dontHaveAccount')}
       footerLinkText={t('nav.register')}
       footerLinkPath={userType ? `/register?type=${userType}` : "/register"}
     >
@@ -79,7 +79,7 @@ const LoginPage: React.FC = () => {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Или войдите через email
+              {t('auth.orLoginWithEmail')}
             </span>
           </div>
         </div>

@@ -43,7 +43,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <div className="flex items-center justify-between">
           <Label htmlFor="password">{t('auth.password')}</Label>
           <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-            Забыли пароль?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
         <Input 
@@ -61,7 +61,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         className="w-full" 
         disabled={isLoading}
       >
-        {isLoading ? 'Вход...' : t('auth.submit')}
+        {isLoading ? t('auth.loggingIn') : t('auth.submit')}
       </Button>
     </form>
   );

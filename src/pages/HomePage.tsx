@@ -25,11 +25,11 @@ const HomePage = () => {
   const limitedSchools = featuredSchools?.slice(0, 3) || [];
   
   const formatSalary = (min?: number, max?: number) => {
-    if (!min && !max) return 'По договоренности';
-    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} с`;
-    if (min) return `от ${min.toLocaleString()} с`;
-    if (max) return `до ${max.toLocaleString()} с`;
-    return 'Не указана';
+    if (!min && !max) return t('vacancy.negotiable');
+    if (min && max) return `${min.toLocaleString()} - ${max.toLocaleString()} ${t('currency.som')}`;
+    if (min) return `${t('vacancy.from')} ${min.toLocaleString()} ${t('currency.som')}`;
+    if (max) return `${t('vacancy.upTo')} ${max.toLocaleString()} ${t('currency.som')}`;
+    return t('vacancy.notSpecified');
   };
   
   const handleAddVacancy = () => {
@@ -46,22 +46,22 @@ const HomePage = () => {
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Найдите свою идеальную работу в образовании
+            {t('home.hero.title')}
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Платформа, которая соединяет талантливых преподавателей с лучшими образовательными учреждениями по всей стране
+            {t('home.hero.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
               <Link to="/teachers">
                 <Search className="mr-2 h-5 w-5" />
-                Найти преподавателей
+                {t('home.hero.findTeachers')}
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link to="/schools">
                 <School className="mr-2 h-5 w-5" />
-                Поиск вакансий
+                {t('home.hero.findVacancies')}
               </Link>
             </Button>
           </div>
@@ -76,19 +76,19 @@ const HomePage = () => {
               <div className="text-4xl font-bold text-blue-600 mb-2">
                 {teachersResult?.data?.length || 0}+
               </div>
-              <p className="text-gray-600">Квалифицированных преподавателей</p>
+              <p className="text-gray-600">{t('home.stats.teachers')}</p>
             </div>
             <div>
               <div className="text-4xl font-bold text-green-600 mb-2">
                 {featuredSchools?.length || 0}+
               </div>
-              <p className="text-gray-600">Образовательных учреждений</p>
+              <p className="text-gray-600">{t('home.stats.schools')}</p>
             </div>
             <div>
               <div className="text-4xl font-bold text-purple-600 mb-2">
                 {featuredVacancies?.length || 0}+
               </div>
-              <p className="text-gray-600">Активных вакансий</p>
+              <p className="text-gray-600">{t('home.stats.vacancies')}</p>
             </div>
           </div>
         </div>
@@ -99,10 +99,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Актуальные вакансии
+              {t('home.vacancies.title')}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Свежие предложения от ведущих образовательных учреждений
+              {t('home.vacancies.subtitle')}
             </p>
           </div>
 
@@ -136,7 +136,7 @@ const HomePage = () => {
                   <CardContent className="space-y-3">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="h-4 w-4" />
-                      <span>{vacancy.location || 'Местоположение не указано'}</span>
+                      <span>{vacancy.location || t('vacancy.locationNotSpecified')}</span>
                     </div>
                     
                     <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -164,7 +164,7 @@ const HomePage = () => {
           <div className="text-center">
             <Button asChild>
               <Link to="/schools">
-                Посмотреть все вакансии
+                {t('home.vacancies.viewAllVacancies')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -177,10 +177,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Опытные преподаватели
+              {t('home.teachers.title')}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Знакомьтесь с нашими талантливыми преподавателями
+              {t('home.teachers.subtitle')}
             </p>
           </div>
 
@@ -204,14 +204,14 @@ const HomePage = () => {
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
                       {teacher.profiles?.full_name?.charAt(0) || 'T'}
                     </div>
-                    <CardTitle>{teacher.profiles?.full_name || 'Имя не указано'}</CardTitle>
+                    <CardTitle>{teacher.profiles?.full_name || t('teacher.nameNotSpecified')}</CardTitle>
                     <CardDescription>{teacher.specialization}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {teacher.experience_years && (
                       <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
                         <GraduationCap className="h-4 w-4" />
-                        <span>{teacher.experience_years} лет опыта</span>
+                        <span>{teacher.experience_years} {t('teacher.yearsOfExperience')}</span>
                       </div>
                     )}
                     {teacher.location && (
@@ -221,7 +221,7 @@ const HomePage = () => {
                       </div>
                     )}
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/teachers/${teacher.id}`}>Подробнее</Link>
+                      <Link to={`/teachers/${teacher.id}`}>{t('common.more')}</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -232,7 +232,7 @@ const HomePage = () => {
           <div className="text-center">
             <Button asChild>
               <Link to="/teachers">
-                Посмотреть всех преподавателей
+                {t('home.teachers.viewAllTeachers')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -245,10 +245,10 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Ведущие образовательные учреждения
+              {t('home.schools.title')}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Школы и учебные заведения, которые ищут талантливых преподавателей
+              {t('home.schools.subtitle')}
             </p>
           </div>
 
@@ -295,11 +295,11 @@ const HomePage = () => {
                     {school.student_count && (
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Users className="h-4 w-4" />
-                        <span>{school.student_count} учеников</span>
+                        <span>{school.student_count} {t('school.students')}</span>
                       </div>
                     )}
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/schools/${school.id}`}>Подробнее</Link>
+                      <Link to={`/schools/${school.id}`}>{t('common.more')}</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -310,7 +310,7 @@ const HomePage = () => {
           <div className="text-center">
             <Button asChild>
               <Link to="/schools">
-                Посмотреть все школы
+                {t('home.schools.viewAllSchools')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -329,10 +329,10 @@ const HomePage = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" onClick={handleAddVacancy}>
-              Добавить вакансию
+              {t('cta.addVacancy')}
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/vacancies')} className="text-slate-500">
-              Найти работу
+              {t('cta.findJob')}
             </Button>
           </div>
         </div>

@@ -101,7 +101,7 @@ const SecureLoginForm: React.FC = () => {
             to="/forgot-password" 
             className="text-sm text-primary hover:underline"
           >
-            Забыли пароль?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
         <Input 
@@ -125,7 +125,7 @@ const SecureLoginForm: React.FC = () => {
         className="w-full" 
         disabled={isLoading}
       >
-        {isLoading ? 'Вход...' : t('auth.submit')}
+        {isLoading ? t('auth.loggingIn') : t('auth.submit')}
       </Button>
     </SecureFormWrapper>
   );

@@ -44,8 +44,8 @@ const SupportPage: React.FC = () => {
     setTimeout(() => {
       setIsSubmitting(false);
       toast({
-        title: "Сообщение отправлено",
-        description: "Мы ответим вам в ближайшее время",
+        title: t('support.messageSent'),
+        description: t('support.responseTime'),
         variant: "default",
       });
       
@@ -71,90 +71,83 @@ const SupportPage: React.FC = () => {
   
   return (
     <div className="container px-4 py-8 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Поддержка</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Контактная информация</CardTitle>
-              <CardDescription>Свяжитесь с нами любым удобным способом</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-primary" />
-                <span>support@teacherconnect.kg</span>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          {t('support.title')}
+        </h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          {t('support.subtitle')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Contact Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              {t('support.contactForm')}
+            </CardTitle>
+            <CardDescription>
+              {t('support.contactFormDescription')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
               </div>
-              <div className="flex items-center gap-3">
-                <ExternalLink className="h-5 w-5 text-primary" />
-                <a 
-                  href="https://t.me/teacherconnect_bot" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:underline"
-                >
-                  Telegram: @teacherconnect_bot
-                </a>
-              </div>
-              <div className="flex items-center gap-3">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <span>Рабочие часы: 9:00 - 18:00 (Пн-Пт)</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Обратная связь</CardTitle>
-              <CardDescription>Заполните форму, и мы свяжемся с вами в ближайшее время</CardDescription>
-            </CardHeader>
-            <CardContent>
+            ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Ваше имя</Label>
-                    <Input 
-                      id="name" 
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)} 
-                      required 
-                      disabled={isSubmitting}
+                  <div>
+                    <Label htmlFor="name">{t('support.name')}</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t('support.namePlaceholder')}
+                      required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      required 
-                      disabled={isSubmitting}
+                  <div>
+                    <Label htmlFor="email">{t('support.email')}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t('support.emailPlaceholder')}
+                      required
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Тема</Label>
-                  <Input 
-                    id="subject" 
-                    value={subject} 
-                    onChange={(e) => setSubject(e.target.value)} 
-                    required 
-                    disabled={isSubmitting}
+                
+                <div>
+                  <Label htmlFor="subject">{t('support.subject')}</Label>
+                  <Input
+                    id="subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder={t('support.subjectPlaceholder')}
+                    required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Сообщение</Label>
-                  <Textarea 
-                    id="message" 
-                    rows={5} 
-                    value={message} 
-                    onChange={(e) => setMessage(e.target.value)} 
-                    required 
-                    disabled={isSubmitting}
+                
+                <div>
+                  <Label htmlFor="message">{t('support.message')}</Label>
+                  <Textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder={t('support.messagePlaceholder')}
+                    rows={5}
+                    required
                   />
                 </div>
+                
                 <Button 
                   type="submit" 
                   className="w-full" 
@@ -162,20 +155,82 @@ const SupportPage: React.FC = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Отправка...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('support.sending')}
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Отправить сообщение
+                      <Send className="mr-2 h-4 w-4" />
+                      {t('support.sendMessage')}
                     </>
                   )}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Contact Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {t('support.contactInfo')}
+            </CardTitle>
+            <CardDescription>
+              {t('support.contactInfoDescription')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-medium">{t('support.emailSupport')}</h3>
+                  <p className="text-sm text-gray-600">support@teacherconnect.kg</p>
+                  <p className="text-xs text-gray-500">{t('support.responseTime')}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <MessageSquare className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-medium">{t('support.liveChat')}</h3>
+                  <p className="text-sm text-gray-600">{t('support.liveChatDescription')}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <ExternalLink className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-medium">{t('support.documentation')}</h3>
+                  <p className="text-sm text-gray-600">{t('support.documentationDescription')}</p>
+                  <Button variant="link" className="p-0 h-auto text-primary">
+                    {t('support.viewDocs')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t pt-6">
+              <h3 className="font-medium mb-3">{t('support.commonIssues')}</h3>
+              <div className="space-y-2 text-sm">
+                <Button variant="link" className="p-0 h-auto text-left justify-start">
+                  {t('support.howToRegister')}
+                </Button>
+                <Button variant="link" className="p-0 h-auto text-left justify-start">
+                  {t('support.howToCreateProfile')}
+                </Button>
+                <Button variant="link" className="p-0 h-auto text-left justify-start">
+                  {t('support.howToApply')}
+                </Button>
+                <Button variant="link" className="p-0 h-auto text-left justify-start">
+                  {t('support.accountIssues')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

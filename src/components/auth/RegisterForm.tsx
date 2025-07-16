@@ -92,7 +92,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
   return (
     <form onSubmit={handleRegister} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Полное имя</Label>
+        <Label htmlFor="name">{t('profile.fullName')}</Label>
         <Input 
           id="name" 
           placeholder="Иван Иванов" 
@@ -127,7 +127,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
+        <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
         <Input 
           id="confirmPassword" 
           type="password" 
@@ -146,7 +146,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
         className="w-full" 
         disabled={isLoading || isSubmitting || !!passwordError}
       >
-        {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}
+        {isSubmitting ? t('auth.registering') : t('auth.register.submit')}
       </Button>
     </form>
   );
