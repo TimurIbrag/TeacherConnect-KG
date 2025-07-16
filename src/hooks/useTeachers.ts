@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { Teacher } from './types';
@@ -42,7 +43,7 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
       if (error) throw error;
       return { data: data as Teacher[], count };
     },
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 };
 
