@@ -484,8 +484,8 @@ const SchoolProfileDetailPage: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-2 gap-3">
                   {school.facilities.map((facility: string, index: number) => <div key={index} className="flex items-center gap-2 p-2 rounded bg-blue-600">
-                      <Building className="w-4 h-4 text-muted-foreground bg-blue-600" />
-                      <span className="text-sm">{facility}</span>
+                      <Building className="w-4 h-4 text-white" />
+                      <span className="text-sm text-white">{facility}</span>
                     </div>)}
                 </div>
               </CardContent>
