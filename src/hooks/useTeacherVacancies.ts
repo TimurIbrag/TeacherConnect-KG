@@ -35,7 +35,7 @@ export const useTeacherVacancies = () => {
       const { data: publishedTeachers, error: teacherError } = await supabase
         .from('teacher_profiles')
         .select('id')
-        .eq('is_published', true);
+        .eq('is_published', true); // Only published teachers, regardless of availability
 
       if (teacherError) {
         console.error('Error fetching published teachers:', teacherError);

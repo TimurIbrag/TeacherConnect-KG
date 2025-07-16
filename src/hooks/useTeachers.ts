@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { Teacher } from './types';
 
-export const useTeachers = () => {
+export const useTeachers = (page: number = 1, pageSize: number = 12) => {
   const queryClient = useQueryClient();
 
   // Set up real-time subscription
@@ -18,7 +18,7 @@ export const useTeachers = () => {
           table: 'teacher_profiles'
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['teachers'] });
+          queryClient.invalidateQueries({ queryKey: ['teachers', page, pageSize] });
         }
       )
       .subscribe();
@@ -26,23 +26,23 @@ export const useTeachers = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, page, pageSize]);
 
   return useQuery({
-    queryKey: ['teachers'],
+    queryKey: ['teachers', page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
         .from('teacher_profiles')
-        .select(`
-          *,
-          profiles (*)
-        `)
-        .eq('is_published', true)  // Only show published teachers
-        .eq('available', true);
+        .select(`*, profiles (*)`, { count: 'exact' })
+        .eq('is_published', true) // Only show published teachers, regardless of availability
+        .range(from, to);
 
       if (error) throw error;
-      return data as Teacher[];
+      return { data: data as Teacher[], count };
     },
+    keepPreviousData: true,
   });
 };
 
@@ -52,10 +52,7 @@ export const useTeacher = (id: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('teacher_profiles')
-        .select(`
-          *,
-          profiles (*)
-        `)
+        .select(`*, profiles (*)`)
         .eq('id', id)
         .maybeSingle();
 

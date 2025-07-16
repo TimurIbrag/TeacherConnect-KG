@@ -158,6 +158,20 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'teachers.header': 'Преподаватели и услуги',
+    'teachers.subheader': 'Найдите квалифицированных преподавателей и их услуги',
+    'teachers.tab': 'Преподаватели',
+    'teachers.servicesTab': 'Услуги',
+    'teachers.searchPlaceholder': 'Поиск по имени или специализации...',
+    'teachers.servicesSearchPlaceholder': 'Поиск услуг...',
+    'teachers.subjectPlaceholder': 'Предмет',
+    'teachers.locationPlaceholder': 'Местоположение',
+    'common.reset': 'Сбросить',
+    'teachers.foundCount': 'Найдено {{count}} преподавателей',
+    'teachers.servicesFoundCount': 'Найдено {{count}} услуг',
+    'teachers.notFound': 'Преподаватели не найдены',
+    'teachers.tryChangeSearch': 'Попробуйте изменить параметры поиска или опубликуйте свой профиль',
+    'teachers.servicesNotFound': 'Услуги не найдены',
   },
   
   en: {
@@ -308,6 +322,20 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'teachers.header': 'Teachers and Services',
+    'teachers.subheader': 'Find qualified teachers and their services',
+    'teachers.tab': 'Teachers',
+    'teachers.servicesTab': 'Services',
+    'teachers.searchPlaceholder': 'Search by name or specialization...',
+    'teachers.servicesSearchPlaceholder': 'Search services...',
+    'teachers.subjectPlaceholder': 'Subject',
+    'teachers.locationPlaceholder': 'Location',
+    'common.reset': 'Reset',
+    'teachers.foundCount': '{{count}} teachers found',
+    'teachers.servicesFoundCount': '{{count}} services found',
+    'teachers.notFound': 'No teachers found',
+    'teachers.tryChangeSearch': 'Try changing your search or publish your profile',
+    'teachers.servicesNotFound': 'No services found',
   },
   
   ky: {
@@ -458,6 +486,20 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'teachers.header': 'Мугалимдер жана кызматтар',
+    'teachers.subheader': 'Квалификациялуу мугалимдерди жана алардын кызматтарын табыңыз',
+    'teachers.tab': 'Мугалимдер',
+    'teachers.servicesTab': 'Кызматтар',
+    'teachers.searchPlaceholder': 'Аты же адистиги боюнча издөө...',
+    'teachers.servicesSearchPlaceholder': 'Кызматтарды издөө...',
+    'teachers.subjectPlaceholder': 'Предмет',
+    'teachers.locationPlaceholder': 'Жайгашкан жери',
+    'common.reset': 'Тазалоо',
+    'teachers.foundCount': '{{count}} мугалим табылды',
+    'teachers.servicesFoundCount': '{{count}} кызмат табылды',
+    'teachers.notFound': 'Мугалимдер табылган жок',
+    'teachers.tryChangeSearch': 'Издөө параметрлерин өзгөртүп көрүңүз же профилиңизди жарыялаңыз',
+    'teachers.servicesNotFound': 'Кызматтар табылган жок',
   }
 };
 

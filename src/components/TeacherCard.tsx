@@ -78,17 +78,17 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !profile) {
       toast({
-        title: "Требуется авторизация",
-        description: "Войдите в систему для отправки сообщений",
+        title: "Требуется регистрация",
+        description: "Зарегистрируйтесь, чтобы отправлять сообщения преподавателям.",
         variant: "destructive",
       });
-      navigate('/login');
+      navigate('/register');
       return;
     }
 
-    if (!profile || profile.role !== 'school') {
+    if (profile.role !== 'school') {
       toast({
         title: "Доступ ограничен",
         description: "Только школы могут связаться с учителями",
@@ -100,12 +100,8 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
     try {
       // Handle different teacher types
       let teacherUserId = id.toString();
-      
-      // For mock or published teachers, create a deterministic user ID
       if (source === 'mock' || source === 'published' || source === 'global_published') {
         teacherUserId = `mock_teacher_${id}`;
-        
-        // Store teacher info in localStorage for the chat system
         const teacherInfo = {
           id: teacherUserId,
           full_name: name,
@@ -114,15 +110,11 @@ const TeacherCard: React.FC<TeacherCardProps> = ({
         };
         localStorage.setItem(`profile_${teacherUserId}`, JSON.stringify(teacherInfo));
       }
-      
-      console.log('Creating chat with teacher ID:', teacherUserId);
       const chatRoomId = await createChatRoom(teacherUserId);
-      
       toast({
         title: "Чат создан",
         description: "Переходим к общению с учителем",
       });
-      
       navigate(`/messages/${chatRoomId}`);
     } catch (error: any) {
       console.error('Failed to start chat:', error);

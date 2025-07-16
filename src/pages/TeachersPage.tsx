@@ -1,191 +1,205 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTeachers } from '@/hooks/useTeachers';
+import { useTeacherVacancies } from '@/hooks/useTeacherVacancies';
+import { useSchools } from '@/hooks/useSchools';
+import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import TeacherCard from '@/components/TeacherCard';
 import TeacherSkeletonLoader from '@/components/TeacherSkeletonLoader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, MapPin, Star, Clock, BookOpen, Users, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useTeachers } from '@/hooks/useTeachers';
 
 const ITEMS_PER_PAGE = 12;
 
-export default function TeachersPage() {
-  const { data: teachers, isLoading, error } = useTeachers();
+// Predefined districts list
+const DISTRICTS = [
+  'Ленинский район',
+  'Первомайский район',
+  'Октябрьский район',
+  'Свердловский район'
+];
+
+// Example subjects list (should be replaced with real data if available)
+const TEACHER_SUBJECTS = [
+  'Математика',
+  'Физика',
+  'Химия',
+  'Биология',
+  'История',
+  'География',
+  'Английский язык',
+  'Русский язык',
+  'Кыргызский язык',
+  'Информатика',
+  'Литература',
+  'Физкультура',
+];
+
+const TeachersPage = () => {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  // const { toast } = useToast(); // Uncomment if you use toast
+  const [viewMode, setViewMode] = useState<'teachers' | 'services'>('teachers');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialization, setSelectedSpecialization] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
-  const [selectedExperience, setSelectedExperience] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [subjectFilter, setSubjectFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter and sort teachers
-  const filteredTeachers = teachers?.filter(teacher => {
-    const profile = teacher.profiles;
-    const matchesSearch = !searchTerm || 
-      profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSpecialization = selectedSpecialization === 'all' || 
-      teacher.specialization === selectedSpecialization;
-    
-    const matchesLocation = selectedLocation === 'all' || 
-      teacher.location?.includes(selectedLocation);
-    
-    const matchesExperience = selectedExperience === 'all' || 
-      (teacher.experience_years && teacher.experience_years >= parseInt(selectedExperience));
+  // Use paginated teachers
+  const {
+    data: teachersResult,
+    isLoading: teachersLoading,
+  } = useTeachers(currentPage, ITEMS_PER_PAGE);
+  const teachers = teachersResult?.data || [];
+  const totalTeachers = teachersResult?.count || 0;
 
-    return matchesSearch && matchesSpecialization && matchesLocation && matchesExperience;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case 'rating':
-        return (b.view_count || 0) - (a.view_count || 0);
-      case 'experience':
-        return (b.experience_years || 0) - (a.experience_years || 0);
-      case 'name':
-        return (a.profiles?.full_name || '').localeCompare(b.profiles?.full_name || '');
-      default:
-        return 0;
-    }
-  }) || [];
+  const { data: teacherVacancies, isLoading: vacanciesLoading } = useTeacherVacancies();
+  const { data: schools, isLoading: schoolsLoading } = useSchools();
 
-  // Pagination
-  const totalPages = Math.ceil(filteredTeachers.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedTeachers = filteredTeachers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // Filtered services (vacancies)
+  const filteredVacancies = useMemo(() => {
+    if (!teacherVacancies) return [];
+    return teacherVacancies.filter(vacancy => {
+      const matchesSearch = !searchTerm ||
+        (vacancy.title?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (vacancy.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSubject = !subjectFilter || vacancy.subject === subjectFilter;
+      const matchesLocation = !locationFilter || vacancy.location === locationFilter;
+      return matchesSearch && matchesSubject && matchesLocation;
+    });
+  }, [teacherVacancies, searchTerm, subjectFilter, locationFilter]);
 
-  // Get unique values for filters
-  const specializations = [...new Set(teachers?.map(t => t.specialization).filter(Boolean))];
-  const locations = [...new Set(teachers?.map(t => t.location).filter(Boolean))];
+  // Pagination for vacancies
+  const totalPages = useMemo(() => {
+    const count = viewMode === 'teachers' ? totalTeachers : filteredVacancies.length;
+    return Math.ceil(count / ITEMS_PER_PAGE);
+  }, [viewMode, totalTeachers, filteredVacancies]);
+
+  const paginatedVacancies = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredVacancies.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredVacancies, currentPage]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedSpecialization, selectedLocation, selectedExperience, sortBy]);
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-2">Error Loading Teachers</h2>
-          <p className="text-gray-600">Sorry, we couldn't load the teachers. Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
+  }, [searchTerm, subjectFilter, locationFilter, viewMode]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Find Your Perfect Teacher
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover qualified educators ready to help you achieve your learning goals
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          {t('teachers.header')}
+        </h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          {t('teachers.subheader')}
+        </p>
+      </div>
+
+      {/* View Mode Toggle */}
+      <div className="flex justify-center mb-6">
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <Button
+            variant={viewMode === 'teachers' ? 'default' : 'ghost'}
+            onClick={() => setViewMode('teachers')}
+            className="rounded-md"
+          >
+            {t('teachers.tab')}
+          </Button>
+          <Button
+            variant={viewMode === 'services' ? 'default' : 'ghost'}
+            onClick={() => setViewMode('services')}
+            className="rounded-md"
+          >
+            {t('teachers.servicesTab')}
+          </Button>
         </div>
+      </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search teachers or subjects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Specialization Filter */}
-            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-              <SelectTrigger>
-                <SelectValue placeholder="Subject" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
-                {specializations.map(spec => (
-                  <SelectItem key={spec} value={spec || ''}>{spec}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Location Filter */}
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-              <SelectTrigger>
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {locations.map(loc => (
-                  <SelectItem key={loc} value={loc || ''}>{loc}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Experience Filter */}
-            <Select value={selectedExperience} onValueChange={setSelectedExperience}>
-              <SelectTrigger>
-                <SelectValue placeholder="Experience" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any Experience</SelectItem>
-                <SelectItem value="1">1+ Years</SelectItem>
-                <SelectItem value="3">3+ Years</SelectItem>
-                <SelectItem value="5">5+ Years</SelectItem>
-                <SelectItem value="10">10+ Years</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Most Popular</SelectItem>
-                <SelectItem value="experience">Most Experienced</SelectItem>
-                <SelectItem value="name">Name A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Search and Filters */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder={viewMode === 'teachers' ? t('teachers.searchPlaceholder') : t('teachers.servicesSearchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
+          <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder={t('teachers.subjectPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Все предметы</SelectItem>
+              {TEACHER_SUBJECTS.map((subject) => (
+                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder={t('teachers.locationPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Все районы</SelectItem>
+              {DISTRICTS.map((district) => (
+                <SelectItem key={district} value={district}>{district}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(searchTerm || subjectFilter || locationFilter) && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchTerm('');
+                setSubjectFilter('');
+                setLocationFilter('');
+              }}
+            >
+              {t('common.reset')}
+            </Button>
+          )}
         </div>
+      </div>
 
-        {/* Results Summary */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-gray-600">
-            {isLoading ? 'Loading...' : `${filteredTeachers.length} teachers found`}
-          </p>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-500">
-              Page {currentPage} of {totalPages}
-            </span>
-          </div>
-        </div>
+      {/* Results count */}
+      <div className="mb-6">
+        <p className="text-gray-600">
+          {viewMode === 'teachers' 
+            ? t('teachers.foundCount').replace('{{count}}', String(totalTeachers || 0))
+            : t('teachers.servicesFoundCount').replace('{{count}}', String(filteredVacancies?.length || 0))
+          }
+        </p>
+      </div>
 
-        {/* Teachers Grid */}
-        {isLoading ? (
+      {/* Teachers or Services Grid */}
+      {viewMode === 'teachers' ? (
+        teachersLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
               <TeacherSkeletonLoader key={index} />
             ))}
           </div>
-        ) : paginatedTeachers.length > 0 ? (
+        ) : teachers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {paginatedTeachers.map((teacher) => {
+            {teachers.map((teacher) => {
               const profile = teacher.profiles;
-              
+              if (!profile) {
+                // Skip rendering if no profile is present
+                return null;
+              }
               // Parse schedule_details properly
               const scheduleDetails = teacher.schedule_details as Record<string, any> | null;
-              
               // Parse languages properly
               const languagesData = teacher.languages as Array<{ language: string; level: string }> | null;
-
               return (
                 <TeacherCard
                   key={teacher.id}
@@ -207,66 +221,77 @@ export default function TeachersPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="bg-white rounded-lg shadow-sm p-8 max-w-md mx-auto">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Teachers Found</h3>
-              <p className="text-gray-600 mb-4">
-                Try adjusting your search criteria or filters
-              </p>
-              <Button 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedSpecialization('all');
-                  setSelectedLocation('all');
-                  setSelectedExperience('all');
-                }}
-                variant="outline"
-              >
-                Clear Filters
-              </Button>
-            </div>
+            <p className="text-xl text-gray-500 mb-4">
+              {t('teachers.notFound')}
+            </p>
+            <p className="text-gray-400">
+              {t('teachers.tryChangeSearch')}
+            </p>
           </div>
-        )}
+        )
+      ) : (
+        paginatedVacancies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            {/* Render your service/vacancy cards here */}
+            {paginatedVacancies.map((vacancy) => (
+              <div key={vacancy.id} className="bg-white rounded-lg shadow p-4">
+                <h3 className="font-bold text-lg mb-2">{vacancy.title}</h3>
+                <p className="text-gray-600 mb-1">{vacancy.subject}</p>
+                <p className="text-gray-500 mb-1">{vacancy.location}</p>
+                <p className="text-gray-400 text-sm">{vacancy.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-500 mb-4">
+              {t('teachers.servicesNotFound')}
+            </p>
+            <p className="text-gray-400">
+              {t('teachers.tryChangeSearch')}
+            </p>
+          </div>
+        )
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = i + 1;
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              );
-            })}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const page = i + 1;
+            return (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </Button>
+            );
+          })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default TeachersPage;
