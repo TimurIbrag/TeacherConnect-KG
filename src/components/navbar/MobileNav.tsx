@@ -48,7 +48,7 @@ const MobileNav = () => {
               className="text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setIsOpen(false)}
             >
-              Вакансии
+              {t('nav.vacancies')}
             </Link>
             <Link 
               to="/about" 

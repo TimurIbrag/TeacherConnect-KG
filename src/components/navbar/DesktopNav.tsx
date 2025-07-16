@@ -29,7 +29,7 @@ const DesktopNav = () => {
         to="/vacancies" 
         className="text-foreground hover:text-primary transition-colors"
       >
-        Вакансии
+        {t('nav.vacancies')}
       </Link>
       <Link 
         to="/about" 
