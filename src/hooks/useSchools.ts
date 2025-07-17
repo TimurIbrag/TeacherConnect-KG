@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -31,6 +32,7 @@ export const useSchools = () => {
   return useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
+      console.log('Fetching schools...');
       const { data, error } = await supabase
         .from('school_profiles')
         .select(`
@@ -39,7 +41,12 @@ export const useSchools = () => {
         `)
         .eq('is_published', true); // Only show published schools
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching schools:', error);
+        throw error;
+      }
+      
+      console.log('Schools fetched:', data?.length || 0);
       return data as School[];
     },
   });

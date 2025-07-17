@@ -16,9 +16,19 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
-  const { data: featuredVacancies, isLoading: vacanciesLoading } = useActiveVacancies(6);
-  const { data: teachersResult, isLoading: teachersLoading } = useTeachers();
-  const { data: featuredSchools, isLoading: schoolsLoading } = useSchools();
+  const { data: featuredVacancies, isLoading: vacanciesLoading, error: vacanciesError } = useActiveVacancies(6);
+  const { data: teachersResult, isLoading: teachersLoading, error: teachersError } = useTeachers();
+  const { data: featuredSchools, isLoading: schoolsLoading, error: schoolsError } = useSchools();
+
+  // Add console logs for debugging
+  console.log('HomePage data:', {
+    featuredVacancies: featuredVacancies?.length || 0,
+    teachers: teachersResult?.data?.length || 0,
+    schools: featuredSchools?.length || 0,
+    vacanciesError,
+    teachersError,
+    schoolsError
+  });
 
   // Take first 3 items for featured sections
   const limitedTeachers = teachersResult?.data?.slice(0, 3) || [];

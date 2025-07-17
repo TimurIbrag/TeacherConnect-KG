@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
@@ -48,7 +49,7 @@ export const useTeacherVacancies = () => {
         return []; // No published teachers
       }
 
-      // Then get vacancies from those teachers
+      // Then get vacancies from those teachers - fix the relationship ambiguity
       const { data, error } = await supabase
         .from('teacher_vacancies')
         .select(`
