@@ -29,22 +29,20 @@ const AboutPage: React.FC = () => {
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
       <div className="max-w-3xl mx-auto text-center mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">О проекте</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">{t('about.title')}</h1>
         <p className="text-xl text-muted-foreground">
-          TeacherConnect Кыргызстан - платформа для соединения учителей и школ по всей стране
+          {t('about.subtitle')}
         </p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
         <div>
-          <h2 className="text-2xl font-bold mb-4">Наша миссия</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('about.mission.title')}</h2>
           <p className="mb-4 text-muted-foreground">
-            Мы создали TeacherConnect KG, чтобы решить проблему нехватки квалифицированных педагогов в школах Кыргызстана. 
-            Наша платформа делает процесс поиска работы или сотрудников простым, прозрачным и эффективным.
+            {t('about.mission.paragraph1')}
           </p>
           <p className="text-muted-foreground">
-            Мы стремимся улучшить систему образования в стране, обеспечивая школы талантливыми педагогами, 
-            а учителям помогая найти работу, соответствующую их навыкам и предпочтениям.
+            {t('about.mission.paragraph2')}
           </p>
         </div>
         <div className="bg-muted rounded-lg flex items-center justify-center h-64">
@@ -54,35 +52,35 @@ const AboutPage: React.FC = () => {
         </div>
       </div>
       
-      <h2 className="text-2xl font-bold mb-6 text-center">Как это работает</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">{t('about.howItWorks.title')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
         <Card className="flex flex-col">
           <CardHeader>
             <div className="mb-4 text-primary flex justify-center">
               <Users className="h-12 w-12" />
             </div>
-            <CardTitle className="text-center">Для учителей</CardTitle>
+            <CardTitle className="text-center">{t('about.forTeachers.title')}</CardTitle>
             <CardDescription className="text-center">
-              Найдите работу своей мечты
+              {t('about.forTeachers.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow">
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <FileCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Создайте профессиональное портфолио</span>
+                <span>{t('about.forTeachers.feature1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <Search className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Просматривайте актуальные вакансии</span>
+                <span>{t('about.forTeachers.feature2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MessageSquare className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Общайтесь напрямую со школами</span>
+                <span>{t('about.forTeachers.feature3')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Фильтруйте по местоположению и условиям</span>
+                <span>{t('about.forTeachers.feature4')}</span>
               </li>
             </ul>
           </CardContent>
@@ -100,28 +98,28 @@ const AboutPage: React.FC = () => {
             <div className="mb-4 text-primary flex justify-center">
               <School className="h-12 w-12" />
             </div>
-            <CardTitle className="text-center">Для школ</CardTitle>
+            <CardTitle className="text-center">{t('about.forSchools.title')}</CardTitle>
             <CardDescription className="text-center">
-              Найдите идеальных кандидатов
+              {t('about.forSchools.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow">
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <FileCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Создайте профиль школы и вакансии</span>
+                <span>{t('about.forSchools.feature1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <Search className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Просматривайте анкеты учителей</span>
+                <span>{t('about.forSchools.feature2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <Star className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Оценивайте кандидатов</span>
+                <span>{t('about.forSchools.feature3')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <GraduationCap className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Находите специалистов по предметам</span>
+                <span>{t('about.forSchools.feature4')}</span>
               </li>
             </ul>
           </CardContent>
@@ -139,35 +137,35 @@ const AboutPage: React.FC = () => {
             <div className="mb-4 text-primary flex justify-center">
               <Globe className="h-12 w-12" />
             </div>
-            <CardTitle className="text-center">Преимущества</CardTitle>
+            <CardTitle className="text-center">{t('about.advantages.title')}</CardTitle>
             <CardDescription className="text-center">
-              Почему выбирают нас
+              {t('about.advantages.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow">
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <FileCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Проверенные анкеты и профили</span>
+                <span>{t('about.advantages.feature1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <Globe className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Интерфейс на трех языках</span>
+                <span>{t('about.advantages.feature2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MessageSquare className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Прямое общение без посредников</span>
+                <span>{t('about.advantages.feature3')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span>Фокус на региональных потребностях</span>
+                <span>{t('about.advantages.feature4')}</span>
               </li>
             </ul>
           </CardContent>
           <CardFooter>
             <Button className="w-full" variant="secondary" asChild>
               <Link to="/faq">
-                Узнать больше
+                {t('about.learnMore')}
               </Link>
             </Button>
           </CardFooter>
@@ -175,10 +173,9 @@ const AboutPage: React.FC = () => {
       </div>
       
       <div className="bg-muted rounded-lg p-8 text-center mb-16">
-        <h2 className="text-2xl font-bold mb-4">Присоединяйтесь к нам сегодня!</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('about.joinUs.title')}</h2>
         <p className="mb-6 max-w-2xl mx-auto">
-          Вместе мы можем улучшить систему образования Кыргызстана, соединяя талантливых учителей 
-          с нуждающимися в них школами. Зарегистрируйтесь сейчас и начните свой путь к успеху!
+          {t('about.joinUs.description')}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" asChild>
@@ -195,44 +192,41 @@ const AboutPage: React.FC = () => {
       </div>
       
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center">Частые вопросы</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">{t('about.faq.title')}</h2>
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Это бесплатно?</CardTitle>
+              <CardTitle>{t('about.faq.question1')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                Да, базовое использование платформы бесплатно как для учителей, так и для школ. 
-                В будущем мы планируем добавить премиум-функции, но основные возможности останутся бесплатными.
+                {t('about.faq.answer1')}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Как подтверждаются профили?</CardTitle>
+              <CardTitle>{t('about.faq.question2')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                Мы используем систему проверки документов и верификации данных. После загрузки
-                необходимых документов (дипломы, сертификаты) профиль получает статус "Проверенный".
+                {t('about.faq.answer2')}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Можно ли использовать платформу на мобильном телефоне?</CardTitle>
+              <CardTitle>{t('about.faq.question3')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                Да, наш сайт полностью адаптирован для мобильных устройств. Вы можете пользоваться
-                всеми функциями с любого устройства с доступом в интернет.
+                {t('about.faq.answer3')}
               </p>
             </CardContent>
           </Card>
           <div className="text-center mt-8">
             <Button variant="link" asChild>
-              <Link to="/faq">Смотреть все вопросы</Link>
+              <Link to="/faq">{t('about.faq.viewAll')}</Link>
             </Button>
           </div>
         </div>

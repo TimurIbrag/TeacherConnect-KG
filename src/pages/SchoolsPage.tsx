@@ -91,71 +91,70 @@ const SchoolsPage: React.FC = () => {
   });
 
   const districts = [
-    'Ленинский район',
-    'Первомайский район', 
-    'Октябрьский район',
-    'Свердловский район'
+    t('schools.districts.leninsky'),
+    t('schools.districts.pervomaisky'), 
+    t('schools.districts.oktyabrsky'),
+    t('schools.districts.sverdlovsky')
   ];
 
   const schoolTypes = [
-    'Государственная',
-    'Частная',
-    'Международная',
-    'Специализированная'
+    t('schools.types.public'),
+    t('schools.types.private'),
+    t('schools.types.specialized')
   ];
 
   const cities = [
-    'Бишкек',
-    'Ош',
-    'Джалал-Абад',
-    'Каракол',
-    'Токмок',
-    'Кара-Балта',
-    'Балыкчы',
-    'Кызыл-Кия',
-    'Баткен',
-    'Нарын',
-    'Талас',
-    'Кант',
-    'Таш-Кумыр',
-    'Кочкор-Ата',
-    'Исфана',
-    'Сулюкта',
-    'Ноокат',
-    'Чолпон-Ата',
-    'Ат-Башы',
-    'Токтогул',
-    'Ала-Бука',
-    'Кемин',
-    'Таш-Короо',
-    'Уч-Коргон',
-    'Ак-Суу',
-    'Шопоков'
+    t('cities.bishkek'),
+    t('cities.osh'),
+    t('cities.jalalabad'),
+    t('cities.karakol'),
+    t('cities.tokmok'),
+    t('cities.karabalta'),
+    t('cities.balykchy'),
+    t('cities.kyzylkiya'),
+    t('cities.batken'),
+    t('cities.naryn'),
+    t('cities.talas'),
+    t('cities.kant'),
+    t('cities.tashkumyr'),
+    t('cities.kochkorata'),
+    t('cities.isfana'),
+    t('cities.sulukta'),
+    t('cities.nookat'),
+    t('cities.cholponata'),
+    t('cities.atbashi'),
+    t('cities.toktogul'),
+    t('cities.alabuka'),
+    t('cities.kemin'),
+    t('cities.tashkoro'),
+    t('cities.uchkorgon'),
+    t('cities.aksuu'),
+    t('cities.shopokov')
   ];
 
   const subjects = [
-    'Русский язык',
-    'Русская литература',
-    'Кыргызский язык',
-    'Кыргызская литература',
-    'Английский язык',
-    'Немецкий язык',
-    'Турецкий язык',
-    'Китайский язык',
-    'Математика',
-    'Алгебра и геометрия',
-    'Физика',
-    'Химия',
-    'Биология',
-    'География',
-    'История',
-    'Обществознание',
-    'Информатика',
-    'Физическая культура',
-    'Изобразительное искусство',
-    'Музыка',
-    'Технология',
-    'ОБЖ'
+    t('subjects.russian'),
+    t('subjects.russianLiterature'),
+    t('subjects.kyrgyz'),
+    t('subjects.kyrgyzLiterature'),
+    t('subjects.english'),
+    t('subjects.german'),
+    t('subjects.turkish'),
+    t('subjects.chinese'),
+    t('subjects.mathematics'),
+    t('subjects.algebraGeometry'),
+    t('subjects.physics'),
+    t('subjects.chemistry'),
+    t('subjects.biology'),
+    t('subjects.geography'),
+    t('subjects.history'),
+    t('subjects.socialStudies'),
+    t('subjects.computerScience'),
+    t('subjects.physicalEducation'),
+    t('subjects.art'),
+    t('subjects.music'),
+    t('subjects.technology'),
+    t('subjects.lifeSafety')
   ];
 
   // Get vacancy subjects for this school
@@ -203,7 +202,7 @@ const SchoolsPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">{t('schools.title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Найдено {filteredSchools.length} {filteredSchools.length === 1 ? 'школа' : 'школ'}
+            {t('schools.foundCount').replace('{{count}}', filteredSchools.length.toString())}
           </p>
         </div>
       </div>
@@ -224,11 +223,11 @@ const SchoolsPage: React.FC = () => {
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <SelectValue placeholder="Город" />
+              <SelectValue placeholder={t('schools.filters.city')} />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все города</SelectItem>
+            <SelectItem value="">{t('schools.filters.allCities')}</SelectItem>
             {cities.map(city => (
               <SelectItem key={city} value={city}>{city}</SelectItem>
             ))}
@@ -239,11 +238,11 @@ const SchoolsPage: React.FC = () => {
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <SelectValue placeholder="Район" />
+              <SelectValue placeholder={t('schools.filters.district')} />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все районы</SelectItem>
+            <SelectItem value="">{t('schools.filters.allDistricts')}</SelectItem>
             {districts.map(district => (
               <SelectItem key={district} value={district}>{district}</SelectItem>
             ))}
@@ -254,11 +253,11 @@ const SchoolsPage: React.FC = () => {
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
               <Building className="h-4 w-4" />
-              <SelectValue placeholder="Тип школы" />
+              <SelectValue placeholder={t('schools.filters.schoolType')} />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все типы</SelectItem>
+            <SelectItem value="">{t('schools.filters.allTypes')}</SelectItem>
             {schoolTypes.map(type => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
@@ -269,13 +268,13 @@ const SchoolsPage: React.FC = () => {
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4" />
-              <SelectValue placeholder="Жилье" />
+              <SelectValue placeholder={t('schools.filters.housing')} />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все варианты</SelectItem>
-            <SelectItem value="true">С жильем</SelectItem>
-            <SelectItem value="false">Без жилья</SelectItem>
+            <SelectItem value="">{t('schools.filters.allOptions')}</SelectItem>
+            <SelectItem value="true">{t('schools.filters.withHousing')}</SelectItem>
+            <SelectItem value="false">{t('schools.filters.withoutHousing')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -283,11 +282,11 @@ const SchoolsPage: React.FC = () => {
           <SelectTrigger className="w-full md:w-48">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
-              <SelectValue placeholder="Предметы" />
+              <SelectValue placeholder={t('schools.filters.subjects')} />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Все предметы</SelectItem>
+            <SelectItem value="">{t('schools.filters.allSubjects')}</SelectItem>
             {subjects.map(subject => (
               <SelectItem key={subject} value={subject}>{subject}</SelectItem>
             ))}
@@ -324,7 +323,7 @@ const SchoolsPage: React.FC = () => {
           )}
           {selectedHousing && (
             <Badge variant="secondary" className="gap-1">
-              {selectedHousing === 'true' ? 'С жильем' : 'Без жилья'}
+              {selectedHousing === 'true' ? t('schools.filters.withHousing') : t('schools.filters.withoutHousing')}
               <button onClick={() => setSelectedHousing('')} className="ml-1 hover:text-destructive">
                 ×
               </button>
@@ -348,12 +347,12 @@ const SchoolsPage: React.FC = () => {
             // Ensure proper data mapping for SchoolCard
             const schoolData = {
               id: school.id,
-              name: school.name || 'Школа',
+              name: school.name || t('schools.defaultName'),
               photo: school.photo || null,
               photos: school.photos || [],
-              address: school.address || 'Адрес не указан',
-              type: school.type || 'Государственная',
-              specialization: school.specialization || 'Общее образование',
+              address: school.address || t('schools.addressNotProvided'),
+              type: school.type || t('schools.types.public'),
+              specialization: school.specialization || t('schools.defaultSpecialization'),
               description: school.description || '',
               openPositions: school.openPositions || [],
               ratings: school.ratings || 4.0,
@@ -361,7 +360,7 @@ const SchoolsPage: React.FC = () => {
               housing: school.housing || false,
               distance: undefined, // Distance not calculated
               locationVerified: school.locationVerified || false,
-              city: school.city || 'Бишкек'
+              city: school.city || t('cities.bishkek')
             };
             
             return (
@@ -371,9 +370,9 @@ const SchoolsPage: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium mb-2">Школы не найдены</h3>
+          <h3 className="text-lg font-medium mb-2">{t('schools.notFound')}</h3>
           <p className="text-muted-foreground mb-4">
-            Попробуйте изменить параметры поиска или фильтры
+            {t('schools.tryChangeSearch')}
           </p>
           <Button
             variant="outline"
@@ -386,7 +385,7 @@ const SchoolsPage: React.FC = () => {
               setSelectedSubject('');
             }}
           >
-            Сбросить фильтры
+            {t('common.reset')}
           </Button>
         </div>
       )}

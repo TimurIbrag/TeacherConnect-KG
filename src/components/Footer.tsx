@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
           <div className="space-y-3">
             <h3 className="text-lg font-bold">TeacherConnect KG</h3>
             <p className="text-sm text-muted-foreground">
-              Соединяем учителей и школы по всему Кыргызстану.
+              {t('footer.slogan')}
             </p>
             <div className="flex space-x-4 pt-2">
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
@@ -42,7 +42,7 @@ const Footer: React.FC = () => {
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Навигация</h3>
+            <h3 className="text-lg font-bold">{t('footer.navigation')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
@@ -66,14 +66,14 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/school-catalog" className="text-sm text-muted-foreground hover:text-primary">
-                  Каталог школ
+                  {t('footer.schoolCatalog')}
                 </Link>
               </li>
             </ul>
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Информация</h3>
+            <h3 className="text-lg font-bold">{t('footer.information')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary">
@@ -82,24 +82,24 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/support" className="text-sm text-muted-foreground hover:text-primary">
-                  Поддержка
+                  {t('footer.support')}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary">
-                  Политика конфиденциальности
+                  {t('footer.privacyPolicy')}
                 </Link>
               </li>
               <li>
                 <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary">
-                  Условия использования
+                  {t('footer.termsOfUse')}
                 </Link>
               </li>
             </ul>
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">Контакты</h3>
+            <h3 className="text-lg font-bold">{t('footer.contacts')}</h3>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -110,7 +110,7 @@ const Footer: React.FC = () => {
                 +996 XXX XXX XXX
               </p>
               <p className="text-sm text-muted-foreground">
-                г. Бишкек, Кыргызская Республика
+                {t('footer.address')}
               </p>
             </div>
           </div>
@@ -118,7 +118,7 @@ const Footer: React.FC = () => {
         
         <div className="border-t mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            &copy; {currentYear} TeacherConnect Kyrgyzstan. Все права защищены.
+            &copy; {currentYear} TeacherConnect Kyrgyzstan. {t('footer.allRightsReserved')}.
           </p>
         </div>
       </div>

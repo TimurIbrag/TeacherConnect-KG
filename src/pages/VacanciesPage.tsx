@@ -161,30 +161,30 @@ const VacanciesPage = () => {
 
   const getVacancyTypeLabel = (type: string) => {
     const types = {
-      teacher: 'Учитель',
-      tutor: 'Репетитор',
-      assistant: 'Ассистент',
-      coordinator: 'Координатор',
-      other: 'Другое'
+      teacher: t('vacancy.types.teacher'),
+      tutor: t('vacancy.types.tutor'),
+      assistant: t('vacancy.types.assistant'),
+      coordinator: t('vacancy.types.coordinator'),
+      other: t('vacancy.types.other')
     };
     return types[type as keyof typeof types] || type;
   };
 
   const getEducationLevelLabel = (level: string) => {
     const levels = {
-      bachelor: 'Бакалавр',
-      master: 'Магистр',
-      any: 'Не важно'
+      bachelor: t('education.bachelor'),
+      master: t('education.master'),
+      any: t('education.any')
     };
     return levels[level as keyof typeof levels] || level;
   };
 
   const getEmploymentTypeLabel = (type: string) => {
     const types = {
-      'full-time': 'Полный день',
-      'part-time': 'Частичная занятость',
-      'online': 'Онлайн',
-      'flexible': 'Гибкий график'
+      'full-time': t('employment.fullTime'),
+      'part-time': t('employment.partTime'),
+      'online': t('employment.online'),
+      'flexible': t('employment.flexible')
     };
     return types[type as keyof typeof types] || type;
   };
@@ -194,20 +194,20 @@ const VacanciesPage = () => {
       rub: '₽',
       usd: '$',
       eur: '€',
-      som: 'сом'
+      som: t('currency.som')
     };
-    return symbols[currency as keyof typeof symbols] || 'сом';
+    return symbols[currency as keyof typeof symbols] || t('currency.som');
   };
 
   const formatSalary = (vacancy: ExtendedVacancy) => {
     const { salary_min, salary_max, salary_currency = 'som' } = vacancy;
     const symbol = getCurrencySymbol(salary_currency);
     
-    if (!salary_min && !salary_max) return 'По договоренности';
+    if (!salary_min && !salary_max) return t('vacancy.negotiable');
     if (salary_min && salary_max) return `${salary_min.toLocaleString()} - ${salary_max.toLocaleString()} ${symbol}`;
-    if (salary_min) return `от ${salary_min.toLocaleString()} ${symbol}`;
-    if (salary_max) return `до ${salary_max.toLocaleString()} ${symbol}`;
-    return 'Не указана';
+    if (salary_min) return `${t('vacancy.from')} ${salary_min.toLocaleString()} ${symbol}`;
+    if (salary_max) return `${t('vacancy.upTo')} ${salary_max.toLocaleString()} ${symbol}`;
+    return t('vacancy.notSpecified');
   };
 
   const formatDate = (dateString?: string) => {
@@ -218,8 +218,8 @@ const VacanciesPage = () => {
   const handleContactSchool = async (schoolId: string, schoolName: string) => {
     if (!user) {
       toast({
-        title: "Требуется авторизация",
-        description: "Войдите в систему, чтобы связаться со школой",
+        title: t('auth.required'),
+        description: t('vacancy.loginToContact'),
         variant: "destructive",
       });
       navigate('/login');
@@ -228,8 +228,8 @@ const VacanciesPage = () => {
 
     if (profile?.role !== 'teacher') {
       toast({
-        title: "Недоступно",
-        description: "Связаться со школой могут только учителя",
+        title: t('common.unavailable'),
+        description: t('vacancy.onlyTeachersCanContact'),
         variant: "destructive",
       });
       return;
@@ -238,15 +238,15 @@ const VacanciesPage = () => {
     try {
       const chatRoomId = await createChatRoom(schoolId);
       toast({
-        title: "Чат создан",
-        description: `Теперь вы можете общаться с ${schoolName}`,
+        title: t('chat.created'),
+        description: t('chat.canNowCommunicate').replace('{{name}}', schoolName),
       });
       navigate(`/messages/${chatRoomId}`);
     } catch (error) {
       console.error('Error creating chat:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать чат со школой",
+        title: t('common.error'),
+        description: t('chat.createError'),
         variant: "destructive",
       });
     }
@@ -255,8 +255,8 @@ const VacanciesPage = () => {
   const handleApplyToVacancy = (vacancy: ExtendedVacancy) => {
     if (!user) {
       toast({
-        title: "Требуется авторизация",
-        description: "Войдите в систему, чтобы откликнуться на вакансию",
+        title: t('auth.required'),
+        description: t('vacancy.loginToApply'),
         variant: "destructive",
       });
       navigate('/login');
@@ -265,16 +265,16 @@ const VacanciesPage = () => {
 
     if (profile?.role !== 'teacher') {
       toast({
-        title: "Недоступно",
-        description: "Откликнуться на вакансию могут только учителя",
+        title: t('common.unavailable'),
+        description: t('vacancy.onlyTeachersCanApply'),
         variant: "destructive",
       });
       return;
     }
 
     toast({
-      title: "Заявка отправлена!",
-      description: `Ваш отклик на вакансию "${vacancy.title}" успешно отправлен`,
+      title: t('vacancy.applicationSent'),
+      description: t('vacancy.applicationSuccess').replace('{{title}}', vacancy.title),
     });
   };
 
@@ -296,7 +296,7 @@ const VacanciesPage = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-muted-foreground">Загрузка вакансий...</p>
+          <p className="text-muted-foreground">{t('vacancy.loading')}</p>
         </div>
       </div>
     );
@@ -305,16 +305,16 @@ const VacanciesPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Вакансии для преподавателей</h1>
+        <h1 className="text-3xl font-bold mb-4">{t('vacancy.pageTitle')}</h1>
         <p className="text-muted-foreground mb-6">
-          Найдите подходящую работу в образовательных учреждениях
+          {t('vacancy.pageSubtitle')}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск вакансий..."
+              placeholder={t('vacancy.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -323,20 +323,20 @@ const VacanciesPage = () => {
           
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Тип вакансии" />
+              <SelectValue placeholder={t('vacancy.typePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все типы</SelectItem>
-              <SelectItem value="teacher">Учитель</SelectItem>
-              <SelectItem value="tutor">Репетитор</SelectItem>
-              <SelectItem value="assistant">Ассистент</SelectItem>
-              <SelectItem value="coordinator">Координатор</SelectItem>
-              <SelectItem value="other">Другое</SelectItem>
+              <SelectItem value="all">{t('vacancy.allTypes')}</SelectItem>
+              <SelectItem value="teacher">{t('vacancy.types.teacher')}</SelectItem>
+              <SelectItem value="tutor">{t('vacancy.types.tutor')}</SelectItem>
+              <SelectItem value="assistant">{t('vacancy.types.assistant')}</SelectItem>
+              <SelectItem value="coordinator">{t('vacancy.types.coordinator')}</SelectItem>
+              <SelectItem value="other">{t('vacancy.types.other')}</SelectItem>
             </SelectContent>
           </Select>
 
           <Input
-            placeholder="Город..."
+            placeholder={t('vacancy.cityPlaceholder')}
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
           />
@@ -349,7 +349,7 @@ const VacanciesPage = () => {
             }}
             variant="outline"
           >
-            Сбросить фильтры
+            {t('common.reset')}
           </Button>
         </div>
       </div>
@@ -358,8 +358,8 @@ const VacanciesPage = () => {
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">
             {vacancies.length === 0 
-              ? 'На данный момент нет активных вакансий' 
-              : 'Не найдено вакансий по заданным критериям'
+              ? t('vacancy.noActiveVacancies') 
+              : t('vacancy.noVacanciesFound')
             }
           </p>
         </div>
@@ -379,7 +379,7 @@ const VacanciesPage = () => {
                       <Badge variant="outline">{getVacancyTypeLabel(vacancy.vacancy_type || 'teacher')}</Badge>
                       {vacancy.subject && <Badge variant="secondary">{vacancy.subject}</Badge>}
                       <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                        Активна
+                        {t('vacancy.active')}
                       </Badge>
                     </div>
                   </div>
@@ -408,14 +408,14 @@ const VacanciesPage = () => {
                   {vacancy.application_deadline && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>До {formatDate(vacancy.application_deadline)}</span>
+                      <span>{t('vacancy.deadline')} {formatDate(vacancy.application_deadline)}</span>
                     </div>
                   )}
                 </div>
 
                 {vacancy.description && (
                   <div>
-                    <h4 className="font-medium mb-2">Описание</h4>
+                    <h4 className="font-medium mb-2">{t('vacancy.description')}</h4>
                     <p className="text-sm text-gray-600">
                       {vacancy.description}
                     </p>
@@ -424,7 +424,7 @@ const VacanciesPage = () => {
 
                 {vacancy.requirements && vacancy.requirements.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Требования</h4>
+                    <h4 className="font-medium mb-2">{t('vacancy.requirements')}</h4>
                     <div className="flex flex-wrap gap-1">
                       {vacancy.requirements.slice(0, 5).map((req: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
@@ -433,7 +433,7 @@ const VacanciesPage = () => {
                       ))}
                       {vacancy.requirements.length > 5 && (
                         <Badge variant="outline" className="text-xs">
-                          +{vacancy.requirements.length - 5} еще
+                          +{vacancy.requirements.length - 5} {t('common.more')}
                         </Badge>
                       )}
                     </div>
@@ -442,7 +442,7 @@ const VacanciesPage = () => {
 
                 {vacancy.benefits && vacancy.benefits.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Дополнительно</h4>
+                    <h4 className="font-medium mb-2">{t('vacancy.benefits')}</h4>
                     <div className="flex flex-wrap gap-1">
                       {vacancy.benefits.slice(0, 3).map((benefit: string, index: number) => (
                         <Badge key={index} variant="secondary" className="text-xs">
@@ -451,7 +451,7 @@ const VacanciesPage = () => {
                       ))}
                       {vacancy.benefits.length > 3 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{vacancy.benefits.length - 3} еще
+                          +{vacancy.benefits.length - 3} {t('common.more')}
                         </Badge>
                       )}
                     </div>
@@ -460,22 +460,22 @@ const VacanciesPage = () => {
 
                 <div className="flex justify-between items-center pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    Опубликовано: {formatDate(vacancy.created_at)}
+                    {t('vacancy.published')}: {formatDate(vacancy.created_at)}
                   </div>
                   <div className="flex gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleContactSchool(vacancy.school_id, vacancy.school_profiles?.school_name || 'школой')}
+                      onClick={() => handleContactSchool(vacancy.school_id, vacancy.school_profiles?.school_name || t('schools.defaultName'))}
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      Связаться со школой
+                      {t('vacancy.contactSchool')}
                     </Button>
                     <Button 
                       size="sm"
                       onClick={() => handleApplyToVacancy(vacancy)}
                     >
-                      Откликнуться
+                      {t('vacancy.apply')}
                     </Button>
                   </div>
                 </div>
