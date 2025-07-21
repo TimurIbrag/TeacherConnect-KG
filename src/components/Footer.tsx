@@ -42,7 +42,7 @@ const Footer: React.FC = () => {
           </div>
           
           <div className="space-y-3">
-            <h3 className="text-lg font-bold">{t('footer.navigation')}</h3>
+            <h3 className="text-lg font-bold">Навигация</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
