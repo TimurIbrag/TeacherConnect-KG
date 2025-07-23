@@ -37,7 +37,6 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
       const { data, error, count } = await supabase
         .from('teacher_profiles')
         .select(`*, profiles (*)`, { count: 'exact' })
-        .eq('is_published', true) // Only show published teachers, regardless of availability
         .range(from, to);
 
       if (error) throw error;
