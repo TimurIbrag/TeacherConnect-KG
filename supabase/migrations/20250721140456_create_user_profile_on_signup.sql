@@ -23,3 +23,9 @@ create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- Allow anyone to view all profiles
+CREATE POLICY "Anyone can view profiles"
+  ON public.profiles
+  FOR SELECT
+  USING (true);
+
