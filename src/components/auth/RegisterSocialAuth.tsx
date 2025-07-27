@@ -20,6 +20,8 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
     
     try {
       console.log('🟢 Google OAuth registration initiated');
+      console.log('📍 Current URL:', window.location.href);
+      console.log('🏠 Origin:', window.location.origin);
       
       // Clear any existing storage
       const keysToClean = [
@@ -64,6 +66,7 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       }
 
       console.log('🚀 OAuth flow initiated successfully');
+      console.log('📋 Data received:', data);
       // Don't setIsLoading(false) here - the page will redirect
       
     } catch (error: any) {

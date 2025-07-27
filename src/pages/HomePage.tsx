@@ -12,7 +12,7 @@ import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import DebugAuth from '@/components/DebugAuth';
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -31,8 +31,27 @@ const HomePage = () => {
       profile: !!profile, 
       loading,
       userEmail: user?.email,
-      profileRole: profile?.role 
+      profileRole: profile?.role,
+      currentUrl: window.location.href,
+      searchParams: window.location.search
     });
+    
+    // Check for OAuth error in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+    
+    if (error) {
+      console.error('❌ OAuth error detected:', { error, errorDescription });
+      toast({
+        title: "Ошибка аутентификации",
+        description: errorDescription || error,
+        variant: "destructive"
+      });
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
     
     // If user is authenticated but has no profile or incomplete profile, redirect to user type selection
     if (user && !loading && (!profile || !profile.role)) {
@@ -54,7 +73,7 @@ const HomePage = () => {
     }
     
     console.log('⏳ Waiting for authentication to complete...');
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, loading, navigate, toast]);
 
   // Add console logs for debugging
   console.log('HomePage data:', {
@@ -384,8 +403,7 @@ const HomePage = () => {
         </div>
       </section>
       
-      {/* Debug component - remove this after testing */}
-      <DebugAuth />
+
     </div>
   );
 };

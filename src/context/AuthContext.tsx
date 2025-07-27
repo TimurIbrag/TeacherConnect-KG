@@ -31,6 +31,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     console.log('🚀 AuthProvider initializing...');
+    console.log('🔧 Environment check:', {
+      hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
+      hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+      currentUrl: window.location.href
+    });
+    
+    // Check for OAuth token in URL hash
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      console.log('🔑 OAuth token detected in URL hash, processing...');
+      // Clear the hash to prevent issues
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     
     // Add a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
@@ -49,6 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setLoading(false);
       }
+    }).catch(error => {
+      console.error('❌ Error getting initial session:', error);
+      setLoading(false);
     });
 
     // Listen for auth changes
@@ -56,12 +72,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state change:', { event, hasSession: !!session, userEmail: session?.user?.email });
-      setUser(session?.user ?? null);
-      if (session?.user) {
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('✅ User signed in successfully:', session.user.email);
+        setUser(session.user);
         await fetchProfile(session.user.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 User signed out');
+        setUser(null);
         setProfile(null);
         setLoading(false);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        console.log('🔄 Token refreshed for user:', session.user.email);
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+      } else {
+        console.log('🔄 Other auth event:', event);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
       }
     });
 
