@@ -115,7 +115,7 @@ export const useSecureAuth = () => {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
-      redirectTo: `${window.location.origin}/password-reset`,
+      redirectTo: `${window.location.origin}/?redirect=password-reset`,
     });
 
     if (error) {

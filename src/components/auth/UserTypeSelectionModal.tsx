@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface UserTypeSelectionModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
   const [selectedType, setSelectedType] = useState<'teacher' | 'school' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     if (!selectedType) {
@@ -111,9 +113,9 @@ const UserTypeSelectionModal: React.FC<UserTypeSelectionModalProps> = ({
       // Navigate to appropriate dashboard
       setTimeout(() => {
         if (selectedType === 'school') {
-          window.location.href = '/school-dashboard';
+          navigate('/school-dashboard');
         } else {
-          window.location.href = '/teacher-dashboard';
+          navigate('/teacher-dashboard');
         }
       }, 500);
       

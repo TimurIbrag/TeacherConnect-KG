@@ -45,8 +45,8 @@ const SecureLoginForm: React.FC = () => {
       await secureLogin(email, password);
       
       toast({
-        title: "Вход выполнен успешно",
-        description: "Добро пожаловать в личный кабинет",
+        title: t('auth.loginSuccess'),
+        description: t('auth.welcomeToDashboard'),
       });
       
       navigate('/');
@@ -54,18 +54,18 @@ const SecureLoginForm: React.FC = () => {
       console.error('Login error:', error);
       
       // User-friendly error messages
-      let errorMessage = 'Произошла ошибка при входе';
+      let errorMessage = t('auth.loginError');
       
       if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Неверный email или пароль';
+        errorMessage = t('auth.invalidCredentials');
       } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = 'Подтвердите email для входа';
+        errorMessage = t('auth.emailNotConfirmed');
       } else if (error.message?.includes('rate limit')) {
         errorMessage = error.message;
       }
       
       toast({
-        title: 'Ошибка входа',
+        title: t('auth.loginError'),
         description: errorMessage,
         variant: 'destructive',
       });

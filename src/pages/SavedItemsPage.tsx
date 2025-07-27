@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { 
   Tabs, 
   TabsContent, 
@@ -8,130 +10,119 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { School, User, Search } from 'lucide-react';
+import { School, User, Search, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import TeacherCard from '@/components/TeacherCard';
-import SchoolCard from '@/components/SchoolCard';
-import { teachersData, schoolsData } from '@/data/mockData';
 
 const SavedItemsPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const { user, profile, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState<'teacher' | 'school' | null>(null);
   
-  // For demo purposes, let's assume these are saved items
-  // In a real app, this would come from an API or localStorage
-  const [savedTeachers] = useState(teachersData.slice(0, 3));
-  const [savedSchools] = useState(schoolsData.slice(0, 2));
+  // Empty saved items - will be populated from real data
+  const [savedTeachers] = useState([]);
+  const [savedSchools] = useState([]);
   
-  // Check if user is logged in
+  // Check if user is logged in using proper auth context
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      setIsLoggedIn(true);
-      try {
-        const userData = JSON.parse(user);
-        setUserType(userData.type);
-      } catch (e) {
-        console.error('Error parsing user data', e);
-      }
-    } else {
-      // Redirect to login if not logged in
+    if (!loading && !user) {
       navigate('/login');
       toast({
-        title: "Требуется авторизация",
-        description: "Пожалуйста, войдите в систему для доступа к избранному",
+        title: t('auth.authorizationRequired'),
+        description: t('savedItems.pleaseLoginForAccess'),
         variant: "destructive",
       });
     }
-  }, [navigate, toast]);
+  }, [user, profile, loading, navigate, toast, t]);
+
+  const filteredTeachers = savedTeachers.filter((teacher: any) =>
+    teacher.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredSchools = savedSchools.filter((school: any) =>
+    school.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="container px-4 py-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Избранное</h1>
-      
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <div className="flex items-center space-x-2">
+        <h1 className="text-3xl font-bold mb-2">{t('savedItems.title')}</h1>
+        <p className="text-muted-foreground">{t('savedItems.description')}</p>
+      </div>
+
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Поиск в избранном..."
+            type="text"
+            placeholder={t('savedItems.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
+            className="pl-10"
           />
-          <Button>
-            <Search className="h-4 w-4 mr-2" />
-            Найти
-          </Button>
         </div>
       </div>
-      
-      <Tabs defaultValue={userType === 'school' ? "teachers" : "schools"}>
+
+      <Tabs defaultValue="teachers" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="teachers" className="flex items-center">
-            <User className="h-4 w-4 mr-2" />
-            Учителя
+          <TabsTrigger value="teachers" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            {t('savedItems.teachers')} ({filteredTeachers.length})
           </TabsTrigger>
-          <TabsTrigger value="schools" className="flex items-center">
-            <School className="h-4 w-4 mr-2" />
-            Школы
+          <TabsTrigger value="schools" className="flex items-center gap-2">
+            <School className="h-4 w-4" />
+            {t('savedItems.schools')} ({filteredSchools.length})
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="teachers" className="pt-6">
-          {savedTeachers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {savedTeachers.map(teacher => (
-                <TeacherCard
-                  key={teacher.id}
-                  id={teacher.id}
-                  name={teacher.name}
-                  photo={teacher.photo}
-                  specialization={teacher.specialization}
-                  experience={teacher.experience}
-                  location={teacher.location}
-                  ratings={teacher.ratings}
-                  views={teacher.views}
-                />
-              ))}
+
+        <TabsContent value="teachers" className="space-y-4">
+          {filteredTeachers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Teacher cards would go here */}
             </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">У вас нет сохраненных учителей</p>
-              <Button variant="outline" className="mt-4" onClick={() => navigate('/teachers')}>
-                Найти учителей
-              </Button>
+            <div className="text-center py-12">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {t('savedItems.noSavedTeachers')}
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {t('savedItems.noSavedTeachersDescription')}
+                </p>
+                <Button onClick={() => navigate('/teachers')}>
+                  {t('savedItems.browseTeachers')}
+                </Button>
+              </div>
             </div>
           )}
         </TabsContent>
-        
-        <TabsContent value="schools" className="pt-6">
-          {savedSchools.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {savedSchools.map(school => (
-                <SchoolCard
-                  key={school.id}
-                  id={school.id}
-                  name={school.name}
-                  photo={school.photo}
-                  address={school.address}
-                  type={school.type}
-                  specialization={school.specialization}
-                  openPositions={school.openPositions}
-                  ratings={school.ratings}
-                  views={school.views}
-                  housing={school.housing}
-                />
-              ))}
+
+        <TabsContent value="schools" className="space-y-4">
+          {filteredSchools.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* School cards would go here */}
             </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">У вас нет сохраненных школ</p>
-              <Button variant="outline" className="mt-4" onClick={() => navigate('/schools')}>
-                Найти школы
-              </Button>
+            <div className="text-center py-12">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <School className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {t('savedItems.noSavedSchools')}
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {t('savedItems.noSavedSchoolsDescription')}
+                </p>
+                <Button onClick={() => navigate('/schools')}>
+                  {t('savedItems.browseSchools')}
+                </Button>
+              </div>
             </div>
           )}
         </TabsContent>

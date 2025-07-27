@@ -66,7 +66,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       let redirectUrl = `${baseUrl}/?flow=login&oauth=google&provider=google&timestamp=${timestamp}`;
       
       if (userType) {
-        redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}&intent=login&action=signin`;
+        redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}&intent=login&action=signin&redirect=user-type-selection`;
       }
       
       console.log('🔗 OAuth LOGIN redirect URL:', redirectUrl);

@@ -17,7 +17,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 const Navbar: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -61,14 +61,16 @@ const Navbar: React.FC = () => {
         <DesktopNav />
 
         <div className="flex items-center gap-3">
-          {user ? (
+          {!loading && user ? (
             <UserMenuDesktop 
               userData={profile} 
               userType={compatibleUserType} 
               handleLogout={handleLogout} 
             />
-          ) : (
+          ) : !loading ? (
             <AuthButtons />
+          ) : (
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           )}
           <LanguageSwitcher />
           <Button 

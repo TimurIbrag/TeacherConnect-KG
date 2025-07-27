@@ -3,37 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ChatRoom, ChatMessage } from '@/types/chat';
 
-// Mock data for development - replace with real API calls
-const mockChatRooms: ChatRoom[] = [
-  {
-    id: 'room1',
-    participant_a: 'teacher1',
-    participant_b: 'school1',
-    created_at: new Date().toISOString(),
-    last_message: {
-      id: 'msg1',
-      chat_room_id: 'room1',
-      sender_id: 'school1',
-      text: 'Здравствуйте! Интересует ваша кандидатура на позицию учителя математики.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      read: false,
-    },
-    unread_count: 1,
-  },
-];
+// Empty data for development - will be replaced with real API calls
+const mockChatRooms: ChatRoom[] = [];
 
-const mockMessages: Record<string, ChatMessage[]> = {
-  room1: [
-    {
-      id: 'msg1',
-      chat_room_id: 'room1',
-      sender_id: 'school1',
-      text: 'Здравствуйте! Интересует ваша кандидатура на позицию учителя математики.',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      read: false,
-    },
-  ],
-};
+const mockMessages: Record<string, ChatMessage[]> = {};
 
 export const usePrivateChat = (currentUserId: string) => {
   const { toast } = useToast();

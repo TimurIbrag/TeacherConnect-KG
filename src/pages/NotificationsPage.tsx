@@ -1,93 +1,57 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
   Bell, 
   MessageSquare, 
   Briefcase, 
   User, 
-  Check, 
-  School 
+  Check,
+  Clock
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-
-// Mock notification data
-const mockNotifications = [
-  {
-    id: 1,
-    type: 'message',
-    title: 'Новое сообщение от Школы №5',
-    content: 'Здравствуйте! Мы рассмотрели ваше резюме и хотели бы пригласить вас на собеседование.',
-    timestamp: new Date(Date.now() - 30 * 60000),
-    read: false,
-  },
-  {
-    id: 2,
-    type: 'vacancy',
-    title: 'Новая вакансия: Учитель математики',
-    content: 'В школе "Сейтек" открыта новая вакансия, которая соответствует вашему профилю.',
-    timestamp: new Date(Date.now() - 5 * 3600000),
-    read: false,
-  },
-  {
-    id: 3,
-    type: 'application',
-    title: 'Отклик на вакансию',
-    content: 'Анна Иванова откликнулась на вашу вакансию учителя английского языка.',
-    timestamp: new Date(Date.now() - 2 * 86400000),
-    read: true,
-  },
-  {
-    id: 4,
-    type: 'system',
-    title: 'Добро пожаловать в TeacherConnect KG!',
-    content: 'Ваш аккаунт успешно создан. Заполните свой профиль, чтобы найти подходящие предложения.',
-    timestamp: new Date(Date.now() - 7 * 86400000),
-    read: true,
-  },
-  {
-    id: 5,
-    type: 'message',
-    title: 'Новое сообщение от Михаила Петрова',
-    content: 'У меня есть несколько вопросов по вакансии учителя физики.',
-    timestamp: new Date(Date.now() - 1 * 86400000),
-    read: true,
-  },
-];
+import { cn } from '@/lib/utils';
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { t } = useLanguage();
+  const { user, profile, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('all');
   
-  // Check if user is logged in
+  // Mock notification data - empty for now, will be populated from real data
+  const mockNotifications = [
+    {
+      id: 1,
+      type: 'system',
+      title: t('notifications.welcomeTitle'),
+      content: t('notifications.welcomeContent'),
+      timestamp: new Date(Date.now() - 7 * 86400000),
+      read: true,
+    }
+  ];
+  
+  const [notifications, setNotifications] = useState(mockNotifications);
+  
+  // Check if user is logged in using proper auth context
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      setIsLoggedIn(true);
-    } else {
-      // Redirect to login if not logged in
+    if (!loading && !user) {
       navigate('/login');
       toast({
-        title: "Требуется авторизация",
-        description: "Пожалуйста, войдите в систему для доступа к уведомлениям",
+        title: t('auth.authorizationRequired'),
+        description: t('auth.pleaseLoginForNotifications'),
         variant: "destructive",
       });
     }
-  }, [navigate, toast]);
+  }, [user, profile, loading, navigate, toast, t]);
   
   // Mark notification as read
   const handleMarkAsRead = (id: number) => {
@@ -105,8 +69,8 @@ const NotificationsPage: React.FC = () => {
     );
     
     toast({
-      title: "Отмечено как прочитанное",
-      description: "Все уведомления отмечены как прочитанные",
+      title: t('notifications.markedAsRead'),
+      description: t('notifications.allMarkedAsRead'),
     });
   };
   
@@ -137,24 +101,20 @@ const NotificationsPage: React.FC = () => {
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Уведомления</h1>
+        <h1 className="text-3xl font-bold">{t('notifications.title')}</h1>
         {unreadCount > 0 && (
           <Button variant="outline" onClick={handleMarkAllAsRead}>
             <Check className="h-4 w-4 mr-2" />
-            Отметить все как прочитанные
+            {t('notifications.markAllAsRead')}
           </Button>
         )}
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="all">
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="flex items-center gap-1">
+            <Bell className="h-4 w-4" />
             Все
-            {unreadCount > 0 && (
-              <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5">
-                {unreadCount}
-              </span>
-            )}
           </TabsTrigger>
           <TabsTrigger value="message" className="flex items-center gap-1">
             <MessageSquare className="h-4 w-4" />
@@ -165,7 +125,7 @@ const NotificationsPage: React.FC = () => {
             Вакансии
           </TabsTrigger>
           <TabsTrigger value="application" className="flex items-center gap-1">
-            <School className="h-4 w-4" />
+            <User className="h-4 w-4" />
             Отклики
           </TabsTrigger>
         </TabsList>

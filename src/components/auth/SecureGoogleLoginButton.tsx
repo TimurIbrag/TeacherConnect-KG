@@ -31,7 +31,7 @@ const SecureGoogleLoginButton: React.FC<SecureGoogleLoginButtonProps> = ({
       
       // Validate redirect URL
       const redirectUrl = userType 
-        ? `${window.location.origin}/?userType=${userType}`
+        ? `${window.location.origin}/?userType=${userType}&redirect=user-type-selection`
         : `${window.location.origin}/`;
       
       if (!isValidUrl(redirectUrl)) {

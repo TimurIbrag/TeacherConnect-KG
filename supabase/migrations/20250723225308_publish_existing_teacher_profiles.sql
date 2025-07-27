@@ -1,5 +1,5 @@
 -- Publish all existing teacher profiles so they become visible
-UPDATE public.teacher_profiles 
+UPDATE public.Hteacher_profiles 
 SET is_published = true 
 WHERE is_published = false OR is_published IS NULL;
 

@@ -27,6 +27,7 @@ const translations = {
     'nav.register': 'Регистрация',
     'nav.logout': 'Выйти',
     'nav.about': 'О нас',
+    'nav.navigation': 'Навигация',
     
     // Common
     'common.save': 'Сохранить',
@@ -44,6 +45,70 @@ const translations = {
     'common.back': 'Назад',
     'common.next': 'Далее',
     'common.submit': 'Отправить',
+    'common.more': 'Подробнее',
+    'common.reset': 'Сбросить',
+    
+    // Brand
+    'brand.name': 'TeacherConnect KG',
+    'brand.description': 'Платформа для связи учителей и школ в Кыргызстане',
+    
+    // Auth Messages
+    'auth.login': 'Вход',
+    'auth.register': 'Регистрация',
+    'auth.loginWithGoogle': 'Войти через Google',
+    'auth.registerWithGoogle': 'Зарегистрироваться через Google',
+    'auth.password': 'Пароль',
+    'auth.confirmPassword': 'Подтвердите пароль',
+    'auth.forgotPassword': 'Забыли пароль?',
+    'auth.alreadyHaveAccount': 'Уже есть аккаунт?',
+    'auth.dontHaveAccount': 'Нет аккаунта?',
+    'auth.loginError': 'Ошибка входа',
+    'auth.registerError': 'Ошибка регистрации',
+    'auth.userType': 'Тип пользователя',
+    'auth.teacher': 'Учитель',
+    'auth.school': 'Школа',
+    'auth.email': 'Email',
+    'auth.submit': 'Войти',
+    'auth.register.submit': 'Зарегистрироваться',
+    'auth.loggingIn': 'Вход...',
+    'auth.registering': 'Регистрация...',
+    'auth.loginDescription': 'Войдите в аккаунт для доступа к платформе',
+    'auth.orLoginWithEmail': 'Или войдите через email',
+    'auth.loginSuccess': 'Вход выполнен успешно!',
+    'auth.welcomeMessage': 'Добро пожаловать на платформу',
+    'auth.welcomeToDashboard': 'Добро пожаловать в панель управления',
+    'auth.invalidCredentials': 'Неверный email или пароль',
+    'auth.emailNotConfirmed': 'Подтвердите email для входа',
+    'auth.passwordReset': 'Восстановление пароля',
+    'auth.emailAddress': 'Email адрес',
+    'auth.sendResetLink': 'Отправить ссылку для сброса',
+    'auth.emailSent': 'Письмо отправлено',
+    'auth.emailSentDescription': 'Проверьте почту для сброса пароля',
+    'auth.emailSentSuccess': 'Письмо отправлено!',
+    'auth.checkEmailForReset': 'Проверьте почту {email} и перейдите по ссылке для сброса пароля',
+    'auth.authorizationRequired': 'Требуется авторизация',
+    'auth.pleaseLoginForNotifications': 'Пожалуйста, войдите в систему для доступа к уведомлениям',
+    'auth.confirmationEmailSent': 'Мы отправили ссылку подтверждения на ваш email. Пожалуйста, проверьте почту и кликните по ссылке для завершения регистрации.',
+    'auth.registrationSuccess': 'Регистрация успешна!',
+    'auth.checkEmailForConfirmation': 'Проверьте email для подтверждения аккаунта.',
+    'auth.registrationFailed': 'Произошла ошибка при регистрации',
+    'auth.googleAuthError': 'Не удалось войти через Google',
+    'auth.accountType': 'Тип аккаунта',
+    'auth.fullName': 'Полное имя',
+    'auth.schoolName': 'Название школы',
+    'auth.signInWithGoogle': 'Войти через Google',
+    'auth.registerAs': 'Зарегистрироваться как {userType}',
+    'auth.orUseEmail': 'Или используйте email',
+    'auth.signIn': 'Войти',
+    'auth.emailSentError': 'Не удалось отправить письмо',
+    
+    // Dashboard
+    'dashboard.profile': 'Профиль',
+    'dashboard.vacancies': 'Вакансии',
+    'dashboard.applications': 'Заявки',
+    'dashboard.teachers': 'Учителя',
+    'dashboard.messages': 'Сообщения',
+    'dashboard.settings': 'Настройки',
     
     // Vacancy Management
     'vacancy.title': 'Название вакансии',
@@ -75,6 +140,16 @@ const translations = {
     'vacancy.featureInDevelopment': 'Функция в разработке',
     'vacancy.editingFeature': 'Редактирование вакансий будет доступно в следующем обновлении',
     'vacancy.applicationsFeature': 'Просмотр откликов будет доступен в следующем обновлении',
+    'vacancy.negotiable': 'По договоренности',
+    'vacancy.from': 'от',
+    'vacancy.upTo': 'до',
+    'vacancy.notSpecified': 'Не указана',
+    'vacancy.locationNotSpecified': 'Местоположение не указано',
+    'vacancy.pageTitle': 'Вакансии для преподавателей',
+    'vacancy.pageSubtitle': 'Найдите подходящую работу в образовательных учреждениях',
+    'vacancy.searchPlaceholder': 'Поиск вакансий...',
+    'vacancy.allTypes': 'Все типы',
+    'vacancy.cityPlaceholder': 'Город...',
     
     // Employment Types
     'employment.fullTime': 'Полная занятость',
@@ -109,37 +184,7 @@ const translations = {
     'school.website': 'Веб-сайт',
     'school.facilities': 'Удобства',
     'school.housingProvided': 'Предоставляется жилье',
-    
-    // Authentication
-    'auth.login': 'Вход',
-    'auth.register': 'Регистрация',
-    'auth.loginWithGoogle': 'Войти через Google',
-    'auth.registerWithGoogle': 'Зарегистрироваться через Google',
-    'auth.password': 'Пароль',
-    'auth.confirmPassword': 'Подтвердите пароль',
-    'auth.forgotPassword': 'Забыли пароль?',
-    'auth.alreadyHaveAccount': 'Уже есть аккаунт?',
-    'auth.dontHaveAccount': 'Нет аккаунта?',
-    'auth.loginError': 'Ошибка входа',
-    'auth.registerError': 'Ошибка регистрации',
-    'auth.userType': 'Тип пользователя',
-    'auth.teacher': 'Учитель',
-    'auth.school': 'Школа',
-    'auth.email': 'Email',
-    'auth.submit': 'Войти',
-    'auth.register.submit': 'Зарегистрироваться',
-    'auth.loggingIn': 'Вход...',
-    'auth.registering': 'Регистрация...',
-    'auth.loginDescription': 'Войдите в аккаунт для доступа к платформе',
-    'auth.orLoginWithEmail': 'Или войдите через email',
-    
-    // Dashboard
-    'dashboard.profile': 'Профиль',
-    'dashboard.vacancies': 'Вакансии',
-    'dashboard.applications': 'Заявки',
-    'dashboard.teachers': 'Учителя',
-    'dashboard.messages': 'Сообщения',
-    'dashboard.settings': 'Настройки',
+    'school.students': 'учеников',
     
     // Maps & Address
     'address.searchPlaceholder': 'Введите адрес...',
@@ -163,6 +208,10 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'cta.addVacancy': 'Добавить вакансию',
+    'cta.findJob': 'Найти работу',
+    
+    // Teachers
     'teachers.header': 'Преподаватели и услуги',
     'teachers.subheader': 'Найдите квалифицированных преподавателей и их услуги',
     'teachers.tab': 'Преподаватели',
@@ -171,12 +220,44 @@ const translations = {
     'teachers.servicesSearchPlaceholder': 'Поиск услуг...',
     'teachers.subjectPlaceholder': 'Предмет',
     'teachers.locationPlaceholder': 'Местоположение',
-    'common.reset': 'Сбросить',
     'teachers.foundCount': 'Найдено {{count}} преподавателей',
     'teachers.servicesFoundCount': 'Найдено {{count}} услуг',
     'teachers.notFound': 'Преподаватели не найдены',
     'teachers.tryChangeSearch': 'Попробуйте изменить параметры поиска или опубликуйте свой профиль',
     'teachers.servicesNotFound': 'Услуги не найдены',
+    'teachers.search': 'Поиск учителей',
+    'teachers.advancedSearch': 'Расширенный поиск',
+    'teachers.noTeachersFound': 'Учителя не найдены',
+    'teachers.noTeachersDescription': 'В данный момент нет доступных учителей. Создайте вакансию, чтобы привлечь кандидатов.',
+    'teachers.browseAllTeachers': 'Просмотреть всех учителей',
+    
+    // Applications
+    'applications.title': 'Отклики на вакансии',
+    'applications.description': 'Отклики учителей на размещенные вакансии',
+    'applications.new': 'Новые',
+    'applications.inProgress': 'В работе',
+    'applications.archive': 'Архив',
+    'applications.noNewApplications': 'Нет новых откликов',
+    'applications.noApplicationsDescription': 'Когда учителя будут откликаться на ваши вакансии, они появятся здесь.',
+    'applications.createVacancy': 'Создать вакансию',
+    'applications.noInProgressApplications': 'Нет откликов в работе',
+    'applications.noInProgressDescription': 'Отклики, которые вы обрабатываете, будут отображаться здесь.',
+    'applications.noArchivedApplications': 'Нет архивных откликов',
+    'applications.noArchivedDescription': 'Завершенные отклики будут перемещены в архив.',
+    
+    // Saved Items
+    'savedItems.title': 'Избранное',
+    'savedItems.description': 'Ваши сохраненные учителя и школы',
+    'savedItems.searchPlaceholder': 'Поиск в избранном...',
+    'savedItems.teachers': 'Учителя',
+    'savedItems.schools': 'Школы',
+    'savedItems.noSavedTeachers': 'Нет сохраненных учителей',
+    'savedItems.noSavedTeachersDescription': 'Сохраняйте интересных учителей, чтобы быстро найти их позже.',
+    'savedItems.browseTeachers': 'Найти учителей',
+    'savedItems.noSavedSchools': 'Нет сохраненных школ',
+    'savedItems.noSavedSchoolsDescription': 'Сохраняйте интересные школы, чтобы быстро найти их позже.',
+    'savedItems.browseSchools': 'Найти школы',
+    'savedItems.pleaseLoginForAccess': 'Пожалуйста, войдите в систему для доступа к избранному',
     
     // Home Page
     'home.hero.title': 'Найдите свою идеальную работу в образовании',
@@ -196,13 +277,6 @@ const translations = {
     'home.schools.subtitle': 'Школы и учебные заведения, которые ищут талантливых преподавателей',
     'home.schools.viewAllSchools': 'Посмотреть все школы',
     
-    // Vacancy
-    'vacancy.negotiable': 'По договоренности',
-    'vacancy.from': 'от',
-    'vacancy.upTo': 'до',
-    'vacancy.notSpecified': 'Не указана',
-    'vacancy.locationNotSpecified': 'Местоположение не указано',
-    
     // Currency
     'currency.som': 'с',
     
@@ -210,22 +284,12 @@ const translations = {
     'teacher.nameNotSpecified': 'Имя не указано',
     'teacher.yearsOfExperience': 'лет опыта',
     
-    // School
-    'school.students': 'учеников',
-    
-    // CTA
-    'cta.addVacancy': 'Добавить вакансию',
-    'cta.findJob': 'Найти работу',
-    
-    // Common
-    'common.more': 'Подробнее',
-    
     // FAQ
     'faq.title': 'Часто задаваемые вопросы',
     'faq.subtitle': 'Ответы на популярные вопросы о платформе',
     'faq.frequentlyAsked': 'Часто задаваемые вопросы',
     'faq.createProfile.question': 'Как создать профиль?',
-    'faq.createProfile.answer': 'Для создания профиля необходимо зарегистрироваться, затем заполнить все необходимые поля в личном кабинете. Учителя указывают свою специализацию, опыт работы, образование и предпочтения по работе. Школы заполняют информацию о своём учебном заведении.',
+    'faq.createProfile.answer': 'Для создания профиля необходимо зарегистрироваться, затем заполнить все необходимые поля в личном кабинете. Учителя указывают свою специализацию, опыт работы, образование и предпочтения по работе. Школы заполняют информацию о своем образовательном учреждении.',
     'faq.findSchool.question': 'Как найти подходящую школу?',
     'faq.findSchool.answer': 'Используйте фильтры на странице "Школы", чтобы найти учебное заведение по местоположению, специализации и другим параметрам. Вы можете просматривать профили школ и их открытые вакансии.',
     'faq.applyVacancy.question': 'Как откликнуться на вакансию?',
@@ -240,7 +304,7 @@ const translations = {
     // Support
     'support.title': 'Поддержка',
     'support.subtitle': 'Мы здесь, чтобы помочь вам с любыми вопросами',
-    'support.contactForm': 'Форма обратной связи',
+    'support.contactForm': 'Контактная форма',
     'support.contactFormDescription': 'Заполните форму, и мы свяжемся с вами в ближайшее время',
     'support.name': 'Ваше имя',
     'support.namePlaceholder': 'Введите ваше имя',
@@ -267,6 +331,7 @@ const translations = {
     'support.howToCreateProfile': 'Как создать профиль?',
     'support.howToApply': 'Как откликнуться на вакансию?',
     'support.accountIssues': 'Проблемы с аккаунтом',
+    
     // Footer
     'footer.information': 'Информация',
     'footer.support': 'Поддержка',
@@ -274,12 +339,24 @@ const translations = {
     'footer.termsOfUse': 'Условия использования',
     'footer.contacts': 'Контакты',
     'footer.address': 'г. Бишкек, Кыргызская Республика',
-    // Vacancy page
-    'vacancy.pageTitle': 'Вакансии для преподавателей',
-    'vacancy.pageSubtitle': 'Найдите подходящую работу в образовательных учреждениях',
-    'vacancy.searchPlaceholder': 'Поиск вакансий...',
-    'vacancy.allTypes': 'Все типы',
-    'vacancy.cityPlaceholder': 'Город...',
+    'footer.slogan': 'Соединяем учителей и школы по всей стране',
+    'footer.schoolCatalog': 'Каталог школ',
+    'footer.allRightsReserved': 'Все права защищены',
+    
+    // Notifications
+    'notifications.title': 'Уведомления',
+    'notifications.markAllAsRead': 'Отметить все как прочитанные',
+    'notifications.markedAsRead': 'Отмечено как прочитанное',
+    'notifications.allMarkedAsRead': 'Все уведомления отмечены как прочитанные',
+    'notifications.welcomeTitle': 'Добро пожаловать на платформу!',
+    'notifications.welcomeContent': 'Ваш аккаунт успешно создан. Заполните свой профиль, чтобы найти подходящие предложения.',
+    'notifications.newMessageTitle': 'Новое сообщение от {sender}',
+    'notifications.newMessageContent': 'У меня есть несколько вопросов по вакансии учителя физики.',
+    
+    // Contact Info
+    'contact.email': 'teacherconnectkg@gmail.com',
+    'contact.phone': '+996 XXX XXX XXX',
+    
     // About page
     'about.title': 'О проекте',
     'about.subtitle': 'TeacherConnect Кыргызстан - платформа для соединения учителей и школ по всей стране',
@@ -316,9 +393,7 @@ const translations = {
     'about.faq.question3': 'Можно ли использовать платформу на мобильном телефоне?',
     'about.faq.answer3': 'Да, наш сайт полностью адаптирован для мобильных устройств. Вы можете пользоваться всеми функциями с любого устройства с доступом в интернет.',
     'about.faq.viewAll': 'Смотреть все вопросы',
-    // Footer
-    'footer.slogan': 'Соединяем учителей и школы по всей стране',
-    'footer.schoolCatalog': 'Каталог школ',
+    
     // Schools page
     'schools.title': 'Школы',
     'schools.foundCount': 'Найдено {{count}} школ',
@@ -355,6 +430,7 @@ const translations = {
     'nav.register': 'Register',
     'nav.logout': 'Logout',
     'nav.about': 'About',
+    'nav.navigation': 'Navigation',
     
     // Common
     'common.save': 'Save',
@@ -372,6 +448,70 @@ const translations = {
     'common.back': 'Back',
     'common.next': 'Next',
     'common.submit': 'Submit',
+    'common.more': 'More',
+    'common.reset': 'Reset',
+    
+    // Brand
+    'brand.name': 'TeacherConnect KG',
+    'brand.description': 'Platform for finding teaching jobs in Kyrgyzstan',
+    
+    // Auth Messages
+    'auth.login': 'Login',
+    'auth.register': 'Register',
+    'auth.loginWithGoogle': 'Login with Google',
+    'auth.registerWithGoogle': 'Register with Google',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm Password',
+    'auth.forgotPassword': 'Forgot Password?',
+    'auth.alreadyHaveAccount': 'Already have an account?',
+    'auth.dontHaveAccount': "Don't have an account?",
+    'auth.loginError': 'Login Error',
+    'auth.registerError': 'Registration Error',
+    'auth.userType': 'User Type',
+    'auth.teacher': 'Teacher',
+    'auth.school': 'School',
+    'auth.email': 'Email',
+    'auth.submit': 'Login',
+    'auth.register.submit': 'Register',
+    'auth.loggingIn': 'Logging in...',
+    'auth.registering': 'Registering...',
+    'auth.loginDescription': 'Sign in to your account to access the platform',
+    'auth.orLoginWithEmail': 'Or sign in with email',
+    'auth.loginSuccess': 'Login successful!',
+    'auth.welcomeMessage': 'Welcome to TeacherConnect KG',
+    'auth.welcomeToDashboard': 'Welcome to your dashboard',
+    'auth.invalidCredentials': 'Invalid email or password',
+    'auth.emailNotConfirmed': 'Please confirm your email to login',
+    'auth.passwordReset': 'Password Recovery',
+    'auth.emailAddress': 'Email address',
+    'auth.sendResetLink': 'Send reset link',
+    'auth.emailSent': 'Email sent',
+    'auth.emailSentDescription': 'Check your email for password reset',
+    'auth.emailSentSuccess': 'Email sent!',
+    'auth.checkEmailForReset': 'Check your email {email} and follow the link to reset your password',
+    'auth.authorizationRequired': 'Authorization required',
+    'auth.pleaseLoginForNotifications': 'Please log in to access notifications',
+    'auth.confirmationEmailSent': 'We sent a confirmation link to your email. Please check your email and click the link to complete registration.',
+    'auth.registrationSuccess': 'Registration successful!',
+    'auth.checkEmailForConfirmation': 'Please check your email for confirmation',
+    'auth.registrationFailed': 'Registration failed',
+    'auth.googleAuthError': 'Failed to sign in with Google',
+    'auth.accountType': 'Account type',
+    'auth.fullName': 'Full Name',
+    'auth.schoolName': 'School Name',
+    'auth.signInWithGoogle': 'Sign in with Google',
+    'auth.registerAs': 'Register as {userType}',
+    'auth.orUseEmail': 'Or use email',
+    'auth.signIn': 'Sign in',
+    'auth.emailSentError': 'Failed to send email',
+    
+    // Dashboard
+    'dashboard.profile': 'Profile',
+    'dashboard.vacancies': 'Vacancies',
+    'dashboard.applications': 'Applications',
+    'dashboard.teachers': 'Teachers',
+    'dashboard.messages': 'Messages',
+    'dashboard.settings': 'Settings',
     
     // Vacancy Management
     'vacancy.title': 'Vacancy Title',
@@ -403,6 +543,16 @@ const translations = {
     'vacancy.featureInDevelopment': 'Feature in Development',
     'vacancy.editingFeature': 'Vacancy editing will be available in the next update',
     'vacancy.applicationsFeature': 'Applications view will be available in the next update',
+    'vacancy.negotiable': 'Negotiable',
+    'vacancy.from': 'from',
+    'vacancy.upTo': 'up to',
+    'vacancy.notSpecified': 'Not specified',
+    'vacancy.locationNotSpecified': 'Location not specified',
+    'vacancy.pageTitle': 'Vacancies for Teachers',
+    'vacancy.pageSubtitle': 'Find the right job in educational institutions',
+    'vacancy.searchPlaceholder': 'Search vacancies...',
+    'vacancy.allTypes': 'All types',
+    'vacancy.cityPlaceholder': 'City...',
     
     // Employment Types
     'employment.fullTime': 'Full Time',
@@ -438,37 +588,6 @@ const translations = {
     'school.facilities': 'Facilities',
     'school.housingProvided': 'Housing Provided',
     
-    // Authentication
-    'auth.login': 'Login',
-    'auth.register': 'Register',
-    'auth.loginWithGoogle': 'Login with Google',
-    'auth.registerWithGoogle': 'Register with Google',
-    'auth.password': 'Password',
-    'auth.confirmPassword': 'Confirm Password',
-    'auth.forgotPassword': 'Forgot Password?',
-    'auth.alreadyHaveAccount': 'Already have an account?',
-    'auth.dontHaveAccount': 'Don\'t have an account?',
-    'auth.loginError': 'Login Error',
-    'auth.registerError': 'Registration Error',
-    'auth.userType': 'User Type',
-    'auth.teacher': 'Teacher',
-    'auth.school': 'School',
-    'auth.email': 'Email',
-    'auth.submit': 'Login',
-    'auth.register.submit': 'Register',
-    'auth.loggingIn': 'Logging in...',
-    'auth.registering': 'Registering...',
-    'auth.loginDescription': 'Sign in to your account to access the platform',
-    'auth.orLoginWithEmail': 'Or sign in with email',
-    
-    // Dashboard
-    'dashboard.profile': 'Profile',
-    'dashboard.vacancies': 'Vacancies',
-    'dashboard.applications': 'Applications',
-    'dashboard.teachers': 'Teachers',
-    'dashboard.messages': 'Messages',
-    'dashboard.settings': 'Settings',
-    
     // Maps & Address
     'address.searchPlaceholder': 'Enter address...',
     'address.selectLocation': 'Select location on map',
@@ -491,6 +610,10 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'cta.addVacancy': 'Add Vacancy',
+    'cta.findJob': 'Find Job',
+    
+    // Teachers
     'teachers.header': 'Teachers and Services',
     'teachers.subheader': 'Find qualified teachers and their services',
     'teachers.tab': 'Teachers',
@@ -499,12 +622,44 @@ const translations = {
     'teachers.servicesSearchPlaceholder': 'Search services...',
     'teachers.subjectPlaceholder': 'Subject',
     'teachers.locationPlaceholder': 'Location',
-    'common.reset': 'Reset',
     'teachers.foundCount': '{{count}} teachers found',
     'teachers.servicesFoundCount': '{{count}} services found',
     'teachers.notFound': 'No teachers found',
     'teachers.tryChangeSearch': 'Try changing your search or publish your profile',
     'teachers.servicesNotFound': 'No services found',
+    'teachers.search': 'Search teachers',
+    'teachers.advancedSearch': 'Advanced Search',
+    'teachers.noTeachersFound': 'No teachers found',
+    'teachers.noTeachersDescription': 'No teachers available at the moment. Please create a vacancy to attract candidates.',
+    'teachers.browseAllTeachers': 'View all teachers',
+    
+    // Applications
+    'applications.title': 'Applications for Vacancies',
+    'applications.description': 'Applications from teachers for posted vacancies',
+    'applications.new': 'New',
+    'applications.inProgress': 'In Progress',
+    'applications.archive': 'Archive',
+    'applications.noNewApplications': 'No new applications',
+    'applications.noApplicationsDescription': 'When teachers apply for your vacancies, they will appear here.',
+    'applications.createVacancy': 'Create a Vacancy',
+    'applications.noInProgressApplications': 'No applications in progress',
+    'applications.noInProgressDescription': 'Applications you are currently processing will appear here.',
+    'applications.noArchivedApplications': 'No archived applications',
+    'applications.noArchivedDescription': 'Completed applications will be moved to the archive.',
+    
+    // Saved Items
+    'savedItems.title': 'Saved Items',
+    'savedItems.description': 'Your saved teachers and schools',
+    'savedItems.searchPlaceholder': 'Search saved...',
+    'savedItems.teachers': 'Teachers',
+    'savedItems.schools': 'Schools',
+    'savedItems.noSavedTeachers': 'No saved teachers',
+    'savedItems.noSavedTeachersDescription': 'Save your favorite teachers for quick access later.',
+    'savedItems.browseTeachers': 'Find Teachers',
+    'savedItems.noSavedSchools': 'No saved schools',
+    'savedItems.noSavedSchoolsDescription': 'Save your favorite schools for quick access later.',
+    'savedItems.browseSchools': 'Find Schools',
+    'savedItems.pleaseLoginForAccess': 'Please log in to access your saved items',
     
     // Home Page
     'home.hero.title': 'Find Your Ideal Job in Education',
@@ -524,29 +679,12 @@ const translations = {
     'home.schools.subtitle': 'Schools and educational institutions looking for talented teachers',
     'home.schools.viewAllSchools': 'View All Schools',
     
-    // Vacancy
-    'vacancy.negotiable': 'Negotiable',
-    'vacancy.from': 'from',
-    'vacancy.upTo': 'up to',
-    'vacancy.notSpecified': 'Not specified',
-    'vacancy.locationNotSpecified': 'Location not specified',
-    
     // Currency
     'currency.som': 'som',
     
     // Teacher
     'teacher.nameNotSpecified': 'Name not specified',
     'teacher.yearsOfExperience': 'years of experience',
-    
-    // School
-    'school.students': 'students',
-    
-    // CTA
-    'cta.addVacancy': 'Add Vacancy',
-    'cta.findJob': 'Find Job',
-    
-    // Common
-    'common.more': 'More',
     
     // FAQ
     'faq.title': 'Frequently Asked Questions',
@@ -595,6 +733,7 @@ const translations = {
     'support.howToCreateProfile': 'How to create a profile?',
     'support.howToApply': 'How to apply for a vacancy?',
     'support.accountIssues': 'Account issues',
+    
     // Footer
     'footer.information': 'Information',
     'footer.support': 'Support',
@@ -602,12 +741,24 @@ const translations = {
     'footer.termsOfUse': 'Terms of Use',
     'footer.contacts': 'Contacts',
     'footer.address': 'Bishkek, Kyrgyz Republic',
-    // Vacancy page
-    'vacancy.pageTitle': 'Vacancies for Teachers',
-    'vacancy.pageSubtitle': 'Find the right job in educational institutions',
-    'vacancy.searchPlaceholder': 'Search vacancies...',
-    'vacancy.allTypes': 'All types',
-    'vacancy.cityPlaceholder': 'City...',
+    'footer.slogan': 'Connecting teachers and schools across the country',
+    'footer.schoolCatalog': 'School Catalog',
+    'footer.allRightsReserved': 'All rights reserved',
+    
+    // Notifications
+    'notifications.title': 'Notifications',
+    'notifications.markAllAsRead': 'Mark all as read',
+    'notifications.markedAsRead': 'Marked as read',
+    'notifications.allMarkedAsRead': 'All notifications marked as read',
+    'notifications.welcomeTitle': 'Welcome to TeacherConnect KG!',
+    'notifications.welcomeContent': 'Your account has been successfully created. Fill out your profile to find suitable offers.',
+    'notifications.newMessageTitle': 'New message from {sender}',
+    'notifications.newMessageContent': 'I have several questions about the physics teacher vacancy.',
+    
+    // Contact Info
+    'contact.email': 'teacherconnectkg@gmail.com',
+    'contact.phone': '+996 XXX XXX XXX',
+    
     // About page
     'about.title': 'About the Project',
     'about.subtitle': 'TeacherConnect Kyrgyzstan - a platform for connecting teachers and schools across the country',
@@ -644,9 +795,7 @@ const translations = {
     'about.faq.question3': 'Can I use the platform on a mobile phone?',
     'about.faq.answer3': 'Yes, our site is fully adapted for mobile devices. You can use all features from any device with internet access.',
     'about.faq.viewAll': 'View all questions',
-    // Footer
-    'footer.slogan': 'Connecting teachers and schools across the country',
-    'footer.schoolCatalog': 'School Catalog',
+    
     // Schools page
     'schools.title': 'Schools',
     'schools.foundCount': 'Found {{count}} schools',
@@ -683,6 +832,7 @@ const translations = {
     'nav.register': 'Катталуу',
     'nav.logout': 'Чыгуу',
     'nav.about': 'Биз жөнүндө',
+    'nav.navigation': 'Навигация',
     
     // Common
     'common.save': 'Сактоо',
@@ -700,6 +850,70 @@ const translations = {
     'common.back': 'Артка',
     'common.next': 'Кийинки',
     'common.submit': 'Жөнөтүү',
+    'common.more': 'Көбүрөөк',
+    'common.reset': 'Тазалоо',
+    
+    // Brand
+    'brand.name': 'TeacherConnect KG',
+    'brand.description': 'Кыргызстанда мугалимдердин жумушун табуу платформасы',
+    
+    // Auth Messages
+    'auth.login': 'Кирүү',
+    'auth.register': 'Катталуу',
+    'auth.loginWithGoogle': 'Google аркылуу кирүү',
+    'auth.registerWithGoogle': 'Google аркылуу катталуу',
+    'auth.password': 'Сыр сөз',
+    'auth.confirmPassword': 'Сыр сөздү ырастоо',
+    'auth.forgotPassword': 'Сыр сөздү унуттуңузбу?',
+    'auth.alreadyHaveAccount': 'Аккаунтуңуз барбы?',
+    'auth.dontHaveAccount': 'Аккаунтуңуз жокпу?',
+    'auth.loginError': 'Кирүү катасы',
+    'auth.registerError': 'Катталуу катасы',
+    'auth.userType': 'Колдонуучу түрү',
+    'auth.teacher': 'Мугалим',
+    'auth.school': 'Мектеп',
+    'auth.email': 'Электрондук почта',
+    'auth.submit': 'Кирүү',
+    'auth.register.submit': 'Катталуу',
+    'auth.loggingIn': 'Кирүүдө...',
+    'auth.registering': 'Катталууда...',
+    'auth.loginDescription': 'Платформага кирүү үчүн аккаунтуңузга кириңиз',
+    'auth.orLoginWithEmail': 'Же электрондук почта аркылуу кириңиз',
+    'auth.loginSuccess': 'Кирүү ийгиликтүү!',
+    'auth.welcomeMessage': 'TeacherConnect KG\'га кош келиңиз',
+    'auth.welcomeToDashboard': 'Башкаруу панелиңизге кош келиңиз',
+    'auth.invalidCredentials': 'Жараксыз электрондук почта же сыр сөз',
+    'auth.emailNotConfirmed': 'Кирүү үчүн электрондук почтаңызды ырастаңыз',
+    'auth.passwordReset': 'Сыр сөздү калыбына келтирүү',
+    'auth.emailAddress': 'Электрондук почта дареги',
+    'auth.sendResetLink': 'Калыбына келтирүү шилтемесин жөнөтүү',
+    'auth.emailSent': 'Электрондук почта жөнөтүлдү',
+    'auth.emailSentDescription': 'Сыр сөздү калыбына келтирүү үчүн электрондук почтаңызды текшериңиз',
+    'auth.emailSentSuccess': 'Электрондук почта жөнөтүлдү!',
+    'auth.checkEmailForReset': 'Электрондук почтаңызды {email} текшериңиз жана сыр сөздү калыбына келтирүү үчүн шилтемени басыңыз',
+    'auth.authorizationRequired': 'Авторизация талап кылынат',
+    'auth.pleaseLoginForNotifications': 'Билдирүүлөргө кирүү үчүн системага кириңиз',
+    'auth.confirmationEmailSent': 'Биз сиздин электрондук почтаңызга ырастоо шилтемесин жөнөттүк. Электрондук почтаңызды текшериңиз жана катталууну аяктоо үчүн шилтемени басыңыз.',
+    'auth.registrationSuccess': 'Регистрация ийгиликтүү!',
+    'auth.checkEmailForConfirmation': 'Электрондук почтаңызды текшериңиз жана катталууну аяктоо үчүн шилтемени басыңыз.',
+    'auth.registrationFailed': 'Регистрацияда ката кетти',
+    'auth.googleAuthError': 'Google аркылуу кирүү катасы',
+    'auth.accountType': 'Аккаунт түрү',
+    'auth.fullName': 'Толук аты',
+    'auth.schoolName': 'Мектептин аталышы',
+    'auth.signInWithGoogle': 'Google аркылуу кирүү',
+    'auth.registerAs': 'Катталуу үчүн {userType}',
+    'auth.orUseEmail': 'Же электрондук почта аркылуу кириңиз',
+    'auth.signIn': 'Кирүү',
+    'auth.emailSentError': 'Письмо жөнөтүлдү',
+    
+    // Dashboard
+    'dashboard.profile': 'Профиль',
+    'dashboard.vacancies': 'Вакансиялар',
+    'dashboard.applications': 'Арыздар',
+    'dashboard.teachers': 'Мугалимдер',
+    'dashboard.messages': 'Билдирүүлөр',
+    'dashboard.settings': 'Параметрлер',
     
     // Vacancy Management
     'vacancy.title': 'Вакансиянын аталышы',
@@ -731,6 +945,16 @@ const translations = {
     'vacancy.featureInDevelopment': 'Функция иштелип жатат',
     'vacancy.editingFeature': 'Вакансияларды өзгөртүү кийинки жаңыртууда жеткиликтүү болот',
     'vacancy.applicationsFeature': 'Арыздарды көрүү кийинки жаңыртууда жеткиликтүү болот',
+    'vacancy.negotiable': 'Келишим боюнча',
+    'vacancy.from': 'башынан',
+    'vacancy.upTo': 'чейин',
+    'vacancy.notSpecified': 'Көрсөтүлгөн эмес',
+    'vacancy.locationNotSpecified': 'Жайгашкан жери көрсөтүлгөн эмес',
+    'vacancy.pageTitle': 'Мугалимдер үчүн жумуш орундары',
+    'vacancy.pageSubtitle': 'Билим берүү мекемелеринде ылайыктуу жумуш табыңыз',
+    'vacancy.searchPlaceholder': 'Жумуш орундарын издөө...',
+    'vacancy.allTypes': 'Бардык түрлөрү',
+    'vacancy.cityPlaceholder': 'Шаар...',
     
     // Employment Types
     'employment.fullTime': 'Толук жумуш күнү',
@@ -765,37 +989,7 @@ const translations = {
     'school.website': 'Веб-сайт',
     'school.facilities': 'Шарттар',
     'school.housingProvided': 'Турак жай берилет',
-    
-    // Authentication
-    'auth.login': 'Кирүү',
-    'auth.register': 'Катталуу',
-    'auth.loginWithGoogle': 'Google аркылуу кирүү',
-    'auth.registerWithGoogle': 'Google аркылуу катталуу',
-    'auth.password': 'Сыр сөз',
-    'auth.confirmPassword': 'Сыр сөздү ырастоо',
-    'auth.forgotPassword': 'Сыр сөздү унуттуңузбу?',
-    'auth.alreadyHaveAccount': 'Аккаунтуңуз барбы?',
-    'auth.dontHaveAccount': 'Аккаунтуңуз жокпу?',
-    'auth.loginError': 'Кирүү катасы',
-    'auth.registerError': 'Катталуу катасы',
-    'auth.userType': 'Колдонуучу түрү',
-    'auth.teacher': 'Мугалим',
-    'auth.school': 'Мектеп',
-    'auth.email': 'Электрондук почта',
-    'auth.submit': 'Кирүү',
-    'auth.register.submit': 'Катталуу',
-    'auth.loggingIn': 'Кирүүдө...',
-    'auth.registering': 'Катталууда...',
-    'auth.loginDescription': 'Платформага кирүү үчүн аккаунтуңузга кириңиз',
-    'auth.orLoginWithEmail': 'Же электрондук почта аркылуу кириңиз',
-    
-    // Dashboard
-    'dashboard.profile': 'Профиль',
-    'dashboard.vacancies': 'Вакансиялар',
-    'dashboard.applications': 'Арыздар',
-    'dashboard.teachers': 'Мугалимдер',
-    'dashboard.messages': 'Билдирүүлөр',
-    'dashboard.settings': 'Параметрлер',
+    'school.students': 'окуучу',
     
     // Maps & Address
     'address.searchPlaceholder': 'Даректи киргизиңиз...',
@@ -819,6 +1013,10 @@ const translations = {
     // CTA Section
     'cta.title': 'Присоединяйтесь к TeacherConnect!',
     'cta.subtitle': 'Создайте профиль или найдите работу в образовании',
+    'cta.addVacancy': 'Вакансия кошуу',
+    'cta.findJob': 'Жумуш табуу',
+    
+    // Teachers
     'teachers.header': 'Мугалимдер жана кызматтар',
     'teachers.subheader': 'Квалификациялуу мугалимдерди жана алардын кызматтарын табыңыз',
     'teachers.tab': 'Мугалимдер',
@@ -827,12 +1025,44 @@ const translations = {
     'teachers.servicesSearchPlaceholder': 'Кызматтарды издөө...',
     'teachers.subjectPlaceholder': 'Предмет',
     'teachers.locationPlaceholder': 'Жайгашкан жери',
-    'common.reset': 'Тазалоо',
     'teachers.foundCount': '{{count}} мугалим табылды',
     'teachers.servicesFoundCount': '{{count}} кызмат табылды',
     'teachers.notFound': 'Мугалимдер табылган жок',
     'teachers.tryChangeSearch': 'Издөө параметрлерин өзгөртүп көрүңүз же профилиңизди жарыялаңыз',
     'teachers.servicesNotFound': 'Кызматтар табылган жок',
+    'teachers.search': 'Поиск учителей',
+    'teachers.advancedSearch': 'Расширенный поиск',
+    'teachers.noTeachersFound': 'Учителя не найдены',
+    'teachers.noTeachersDescription': 'В данный момент нет доступных учителей. Создайте вакансию, чтобы привлечь кандидатов.',
+    'teachers.browseAllTeachers': 'Просмотреть всех учителей',
+    
+    // Applications
+    'applications.title': 'Отклики на вакансии',
+    'applications.description': 'Отклики учителей на размещенные вакансии',
+    'applications.new': 'Новые',
+    'applications.inProgress': 'В работе',
+    'applications.archive': 'Архив',
+    'applications.noNewApplications': 'Нет новых откликов',
+    'applications.noApplicationsDescription': 'Когда учителя будут откликаться на ваши вакансии, они появятся здесь.',
+    'applications.createVacancy': 'Создать вакансию',
+    'applications.noInProgressApplications': 'Нет откликов в работе',
+    'applications.noInProgressDescription': 'Отклики, которые вы обрабатываете, будут отображаться здесь.',
+    'applications.noArchivedApplications': 'Нет архивных откликов',
+    'applications.noArchivedDescription': 'Завершенные отклики будут перемещены в архив.',
+    
+    // Saved Items
+    'savedItems.title': 'Избранное',
+    'savedItems.description': 'Ваши сохраненные учителя и школы',
+    'savedItems.searchPlaceholder': 'Поиск в избранном...',
+    'savedItems.teachers': 'Учителя',
+    'savedItems.schools': 'Школы',
+    'savedItems.noSavedTeachers': 'Нет сохраненных учителей',
+    'savedItems.noSavedTeachersDescription': 'Сохраняйте интересных учителей, чтобы быстро найти их позже.',
+    'savedItems.browseTeachers': 'Найти учителей',
+    'savedItems.noSavedSchools': 'Нет сохраненных школ',
+    'savedItems.noSavedSchoolsDescription': 'Сохраняйте интересные школы, чтобы быстро найти их позже.',
+    'savedItems.browseSchools': 'Найти школы',
+    'savedItems.pleaseLoginForAccess': 'Пожалуйста, войдите в систему для доступа к избранному',
     
     // Home Page
     'home.hero.title': 'Билим берүүдө идеалдуу жумушуңузду табыңыз',
@@ -852,29 +1082,12 @@ const translations = {
     'home.schools.subtitle': 'Жөндөмдүү мугалимдерди издеген мектептер жана билим берүү мекемелери',
     'home.schools.viewAllSchools': 'Бардык мектептерди көрүү',
     
-    // Vacancy
-    'vacancy.negotiable': 'Келишим боюнча',
-    'vacancy.from': 'башынан',
-    'vacancy.upTo': 'чейин',
-    'vacancy.notSpecified': 'Көрсөтүлгөн эмес',
-    'vacancy.locationNotSpecified': 'Жайгашкан жери көрсөтүлгөн эмес',
-    
     // Currency
     'currency.som': 'сом',
     
     // Teacher
     'teacher.nameNotSpecified': 'Аты көрсөтүлгөн эмес',
     'teacher.yearsOfExperience': 'жылдык тажрыйба',
-    
-    // School
-    'school.students': 'окуучу',
-    
-    // CTA
-    'cta.addVacancy': 'Вакансия кошуу',
-    'cta.findJob': 'Жумуш табуу',
-    
-    // Common
-    'common.more': 'Көбүрөөк',
     
     // FAQ
     'faq.title': 'Көп берилүүчү суроолор',
@@ -923,19 +1136,32 @@ const translations = {
     'support.howToCreateProfile': 'Профильди кантип түзүү керек?',
     'support.howToApply': 'Вакансияга кантип арыз берүү керек?',
     'support.accountIssues': 'Аккаунт маселелери',
+    
     // Footer
     'footer.information': 'Маалымат',
     'footer.support': 'Колдоо',
     'footer.privacyPolicy': 'Купуялык саясаты',
     'footer.termsOfUse': 'Колдонуу шарттары',
-    'footer.contacts': 'Байланыш',
+    'footer.contacts': 'Байланыштар',
     'footer.address': 'Бишкек, Кыргыз Республикасы',
-    // Vacancy page
-    'vacancy.pageTitle': 'Мугалимдер үчүн жумуш орундары',
-    'vacancy.pageSubtitle': 'Билим берүү мекемелеринде ылайыктуу жумуш табыңыз',
-    'vacancy.searchPlaceholder': 'Жумуш орундарын издөө...',
-    'vacancy.allTypes': 'Бардык түрлөрү',
-    'vacancy.cityPlaceholder': 'Шаар...',
+    'footer.slogan': 'Өлкө боюнча мугалимдер менен мектептерди байланыштыруу',
+    'footer.schoolCatalog': 'Мектептердин каталогу',
+    'footer.allRightsReserved': 'Бардык укуктар корголгон',
+    
+    // Notifications
+    'notifications.title': 'Билдирүүлөр',
+    'notifications.markAllAsRead': 'Бардыгын окулган деп белгилөө',
+    'notifications.markedAsRead': 'Окулган деп белгиленди',
+    'notifications.allMarkedAsRead': 'Бардык билдирүүлөр окулган деп белгиленди',
+    'notifications.welcomeTitle': 'TeacherConnect KG\'га кош келиңиз!',
+    'notifications.welcomeContent': 'Сиздин аккаунтуңуз ийгиликтүү түзүлдү. Ылайыктуу сунуштарды табуу үчүн профилиңизди толтуруңуз.',
+    'notifications.newMessageTitle': '{sender} дан жаңы билдирүү',
+    'notifications.newMessageContent': 'Физика мугалиминин вакансиясы жөнүндө бир нече суроом бар.',
+    
+    // Contact Info
+    'contact.email': 'teacherconnectkg@gmail.com',
+    'contact.phone': '+996 XXX XXX XXX',
+    
     // About page
     'about.title': 'Долбоор жөнүндө',
     'about.subtitle': 'TeacherConnect Кыргызстан - мугалимдер менен мектептерди өлкө боюнча байланыштырган платформа',
@@ -972,9 +1198,7 @@ const translations = {
     'about.faq.question3': 'Платформаны мобилдик телефон менен колдонсо болобу?',
     'about.faq.answer3': 'Ооба, биздин сайт толугу менен мобилдик түзмөктөргө ылайыкталган. Интернетке кире алган бардык түзмөктөрдөн бардык функцияларды колдоно аласыз.',
     'about.faq.viewAll': 'Бардык суроолорду көрүү',
-    // Footer
-    'footer.slogan': 'Мугалимдер менен мектептерди өлкө боюнча байланыштырган платформа',
-    'footer.schoolCatalog': 'Мектептер каталогу',
+    
     // Schools page
     'schools.title': 'Мектептер',
     'schools.foundCount': '{{count}} мектеп табылды',

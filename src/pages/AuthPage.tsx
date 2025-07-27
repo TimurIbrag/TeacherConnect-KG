@@ -1,40 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2, Chrome, Mail, ArrowLeft } from 'lucide-react';
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const defaultUserType = searchParams.get('type') || searchParams.get('userType') || 'teacher';
 
   const [isLoading, setIsLoading] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [userType, setUserType] = useState<'teacher' | 'school'>(defaultUserType as 'teacher' | 'school');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [userType, setUserType] = useState<'teacher' | 'school'>(
-    (defaultUserType === 'school' || defaultUserType === 'teacher') ? defaultUserType as 'teacher' | 'school' : 'teacher'
-  );
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true });
-    }
-  }, [user, navigate]);
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        navigate('/');
+      }
+    };
+    getUser();
+  }, [navigate]);
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
@@ -51,7 +54,7 @@ const AuthPage = () => {
       sessionStorage.setItem('pendingOAuthFlow', flowType);
       
       const baseUrl = window.location.origin;
-      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=${flowType}`;
+      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=${flowType}&redirect=user-type-selection`;
       console.log('OAuth redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
@@ -71,8 +74,8 @@ const AuthPage = () => {
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
-        title: 'Ошибка входа',
-        description: error.message || 'Не удалось войти через Google',
+        title: t('auth.loginError'),
+        description: error.message || t('auth.googleAuthError'),
         variant: 'destructive',
       });
     } finally {
@@ -92,7 +95,7 @@ const AuthPage = () => {
       sessionStorage.setItem('pendingUserType', userType);
       
       const baseUrl = window.location.origin;
-      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=registration`;
+      const redirectUrl = `${baseUrl}/?userType=${userType}&flow=registration&redirect=user-type-selection`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -109,14 +112,14 @@ const AuthPage = () => {
       if (error) throw error;
 
       toast({
-        title: 'Регистрация успешна!',
-        description: 'Проверьте email для подтверждения аккаунта.',
+        title: t('auth.registrationSuccess'),
+        description: t('auth.checkEmailForConfirmation'),
       });
     } catch (error: any) {
       console.error('Sign up error:', error);
       toast({
-        title: 'Ошибка регистрации',
-        description: error.message || 'Произошла ошибка при регистрации',
+        title: t('auth.registrationError'),
+        description: error.message || t('auth.registrationFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -137,14 +140,14 @@ const AuthPage = () => {
       if (error) throw error;
 
       toast({
-        title: 'Вход выполнен успешно!',
-        description: 'Добро пожаловать в TeacherConnect KG',
+        title: t('auth.loginSuccess'),
+        description: t('auth.welcomeMessage'),
       });
     } catch (error: any) {
       console.error('Sign in error:', error);
       toast({
-        title: 'Ошибка входа',
-        description: error.message || 'Неверный email или пароль',
+        title: t('auth.loginError'),
+        description: error.message || t('auth.invalidCredentials'),
         variant: 'destructive',
       });
     } finally {
@@ -158,21 +161,21 @@ const AuthPage = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?mode=reset`,
+        redirectTo: `${window.location.origin}/?redirect=password-reset`,
       });
 
       if (error) throw error;
 
       setResetEmailSent(true);
       toast({
-        title: 'Письмо отправлено',
-        description: 'Проверьте почту для сброса пароля',
+        title: t('auth.emailSent'),
+        description: t('auth.emailSentDescription'),
       });
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось отправить письмо',
+        title: t('common.error'),
+        description: error.message || t('auth.emailSentError'),
         variant: 'destructive',
       });
     } finally {
@@ -188,11 +191,11 @@ const AuthPage = () => {
     <div className="container mx-auto px-4 py-12 max-w-md">
       <Card>
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">TeacherConnect KG</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('brand.name')}</CardTitle>
           <CardDescription>
             {authMode === 'forgot' 
-              ? 'Восстановление пароля'
-              : 'Платформа для поиска работы преподавателей в Кыргызстане'
+              ? t('auth.passwordReset')
+              : t('brand.description')
             }
           </CardDescription>
         </CardHeader>
@@ -202,7 +205,7 @@ const AuthPage = () => {
               {!resetEmailSent ? (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email адрес</Label>
+                    <Label htmlFor="reset-email">{t('auth.emailAddress')}</Label>
                     <Input
                       id="reset-email"
                       type="email"
@@ -215,16 +218,16 @@ const AuthPage = () => {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <Mail className="mr-2 h-4 w-4" />
-                    Отправить ссылку для сброса
+                    {t('auth.sendResetLink')}
                   </Button>
                 </form>
               ) : (
                 <div className="text-center space-y-4">
                   <div className="text-green-600">
                     <Mail className="mx-auto h-12 w-12 mb-4" />
-                    <h3 className="font-semibold">Письмо отправлено!</h3>
+                    <h3 className="font-semibold">{t('auth.emailSentSuccess')}</h3>
                     <p className="text-sm text-gray-600 mt-2">
-                      Проверьте почту {email} и перейдите по ссылке для сброса пароля
+                      {t('auth.checkEmailForReset').replace('{email}', email)}
                     </p>
                   </div>
                 </div>
@@ -234,33 +237,32 @@ const AuthPage = () => {
                 onClick={() => setAuthMode('signin')} 
                 className="w-full"
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Вернуться к входу
+                {t('common.back')}
               </Button>
             </div>
           ) : (
             <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'signin' | 'signup')}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Вход</TabsTrigger>
-                <TabsTrigger value="signup">Регистрация</TabsTrigger>
+                <TabsTrigger value="signin">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('auth.register')}</TabsTrigger>
               </TabsList>
 
               <div className="mt-4 space-y-4">
                 {/* User Type Selection for OAuth */}
                 {authMode === 'signup' && (
                   <div className="space-y-2">
-                    <Label>Тип аккаунта</Label>
+                    <Label>{t('auth.accountType')}</Label>
                     <RadioGroup
                       value={userType}
                       onValueChange={(value) => setUserType(value as 'teacher' | 'school')}
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="teacher" id="teacher-auth" />
-                        <Label htmlFor="teacher-auth">Преподаватель</Label>
+                        <Label htmlFor="teacher-auth">{t('auth.teacher')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="school" id="school-auth" />
-                        <Label htmlFor="school-auth">Школа</Label>
+                        <Label htmlFor="school-auth">{t('auth.school')}</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -275,8 +277,8 @@ const AuthPage = () => {
                 >
                   <Chrome className="mr-2 h-4 w-4" />
                   {authMode === 'signin' 
-                    ? 'Войти через Google' 
-                    : `Регистрация через Google как ${userType === 'teacher' ? 'учитель' : 'школа'}`
+                    ? t('auth.signInWithGoogle')
+                    : `${t('auth.registerWithGoogle')} как ${userType === 'teacher' ? t('auth.teacher') : t('auth.school')}`
                   }
                 </Button>
 
@@ -286,7 +288,7 @@ const AuthPage = () => {
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background px-2 text-muted-foreground">
-                      Или используйте email
+                      {t('auth.orUseEmail')}
                     </span>
                   </div>
                 </div>
@@ -295,7 +297,7 @@ const AuthPage = () => {
               <TabsContent value="signin" className="space-y-4 mt-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t('auth.email')}</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -306,7 +308,7 @@ const AuthPage = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="signin-password">Пароль</Label>
+                      <Label htmlFor="signin-password">{t('auth.password')}</Label>
                       <Button
                         type="button"
                         variant="link"
@@ -314,7 +316,7 @@ const AuthPage = () => {
                         onClick={() => setAuthMode('forgot')}
                         className="px-0 font-normal text-sm"
                       >
-                        Забыли пароль?
+                        {t('auth.forgotPassword')}
                       </Button>
                     </div>
                     <Input
@@ -327,7 +329,7 @@ const AuthPage = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Войти
+                    {t('auth.signIn')}
                   </Button>
                 </form>
               </TabsContent>
@@ -335,9 +337,7 @@ const AuthPage = () => {
               <TabsContent value="signup" className="space-y-4 mt-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">
-                      {userType === 'teacher' ? 'Полное имя' : 'Название школы'}
-                    </Label>
+                    <Label htmlFor="fullName">{userType === 'teacher' ? t('auth.fullName') : t('auth.schoolName')}</Label>
                     <Input
                       id="fullName"
                       type="text"
@@ -347,7 +347,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('auth.email')}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -357,7 +357,7 @@ const AuthPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Пароль</Label>
+                    <Label htmlFor="signup-password">{t('auth.password')}</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -369,7 +369,7 @@ const AuthPage = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Зарегистрироваться как {userType === 'teacher' ? 'учитель' : 'школа'}
+                    {t('auth.registerAs').replace('{userType}', userType === 'teacher' ? t('auth.teacher') : t('auth.school'))}
                   </Button>
                 </form>
               </TabsContent>

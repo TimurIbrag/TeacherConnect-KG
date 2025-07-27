@@ -45,13 +45,13 @@ const LoginPage: React.FC = () => {
       if (error) throw error;
 
       toast({
-        title: "Вход выполнен успешно",
-        description: "Добро пожаловать в личный кабинет",
+        title: t('auth.loginSuccess'),
+        description: t('auth.welcomeToDashboard'),
       });
       
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Произошла ошибка при входе');
+      setError(err.message || t('auth.loginError'));
     } finally {
       setIsLoading(false);
     }

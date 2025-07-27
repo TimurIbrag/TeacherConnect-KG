@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSchools } from '@/hooks/useSchools';
@@ -14,11 +14,35 @@ import { useAuth } from '@/context/AuthContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { data: featuredVacancies, isLoading: vacanciesLoading, error: vacanciesError } = useActiveVacancies(6);
   const { data: teachersResult, isLoading: teachersLoading, error: teachersError } = useTeachers();
   const { data: featuredSchools, isLoading: schoolsLoading, error: schoolsError } = useSchools();
+
+  // Handle OAuth redirects
+  useEffect(() => {
+    const redirect = searchParams.get('redirect');
+    const userType = searchParams.get('userType') || searchParams.get('type');
+    const flow = searchParams.get('flow');
+    
+    console.log('🔄 HomePage redirect handling:', { redirect, userType, flow });
+    
+    if (redirect === 'user-type-selection' && user) {
+      console.log('🔄 Redirecting to user type selection after OAuth');
+      navigate('/user-type-selection');
+    } else if (redirect === 'password-reset') {
+      console.log('🔄 Redirecting to password reset page');
+      navigate('/reset-password');
+    } else if (userType && user && flow === 'registration') {
+      console.log('🔄 Redirecting to user type selection after registration');
+      navigate('/user-type-selection');
+    } else if (userType && user && flow === 'login') {
+      console.log('🔄 User logged in with type, redirecting to appropriate dashboard');
+      // Let the auth system handle the redirect based on user type
+    }
+  }, [searchParams, user, navigate]);
 
   // Add console logs for debugging
   console.log('HomePage data:', {

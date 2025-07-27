@@ -47,7 +47,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isLoading }) => {
     
     try {
       console.log('📧 Starting email registration process...');
-      const redirectUrl = `${window.location.origin}/user-type-selection`;
+      const redirectUrl = `${window.location.origin}/?redirect=user-type-selection`;
       
       const { data, error } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
