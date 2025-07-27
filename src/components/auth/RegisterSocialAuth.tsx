@@ -33,8 +33,8 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
         sessionStorage.removeItem(key);
       });
       
-      // Redirect to user type selection page after successful OAuth
-      const redirectUrl = `${window.location.origin}/?redirect=user-type-selection`;
+      // Redirect to home page after successful OAuth - let the auth system handle the rest
+      const redirectUrl = `${window.location.origin}/`;
       
       console.log('🔗 OAuth redirect URL:', redirectUrl);
       

@@ -59,15 +59,9 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
         console.log('✅ User type stored for LOGIN as:', userType);
       }
       
-      // Build redirect URL
+      // Build redirect URL - simplify to just redirect to home
       const baseUrl = window.location.origin;
-      const timestamp = Date.now().toString();
-      
-      let redirectUrl = `${baseUrl}/?flow=login&oauth=google&provider=google&timestamp=${timestamp}`;
-      
-      if (userType) {
-        redirectUrl = `${baseUrl}/?userType=${userType}&type=${userType}&user_type=${userType}&role=${userType}&flow=login&oauth=google&provider=google&timestamp=${timestamp}&intent=login&action=signin&redirect=user-type-selection`;
-      }
+      const redirectUrl = `${baseUrl}/`;
       
       console.log('🔗 OAuth LOGIN redirect URL:', redirectUrl);
       
@@ -75,7 +69,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ isLoading, userTy
       const queryParams: Record<string, string> = {
         access_type: 'offline',
         prompt: 'consent',
-        timestamp: timestamp
+        timestamp: Date.now().toString()
       };
       
       if (userType) {

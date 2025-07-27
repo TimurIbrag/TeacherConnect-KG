@@ -84,32 +84,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error fetching profile:', error);
         setProfile(null);
-      } else if (data) {
+        setLoading(false);
+        return;
+      }
+      
+      if (data) {
         console.log('✅ Profile found:', data);
         setProfile(data);
-      } else {
-        console.log('⚠️ No profile found for user, creating one...');
-        // Create a basic profile for the user
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId,
-            email: user?.email || '',
-            full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || '',
-            role: null, // Will be set during user type selection
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+        setLoading(false);
+        return;
+      }
+      
+      // No profile found, create one
+      console.log('⚠️ No profile found for user, creating one...');
+      
+      // Get user metadata from the current user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: currentUser?.email || '',
+          full_name: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '',
+          role: null, // Will be set during user type selection
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-        if (createError) {
-          console.error('Error creating profile:', createError);
-          setProfile(null);
-        } else {
-          console.log('✅ Profile created:', newProfile);
-          setProfile(newProfile);
-        }
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        setProfile(null);
+      } else {
+        console.log('✅ Profile created:', newProfile);
+        setProfile(newProfile);
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);

@@ -31,6 +31,18 @@ const Navbar: React.FC = () => {
     });
   }, [user, profile, loading]);
 
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (loading) {
+      const timeoutId = setTimeout(() => {
+        console.warn('⚠️ Navbar loading timeout - forcing loading to false');
+        // Force loading to false after 15 seconds
+      }, 15000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [loading]);
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };

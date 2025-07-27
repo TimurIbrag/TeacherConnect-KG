@@ -29,10 +29,8 @@ const SecureGoogleLoginButton: React.FC<SecureGoogleLoginButtonProps> = ({
         console.log('Stored user type in localStorage:', userType);
       }
       
-      // Validate redirect URL
-      const redirectUrl = userType 
-        ? `${window.location.origin}/?userType=${userType}&redirect=user-type-selection`
-        : `${window.location.origin}/`;
+      // Validate redirect URL - simplify to just redirect to home
+      const redirectUrl = `${window.location.origin}/`;
       
       if (!isValidUrl(redirectUrl)) {
         throw new Error('Invalid redirect URL');

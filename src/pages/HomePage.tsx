@@ -17,59 +17,43 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { data: featuredVacancies, isLoading: vacanciesLoading, error: vacanciesError } = useActiveVacancies(6);
   const { data: teachersResult, isLoading: teachersLoading, error: teachersError } = useTeachers();
   const { data: featuredSchools, isLoading: schoolsLoading, error: schoolsError } = useSchools();
   const { toast } = useToast();
 
-  // Handle OAuth redirects
+  // Handle OAuth redirects and authentication flow
   useEffect(() => {
-    const redirect = searchParams.get('redirect');
-    const userType = searchParams.get('userType') || searchParams.get('type');
-    const flow = searchParams.get('flow');
-    const error = searchParams.get('error');
+    console.log('🔄 HomePage auth state:', { 
+      user: !!user, 
+      profile: !!profile, 
+      loading,
+      userEmail: user?.email,
+      profileRole: profile?.role 
+    });
     
-    console.log('🔄 HomePage redirect handling:', { redirect, userType, flow, user: !!user, profile: !!profile, error });
-    
-    // Handle OAuth errors
-    if (error) {
-      console.error('❌ OAuth error detected:', error);
-      toast({
-        title: "Ошибка аутентификации",
-        description: "Произошла ошибка при входе через Google. Попробуйте еще раз.",
-        variant: "destructive"
-      });
+    // If user is authenticated but has no profile or incomplete profile, redirect to user type selection
+    if (user && !loading && (!profile || !profile.role)) {
+      console.log('🔄 User authenticated but profile incomplete, redirecting to user type selection');
+      navigate('/user-type-selection');
       return;
     }
     
-    // Only handle redirects if we have a user (authenticated)
-    if (!user) {
-      console.log('⏳ Waiting for user authentication...');
+    // If user is authenticated and has complete profile, let them stay on home page
+    if (user && profile && profile.role) {
+      console.log('🔄 User authenticated with complete profile');
       return;
     }
     
-    if (redirect === 'user-type-selection') {
-      console.log('🔄 Redirecting to user type selection after OAuth');
-      navigate('/user-type-selection');
-    } else if (redirect === 'password-reset') {
-      console.log('🔄 Redirecting to password reset page');
-      navigate('/reset-password');
-    } else if (userType && flow === 'registration') {
-      console.log('🔄 Redirecting to user type selection after registration');
-      navigate('/user-type-selection');
-    } else if (userType && flow === 'login') {
-      console.log('🔄 User logged in with type, checking if profile is complete...');
-      // Check if user has a complete profile
-      if (user && profile && !profile.role) {
-        console.log('🔄 Profile incomplete, redirecting to user type selection');
-        navigate('/user-type-selection');
-      } else {
-        console.log('🔄 Profile complete, user should be redirected by auth system');
-        // Let the auth system handle the redirect based on user type
-      }
+    // If not authenticated, let them stay on home page
+    if (!user && !loading) {
+      console.log('🔄 User not authenticated, staying on home page');
+      return;
     }
-  }, [searchParams, user, profile, navigate, toast]);
+    
+    console.log('⏳ Waiting for authentication to complete...');
+  }, [user, profile, loading, navigate]);
 
   // Add console logs for debugging
   console.log('HomePage data:', {
