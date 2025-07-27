@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +19,17 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Debug authentication state
+  useEffect(() => {
+    console.log('🔍 Navbar auth state:', { 
+      user: !!user, 
+      profile: !!profile, 
+      loading, 
+      userEmail: user?.email,
+      profileRole: profile?.role 
+    });
+  }, [user, profile, loading]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);

@@ -39,6 +39,15 @@ const UserMenuDesktop: React.FC<UserMenuDesktopProps> = ({
 
   // Helper to check if profile is complete
   const isProfileComplete = userData && userData.full_name && userData.email && userData.full_name.trim() !== '';
+  
+  // Debug logging
+  console.log('🔍 UserMenuDesktop state:', { 
+    userData, 
+    isProfileComplete, 
+    hasName: userData?.full_name, 
+    hasEmail: userData?.email,
+    userType 
+  });
 
   return (
     <div className="hidden md:flex items-center gap-4">

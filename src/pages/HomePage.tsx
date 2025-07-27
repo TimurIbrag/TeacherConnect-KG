@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -20,29 +21,55 @@ const HomePage = () => {
   const { data: featuredVacancies, isLoading: vacanciesLoading, error: vacanciesError } = useActiveVacancies(6);
   const { data: teachersResult, isLoading: teachersLoading, error: teachersError } = useTeachers();
   const { data: featuredSchools, isLoading: schoolsLoading, error: schoolsError } = useSchools();
+  const { toast } = useToast();
 
   // Handle OAuth redirects
   useEffect(() => {
     const redirect = searchParams.get('redirect');
     const userType = searchParams.get('userType') || searchParams.get('type');
     const flow = searchParams.get('flow');
+    const error = searchParams.get('error');
     
-    console.log('🔄 HomePage redirect handling:', { redirect, userType, flow });
+    console.log('🔄 HomePage redirect handling:', { redirect, userType, flow, user: !!user, profile: !!profile, error });
     
-    if (redirect === 'user-type-selection' && user) {
+    // Handle OAuth errors
+    if (error) {
+      console.error('❌ OAuth error detected:', error);
+      toast({
+        title: "Ошибка аутентификации",
+        description: "Произошла ошибка при входе через Google. Попробуйте еще раз.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Only handle redirects if we have a user (authenticated)
+    if (!user) {
+      console.log('⏳ Waiting for user authentication...');
+      return;
+    }
+    
+    if (redirect === 'user-type-selection') {
       console.log('🔄 Redirecting to user type selection after OAuth');
       navigate('/user-type-selection');
     } else if (redirect === 'password-reset') {
       console.log('🔄 Redirecting to password reset page');
       navigate('/reset-password');
-    } else if (userType && user && flow === 'registration') {
+    } else if (userType && flow === 'registration') {
       console.log('🔄 Redirecting to user type selection after registration');
       navigate('/user-type-selection');
-    } else if (userType && user && flow === 'login') {
-      console.log('🔄 User logged in with type, redirecting to appropriate dashboard');
-      // Let the auth system handle the redirect based on user type
+    } else if (userType && flow === 'login') {
+      console.log('🔄 User logged in with type, checking if profile is complete...');
+      // Check if user has a complete profile
+      if (user && profile && !profile.role) {
+        console.log('🔄 Profile incomplete, redirecting to user type selection');
+        navigate('/user-type-selection');
+      } else {
+        console.log('🔄 Profile complete, user should be redirected by auth system');
+        // Let the auth system handle the redirect based on user type
+      }
     }
-  }, [searchParams, user, navigate]);
+  }, [searchParams, user, profile, navigate, toast]);
 
   // Add console logs for debugging
   console.log('HomePage data:', {

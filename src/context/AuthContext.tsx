@@ -30,8 +30,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🚀 AuthProvider initializing...');
+    
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('⚠️ Auth loading timeout, setting loading to false');
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 Initial session check:', { hasSession: !!session, userEmail: session?.user?.email });
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -44,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state change:', { event, hasSession: !!session, userEmail: session?.user?.email });
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
@@ -53,24 +65,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('🔍 Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
       if (error) {
         console.error('Error fetching profile:', error);
-      } else {
+        setProfile(null);
+      } else if (data) {
+        console.log('✅ Profile found:', data);
         setProfile(data);
+      } else {
+        console.log('⚠️ No profile found for user, creating one...');
+        // Create a basic profile for the user
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: user?.email || '',
+            full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+            role: null, // Will be set during user type selection
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          setProfile(null);
+        } else {
+          console.log('✅ Profile created:', newProfile);
+          setProfile(newProfile);
+        }
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
