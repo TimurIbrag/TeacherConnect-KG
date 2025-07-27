@@ -34,15 +34,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔧 Environment check:', {
       hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
       hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-      currentUrl: window.location.href
+      currentUrl: window.location.href,
+      timestamp: new Date().toISOString()
     });
     
     // Check for OAuth token in URL hash
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
       console.log('🔑 OAuth token detected in URL hash, processing...');
+      console.log('🔑 Hash content:', hash.substring(0, 100) + '...');
       // Clear the hash to prevent issues
       window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Check for OAuth parameters in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    
+    if (accessToken) {
+      console.log('🔑 Access token found in URL params');
+    }
+    
+    if (refreshToken) {
+      console.log('🔑 Refresh token found in URL params');
     }
     
     // Add a timeout to prevent infinite loading
@@ -60,7 +75,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
-        setLoading(false);
+        // If no session but we have tokens in URL, try to refresh
+        if (accessToken || refreshToken || (hash && hash.includes('access_token'))) {
+          console.log('🔄 No session but tokens detected, attempting to refresh...');
+          supabase.auth.refreshSession().then(({ data: { session: refreshedSession }, error }) => {
+            if (error) {
+              console.error('❌ Error refreshing session:', error);
+              setLoading(false);
+            } else if (refreshedSession?.user) {
+              console.log('✅ Session refreshed successfully:', refreshedSession.user.email);
+              setUser(refreshedSession.user);
+              fetchProfile(refreshedSession.user.id);
+            } else {
+              console.log('⚠️ No session after refresh attempt');
+              setLoading(false);
+            }
+          });
+        } else {
+          setLoading(false);
+        }
       }
     }).catch(error => {
       console.error('❌ Error getting initial session:', error);
