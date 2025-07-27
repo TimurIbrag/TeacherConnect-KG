@@ -12,6 +12,7 @@ import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import DebugAuth from '@/components/DebugAuth';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -382,6 +383,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      
+      {/* Debug component - remove this after testing */}
+      <DebugAuth />
     </div>
   );
 };
