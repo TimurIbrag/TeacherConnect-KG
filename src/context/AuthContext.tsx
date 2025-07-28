@@ -38,6 +38,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestamp: new Date().toISOString()
     });
     
+    // Test Supabase client
+    console.log('🔧 Supabase client test:', {
+      clientExists: !!supabase,
+      authExists: !!supabase.auth,
+      hasGetSession: typeof supabase.auth.getSession === 'function'
+    });
+    
     // Check for OAuth token in URL hash
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
@@ -51,6 +58,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get('access_token');
     const refreshToken = urlParams.get('refresh_token');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+    
+    if (error) {
+      console.error('❌ OAuth error in URL params:', { error, errorDescription });
+    }
     
     if (accessToken) {
       console.log('🔑 Access token found in URL params');
@@ -59,6 +72,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (refreshToken) {
       console.log('🔑 Refresh token found in URL params');
     }
+    
+    // Handle OAuth callback manually if tokens are present
+    const handleOAuthCallback = async () => {
+      if (hash && hash.includes('access_token')) {
+        console.log('🔄 Processing OAuth callback from hash...');
+        try {
+          // Parse the hash to extract tokens
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const hashAccessToken = hashParams.get('access_token');
+          const hashRefreshToken = hashParams.get('refresh_token');
+          
+          if (hashAccessToken) {
+            console.log('🔑 Processing access token from hash...');
+            // Set the session manually
+            const { data, error } = await supabase.auth.setSession({
+              access_token: hashAccessToken,
+              refresh_token: hashRefreshToken || ''
+            });
+            
+            if (error) {
+              console.error('❌ Error setting session from hash:', error);
+            } else {
+              console.log('✅ Session set successfully from hash');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error processing OAuth callback:', error);
+        }
+      }
+    };
+    
+    // Process OAuth callback if needed
+    handleOAuthCallback();
     
     // Add a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {

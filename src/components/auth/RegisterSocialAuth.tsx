@@ -22,6 +22,12 @@ const RegisterSocialAuth: React.FC<RegisterSocialAuthProps> = ({
       console.log('🟢 Google OAuth registration initiated');
       console.log('📍 Current URL:', window.location.href);
       console.log('🏠 Origin:', window.location.origin);
+      console.log('🔧 Environment check:', {
+        hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
+        hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL?.substring(0, 20) + '...',
+        timestamp: new Date().toISOString()
+      });
       
       // Clear any existing storage
       const keysToClean = [
