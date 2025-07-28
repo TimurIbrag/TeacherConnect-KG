@@ -132,7 +132,7 @@ const UserMenuDesktop: React.FC<UserMenuDesktopProps> = ({
                     Профиль не заполнен
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    Пожалуйста, <Link to="/register" className="text-blue-600 underline">зарегистрируйтесь</Link> или <Link to="/profile/edit" className="text-blue-600 underline">заполните профиль</Link>
+                    Пожалуйста, <Link to="/register" className="text-blue-600 underline">зарегистрируйтесь</Link> или <Link to="/user-type-selection" className="text-blue-600 underline">заполните профиль</Link>
                   </p>
                 </div>
               </DropdownMenuLabel>

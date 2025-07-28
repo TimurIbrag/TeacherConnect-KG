@@ -82,8 +82,22 @@ const HomePage = () => {
     schools: featuredSchools?.length || 0,
     vacanciesError,
     teachersError,
-    schoolsError
+    schoolsError,
+    vacanciesLoading,
+    teachersLoading,
+    schoolsLoading
   });
+
+  // Debug individual data
+  if (featuredVacancies) {
+    console.log('Featured vacancies:', featuredVacancies);
+  }
+  if (teachersResult?.data) {
+    console.log('Teachers data:', teachersResult.data);
+  }
+  if (featuredSchools) {
+    console.log('Featured schools:', featuredSchools);
+  }
 
   // Take first 3 items for featured sections
   const limitedTeachers = teachersResult?.data?.slice(0, 3) || [];

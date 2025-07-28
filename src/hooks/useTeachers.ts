@@ -32,6 +32,7 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
   return useQuery({
     queryKey: ['teachers', page, pageSize],
     queryFn: async () => {
+      console.log('Fetching teachers...');
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       const { data, error, count } = await supabase
@@ -39,7 +40,12 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
         .select(`*, profiles (*)`, { count: 'exact' })
         .range(from, to);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching teachers:', error);
+        throw error;
+      }
+      
+      console.log('Teachers fetched:', data?.length || 0);
       return { data: data as Teacher[], count };
     },
     placeholderData: keepPreviousData,

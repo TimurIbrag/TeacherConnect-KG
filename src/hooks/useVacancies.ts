@@ -57,6 +57,7 @@ export const useActiveVacancies = (limit?: number) => {
   return useQuery({
     queryKey: ['active-vacancies', limit],
     queryFn: async () => {
+      console.log('Fetching active vacancies...');
       let query = supabase
         .from('vacancies')
         .select(`
@@ -79,7 +80,12 @@ export const useActiveVacancies = (limit?: number) => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching active vacancies:', error);
+        throw error;
+      }
+      
+      console.log('Active vacancies fetched:', data?.length || 0);
       return data;
     },
   });
