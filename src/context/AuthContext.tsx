@@ -45,6 +45,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasGetSession: typeof supabase.auth.getSession === 'function'
     });
     
+    // Test database connection
+    const testDatabaseConnection = async () => {
+      try {
+        console.log('🔧 Testing database connection...');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('count')
+          .limit(1);
+        
+        if (error) {
+          console.error('❌ Database connection error:', error);
+        } else {
+          console.log('✅ Database connection successful');
+        }
+      } catch (error) {
+        console.error('❌ Database test failed:', error);
+      }
+    };
+    
+    testDatabaseConnection();
+    
     // Check for OAuth token in URL hash
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
@@ -187,52 +208,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔍 Fetching profile for user:', userId);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors
+      // Add timeout protection for the entire fetchProfile operation
+      const profilePromise = (async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-      
-      if (data) {
-        console.log('✅ Profile found:', data);
-        setProfile(data);
-        setLoading(false);
-        return;
-      }
-      
-      // No profile found, create one
-      console.log('⚠️ No profile found for user, creating one...');
-      
-      // Get user metadata from the current user
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: currentUser?.email || '',
-          full_name: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '',
-          role: null, // Will be set during user type selection
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        
+        if (data) {
+          console.log('✅ Profile found:', data);
+          setProfile(data);
+          setLoading(false);
+          return;
+        }
+        
+        // No profile found, create one
+        console.log('⚠️ No profile found for user, creating one...');
+        
+        // Get user metadata from the current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: currentUser?.email || '',
+            full_name: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '',
+            role: null, // Will be set during user type selection
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
 
-      if (createError) {
-        console.error('Error creating profile:', createError);
-        setProfile(null);
-      } else {
-        console.log('✅ Profile created:', newProfile);
-        setProfile(newProfile);
-      }
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          setProfile(null);
+        } else {
+          console.log('✅ Profile created:', newProfile);
+          setProfile(newProfile);
+        }
+      })();
+
+      // Add a 5-second timeout for profile operations
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+      });
+
+      await Promise.race([profilePromise, timeoutPromise]);
+      
     } catch (error) {
       console.error('Error in fetchProfile:', error);
       setProfile(null);
