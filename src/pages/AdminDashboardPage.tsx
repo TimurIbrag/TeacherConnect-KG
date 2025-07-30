@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
+import UserManagementTab from '@/components/admin/UserManagementTab';
 
 interface AdminSession {
   admin_id: string;
@@ -282,31 +283,7 @@ const AdminDashboardPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage teachers, schools, and user accounts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex space-x-2">
-                    <Button variant="outline">View All Teachers</Button>
-                    <Button variant="outline">View All Schools</Button>
-                    <Button variant="outline">User Analytics</Button>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    {adminSession.role === 'super_admin' 
-                      ? 'You have full access to manage all users, edit profiles, and control platform access.'
-                      : adminSession.role === 'admin_user'
-                      ? 'You can view user data and edit profiles for content moderation.'
-                      : 'You have limited access to user information for support purposes.'
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <UserManagementTab />
           </TabsContent>
 
           <TabsContent value="content" className="space-y-4">
