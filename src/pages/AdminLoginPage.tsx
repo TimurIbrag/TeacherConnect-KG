@@ -17,9 +17,21 @@ const AdminLoginPage: React.FC = () => {
 
   // Temporary admin credentials (in production, these would be in the database)
   const adminCredentials = {
-    'superadmin': { password: 'SuperAdmin2024!', role: 'super_admin', name: 'Super Administrator' },
-    'admin': { password: 'Admin2024!', role: 'admin_user', name: 'Platform Administrator' },
-    'support': { password: 'Support2024!', role: 'support_user', name: 'Support Specialist' }
+    'TCKG_SuperAdmin_2024': { 
+      password: 'K7#mN9$pQ2@vX8&jL5*wR3!hF6^cE4%tY1', 
+      role: 'super_admin', 
+      name: 'Super Administrator' 
+    },
+    'TCKG_PlatformAdmin_2024': { 
+      password: 'B8#kM2$nP7@wY9&hK4*xS6!jG3^dF5%uZ8', 
+      role: 'admin_user', 
+      name: 'Platform Administrator' 
+    },
+    'TCKG_SupportSpecialist_2024': { 
+      password: 'V5#qL8$mN3@tR6&fJ2*xH9!kC7^gE4%iW1', 
+      role: 'support_user', 
+      name: 'Support Specialist' 
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -143,11 +155,23 @@ const AdminLoginPage: React.FC = () => {
           </form>
           
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium text-gray-900 mb-2">Demo Credentials:</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <div><strong>Super Admin:</strong> superadmin / SuperAdmin2024!</div>
-              <div><strong>Admin User:</strong> admin / Admin2024!</div>
-              <div><strong>Support User:</strong> support / Support2024!</div>
+            <h4 className="font-medium text-gray-900 mb-2">Admin Credentials:</h4>
+            <div className="space-y-2 text-xs text-gray-600">
+              <div className="break-all">
+                <strong>Super Admin:</strong><br/>
+                Username: <code className="bg-gray-200 px-1 rounded">TCKG_SuperAdmin_2024</code><br/>
+                Password: <code className="bg-gray-200 px-1 rounded">K7#mN9$pQ2@vX8&jL5*wR3!hF6^cE4%tY1</code>
+              </div>
+              <div className="break-all">
+                <strong>Platform Admin:</strong><br/>
+                Username: <code className="bg-gray-200 px-1 rounded">TCKG_PlatformAdmin_2024</code><br/>
+                Password: <code className="bg-gray-200 px-1 rounded">B8#kM2$nP7@wY9&hK4*xS6!jG3^dF5%uZ8</code>
+              </div>
+              <div className="break-all">
+                <strong>Support Specialist:</strong><br/>
+                Username: <code className="bg-gray-200 px-1 rounded">TCKG_SupportSpecialist_2024</code><br/>
+                Password: <code className="bg-gray-200 px-1 rounded">V5#qL8$mN3@tR6&fJ2*xH9!kC7^gE4%iW1</code>
+              </div>
             </div>
           </div>
         </CardContent>
