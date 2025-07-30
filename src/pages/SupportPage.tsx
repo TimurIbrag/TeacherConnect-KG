@@ -15,10 +15,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, MessageSquare, Send, ExternalLink, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCreateSupportRequest } from '@/hooks/useSupportRequests';
 
 const SupportPage: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const createSupportRequest = useCreateSupportRequest();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -36,13 +38,19 @@ const SupportPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Симуляция отправки API запроса
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await createSupportRequest.mutateAsync({
+        user_name: name,
+        user_email: email,
+        subject: subject,
+        message: message,
+        priority: 'medium'
+      });
+      
       toast({
         title: t('support.messageSent'),
         description: t('support.responseTime'),
@@ -54,7 +62,15 @@ const SupportPage: React.FC = () => {
       setEmail('');
       setSubject('');
       setMessage('');
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send support request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   if (isLoading) {

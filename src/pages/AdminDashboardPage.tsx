@@ -19,6 +19,9 @@ import {
   CheckCircle
 } from 'lucide-react';
 import UserManagementTab from '@/components/admin/UserManagementTab';
+import SupportManagementTab from '@/components/admin/SupportManagementTab';
+import { useAdminStats } from '@/hooks/useAdminStats';
+import { useSupportRequestStats } from '@/hooks/useSupportRequests';
 
 interface AdminSession {
   admin_id: string;
@@ -30,16 +33,8 @@ interface AdminSession {
 
 const AdminDashboardPage: React.FC = () => {
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
-  const [stats, setStats] = useState({
-    totalTeachers: 0,
-    totalSchools: 0,
-    totalVacancies: 0,
-    totalApplications: 0,
-    pendingCertificates: 0,
-    pendingSupportRequests: 0,
-    newRegistrationsToday: 0,
-    activeUsersThisWeek: 0
-  });
+  const { data: adminStats, isLoading: statsLoading } = useAdminStats();
+  const { data: supportStats } = useSupportRequestStats();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,17 +49,7 @@ const AdminDashboardPage: React.FC = () => {
       const session = JSON.parse(sessionData);
       setAdminSession(session);
       
-      // Load mock statistics (in real app, fetch from API)
-      setStats({
-        totalTeachers: 156,
-        totalSchools: 23,
-        totalVacancies: 89,
-        totalApplications: 342,
-        pendingCertificates: 12,
-        pendingSupportRequests: 8,
-        newRegistrationsToday: 5,
-        activeUsersThisWeek: 89
-      });
+      // Statistics are now loaded via useAdminStats hook
     } catch (error) {
       console.error('Error parsing admin session:', error);
       navigate('/admin/login');
@@ -138,9 +123,9 @@ const AdminDashboardPage: React.FC = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTeachers}</div>
+              <div className="text-2xl font-bold">{adminStats?.total_teachers || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +{stats.newRegistrationsToday} today
+                +{adminStats?.new_registrations_today || 0} today
               </p>
             </CardContent>
           </Card>
@@ -151,7 +136,7 @@ const AdminDashboardPage: React.FC = () => {
               <School className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSchools}</div>
+              <div className="text-2xl font-bold">{adminStats?.total_schools || 0}</div>
               <p className="text-xs text-muted-foreground">
                 Active institutions
               </p>
@@ -164,9 +149,9 @@ const AdminDashboardPage: React.FC = () => {
               <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalVacancies}</div>
+              <div className="text-2xl font-bold">{adminStats?.total_vacancies || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.totalApplications} applications
+                {adminStats?.total_applications || 0} applications
               </p>
             </CardContent>
           </Card>
@@ -177,7 +162,7 @@ const AdminDashboardPage: React.FC = () => {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeUsersThisWeek}</div>
+              <div className="text-2xl font-bold">{adminStats?.active_users_this_week || 0}</div>
               <p className="text-xs text-muted-foreground">
                 This week
               </p>
@@ -192,7 +177,7 @@ const AdminDashboardPage: React.FC = () => {
               <CardTitle className="flex items-center space-x-2">
                 <FileText className="w-5 h-5" />
                 <span>Pending Certificates</span>
-                <Badge variant="secondary">{stats.pendingCertificates}</Badge>
+                <Badge variant="secondary">{adminStats?.pending_certificates || 0}</Badge>
               </CardTitle>
               <CardDescription>
                 Certificates awaiting verification
@@ -210,7 +195,7 @@ const AdminDashboardPage: React.FC = () => {
               <CardTitle className="flex items-center space-x-2">
                 <MessageSquare className="w-5 h-5" />
                 <span>Support Requests</span>
-                <Badge variant="secondary">{stats.pendingSupportRequests}</Badge>
+                <Badge variant="secondary">{supportStats?.open || 0}</Badge>
               </CardTitle>
               <CardDescription>
                 User support tickets
@@ -313,26 +298,7 @@ const AdminDashboardPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="support" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Support Management</CardTitle>
-                <CardDescription>
-                  Handle user support requests and inquiries
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex space-x-2">
-                    <Button variant="outline">View Support Requests</Button>
-                    <Button variant="outline">Chat with Users</Button>
-                    <Button variant="outline">Support Analytics</Button>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    All admin roles can access support features to help users and manage inquiries.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <SupportManagementTab />
           </TabsContent>
         </Tabs>
       </main>
