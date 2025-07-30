@@ -34,6 +34,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import VacanciesPage from '@/pages/VacanciesPage';
 import UserTypeSelectionPage from './pages/UserTypeSelectionPage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminRouteGuard from './components/admin/AdminRouteGuard';
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,15 @@ function App() {
                     <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="/vacancies" element={<VacanciesPage />} />
                     <Route path="/user-type-selection" element={<UserTypeSelectionPage />} />
+                    
+                    {/* Admin Routes */}
+                    <Route path="/admin/login" element={<AdminLoginPage />} />
+                    <Route path="/admin/dashboard" element={
+                      <AdminRouteGuard>
+                        <AdminDashboardPage />
+                      </AdminRouteGuard>
+                    } />
+                    
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </main>
