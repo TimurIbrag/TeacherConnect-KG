@@ -36,6 +36,8 @@ import VacanciesPage from '@/pages/VacanciesPage';
 import UserTypeSelectionPage from './pages/UserTypeSelectionPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import CertificateManagementPage from './pages/admin/CertificateManagementPage';
+import ContentModerationPage from './pages/admin/ContentModerationPage';
 import AdminRouteGuard from './components/admin/AdminRouteGuard';
 
 const queryClient = new QueryClient();
@@ -80,12 +82,22 @@ function App() {
                     <Route path="/user-type-selection" element={<UserTypeSelectionPage />} />
                     
                     {/* Admin Routes */}
-                    <Route path="/admin/login" element={<AdminLoginPage />} />
-                    <Route path="/admin/dashboard" element={
-                      <AdminRouteGuard>
-                        <AdminDashboardPage />
-                      </AdminRouteGuard>
-                    } />
+                                <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/dashboard" element={
+              <AdminRouteGuard>
+                <AdminDashboardPage />
+              </AdminRouteGuard>
+            } />
+            <Route path="/admin/certificates" element={
+              <AdminRouteGuard>
+                <CertificateManagementPage />
+              </AdminRouteGuard>
+            } />
+            <Route path="/admin/moderation" element={
+              <AdminRouteGuard>
+                <ContentModerationPage />
+              </AdminRouteGuard>
+            } />
                     
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>

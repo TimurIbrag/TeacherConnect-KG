@@ -61,6 +61,18 @@ const AdminDashboardPage: React.FC = () => {
     navigate('/admin/login');
   };
 
+  const handleNavigateToCertificates = () => {
+    navigate('/admin/certificates');
+  };
+
+  const handleNavigateToModeration = () => {
+    navigate('/admin/moderation');
+  };
+
+  const handleNavigateToUsers = () => {
+    navigate('/admin/dashboard');
+  };
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'super_admin': return 'bg-red-100 text-red-800';
@@ -184,7 +196,11 @@ const AdminDashboardPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={handleNavigateToCertificates}
+              >
                 Review Certificates
               </Button>
             </CardContent>
@@ -202,7 +218,11 @@ const AdminDashboardPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => navigate('/admin/dashboard')}
+              >
                 View Requests
               </Button>
             </CardContent>
@@ -248,15 +268,30 @@ const AdminDashboardPage: React.FC = () => {
                   <div className="space-y-2">
                     <h4 className="font-medium">Quick Actions</h4>
                     <div className="space-y-2">
-                      <Button size="sm" variant="outline" className="w-full justify-start">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={handleNavigateToUsers}
+                      >
                         <Users className="w-4 h-4 mr-2" />
                         View All Users
                       </Button>
-                      <Button size="sm" variant="outline" className="w-full justify-start">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={handleNavigateToCertificates}
+                      >
                         <FileText className="w-4 h-4 mr-2" />
                         Review Certificates
                       </Button>
-                      <Button size="sm" variant="outline" className="w-full justify-start">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => navigate('/admin/dashboard')}
+                      >
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Support Requests
                       </Button>
@@ -282,9 +317,24 @@ const AdminDashboardPage: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex space-x-2">
-                    <Button variant="outline">Review Profiles</Button>
-                    <Button variant="outline">Moderate Vacancies</Button>
-                    <Button variant="outline">Reported Content</Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleNavigateToModeration}
+                    >
+                      Review Profiles
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleNavigateToModeration}
+                    >
+                      Moderate Vacancies
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleNavigateToModeration}
+                    >
+                      Reported Content
+                    </Button>
                   </div>
                   <p className="text-sm text-gray-600">
                     {adminSession.role === 'super_admin' || adminSession.role === 'admin_user'
