@@ -14,122 +14,138 @@ export interface AdminStats {
   inactive_users: number;
   verified_certificates: number;
   total_support_requests: number;
+  suspended_users: number;
+  total_profiles_complete: number;
+  total_profiles_incomplete: number;
+  recent_activity: {
+    new_teachers: number;
+    new_schools: number;
+    new_vacancies: number;
+    new_applications: number;
+  };
 }
 
 export const useAdminStats = () => {
   return useQuery({
     queryKey: ['admin-stats'],
     queryFn: async (): Promise<AdminStats> => {
-      console.log('📊 Fetching admin statistics...');
+      console.log('📊 Fetching comprehensive admin statistics...');
 
       // Get current date for calculations
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
       try {
-        // Fetch teachers count
-        const { data: teachersData, error: teachersError } = await supabase
+        // Fetch all profiles for comprehensive analysis
+        const { data: allProfiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('role', 'teacher');
+          .select('*');
 
-        if (teachersError) {
-          console.error('Error fetching teachers count:', teachersError);
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          throw profilesError;
         }
 
-        // Fetch schools count
-        const { data: schoolsData, error: schoolsError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'school');
-
-        if (schoolsError) {
-          console.error('Error fetching schools count:', schoolsError);
-        }
-
-        // Fetch vacancies count
-        const { data: vacanciesData, error: vacanciesError } = await supabase
+        // Fetch vacancies
+        const { data: vacancies, error: vacanciesError } = await supabase
           .from('vacancies')
-          .select('id')
-          .eq('status', 'active');
+          .select('*');
 
         if (vacanciesError) {
-          console.error('Error fetching vacancies count:', vacanciesError);
+          console.error('Error fetching vacancies:', vacanciesError);
         }
 
-        // Fetch applications count
-        const { data: applicationsData, error: applicationsError } = await supabase
+        // Fetch applications
+        const { data: applications, error: applicationsError } = await supabase
           .from('applications')
-          .select('id');
+          .select('*');
 
         if (applicationsError) {
-          console.error('Error fetching applications count:', applicationsError);
+          console.error('Error fetching applications:', applicationsError);
         }
 
-        // Fetch new registrations today
-        const { data: newRegData, error: newRegError } = await supabase
-          .from('profiles')
-          .select('id')
-          .gte('created_at', today.toISOString());
+        // Calculate comprehensive statistics
+        const teachers = allProfiles?.filter(p => p.role === 'teacher') || [];
+        const schools = allProfiles?.filter(p => p.role === 'school') || [];
+        const activeVacancies = vacancies?.filter(v => v.is_active === true) || [];
+        const allApplications = applications || [];
 
-        if (newRegError) {
-          console.error('Error fetching new registrations:', newRegError);
-        }
+        // User activity analysis
+        const activeUsersThisWeek = allProfiles?.filter(p => 
+          p.last_seen_at && new Date(p.last_seen_at) >= weekAgo
+        ) || [];
 
-        // Fetch active users this week (users who logged in within the last week)
-        const { data: activeUsersData, error: activeUsersError } = await supabase
-          .from('profiles')
-          .select('id')
-          .gte('last_seen_at', weekAgo.toISOString());
+        const inactiveUsers = allProfiles?.filter(p => 
+          !p.last_seen_at || new Date(p.last_seen_at) < thirtyDaysAgo
+        ) || [];
 
-        if (activeUsersError) {
-          console.error('Error fetching active users:', activeUsersError);
-        }
+        const newRegistrationsToday = allProfiles?.filter(p => 
+          new Date(p.created_at) >= today
+        ) || [];
 
-        // Fetch total users
-        const { data: totalUsersData, error: totalUsersError } = await supabase
-          .from('profiles')
-          .select('id');
+        const completeProfiles = allProfiles?.filter(p => 
+          p.full_name && p.full_name.trim() !== '' && p.role
+        ) || [];
 
-        if (totalUsersError) {
-          console.error('Error fetching total users:', totalUsersError);
-        }
+        const incompleteProfiles = allProfiles?.filter(p => 
+          !p.full_name || p.full_name.trim() === '' || !p.role
+        ) || [];
 
-        // Fetch inactive users (users who haven't logged in for more than 30 days)
-        const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-        const { data: inactiveUsersData, error: inactiveUsersError } = await supabase
-          .from('profiles')
-          .select('id')
-          .lt('last_seen_at', thirtyDaysAgo.toISOString());
+        // Recent activity (last 7 days)
+        const recentTeachers = teachers.filter(t => 
+          new Date(t.created_at) >= weekAgo
+        );
 
-        if (inactiveUsersError) {
-          console.error('Error fetching inactive users:', inactiveUsersError);
-        }
+        const recentSchools = schools.filter(s => 
+          new Date(s.created_at) >= weekAgo
+        );
 
-        // For now, we'll use mock data for certificates and support requests
-        // In a real implementation, you'd have these tables in Supabase
+        const recentVacancies = activeVacancies.filter(v => 
+          new Date(v.created_at) >= weekAgo
+        );
+
+        const recentApplications = allApplications.filter(a => 
+          new Date(a.applied_at) >= weekAgo
+        );
+
+        // Support requests from localStorage (simulating database)
+        const storedRequests = localStorage.getItem('support_requests');
+        const supportRequests = storedRequests ? JSON.parse(storedRequests) : [];
+        const pendingSupportRequests = supportRequests.filter((req: any) => 
+          req.status === 'open' || req.status === 'in_progress'
+        );
+
+        // Mock certificate data (in production, this would be from a certificates table)
         const pendingCertificates = 12; // Mock data
-        const pendingSupportRequests = 8; // Mock data
         const verifiedCertificates = 45; // Mock data
-        const totalSupportRequests = 23; // Mock data
 
         const stats: AdminStats = {
-          total_teachers: teachersData?.length || 0,
-          total_schools: schoolsData?.length || 0,
-          total_vacancies: vacanciesData?.length || 0,
-          total_applications: applicationsData?.length || 0,
-          new_registrations_today: newRegData?.length || 0,
-          active_users_this_week: activeUsersData?.length || 0,
+          total_teachers: teachers.length,
+          total_schools: schools.length,
+          total_vacancies: activeVacancies.length,
+          total_applications: allApplications.length,
+          new_registrations_today: newRegistrationsToday.length,
+          active_users_this_week: activeUsersThisWeek.length,
           pending_certificates: pendingCertificates,
-          pending_support_requests: pendingSupportRequests,
-          total_users: totalUsersData?.length || 0,
-          inactive_users: inactiveUsersData?.length || 0,
+          pending_support_requests: pendingSupportRequests.length,
+          total_users: allProfiles?.length || 0,
+          inactive_users: inactiveUsers.length,
           verified_certificates: verifiedCertificates,
-          total_support_requests: totalSupportRequests
+          total_support_requests: supportRequests.length,
+          suspended_users: 0, // Would come from a suspended users table
+          total_profiles_complete: completeProfiles.length,
+          total_profiles_incomplete: incompleteProfiles.length,
+          recent_activity: {
+            new_teachers: recentTeachers.length,
+            new_schools: recentSchools.length,
+            new_vacancies: recentVacancies.length,
+            new_applications: recentApplications.length,
+          }
         };
 
-        console.log('📊 Admin statistics fetched:', stats);
+        console.log('📊 Comprehensive admin statistics fetched:', stats);
         return stats;
 
       } catch (error) {
@@ -138,5 +154,6 @@ export const useAdminStats = () => {
       }
     },
     refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 }; 

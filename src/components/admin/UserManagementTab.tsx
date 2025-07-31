@@ -26,88 +26,21 @@ import {
   User,
   School
 } from 'lucide-react';
-import { UserManagementData } from '@/types/admin';
+import { UserManagementData } from '@/hooks/useUserManagement';
+import { useUserManagement, useUpdateUser, useSuspendUser, useActivateUser, useDeleteUser } from '@/hooks/useUserManagement';
 
 const UserManagementTab: React.FC = () => {
-  const [teachers, setTeachers] = useState<UserManagementData[]>([]);
-  const [schools, setSchools] = useState<UserManagementData[]>([]);
+  const { data: allUsers = [], isLoading } = useUserManagement();
+  const updateUser = useUpdateUser();
+  const suspendUser = useSuspendUser();
+  const activateUser = useActivateUser();
+  const deleteUser = useDeleteUser();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'teacher' | 'school'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Load mock data (in real app, fetch from API)
-    const mockTeachers: UserManagementData[] = [
-      {
-        id: '1',
-        email: 'anna.ivanova@email.com',
-        full_name: 'Анна Иванова',
-        role: 'teacher',
-        created_at: '2024-01-15T10:30:00Z',
-        last_seen_at: '2024-01-20T14:45:00Z',
-        is_active: true,
-        profile_complete: true,
-        certificates_verified: true,
-        reported_count: 0
-      },
-      {
-        id: '2',
-        email: 'maria.petrova@email.com',
-        full_name: 'Мария Петрова',
-        role: 'teacher',
-        created_at: '2024-01-10T09:15:00Z',
-        last_seen_at: '2024-01-19T16:20:00Z',
-        is_active: true,
-        profile_complete: false,
-        certificates_verified: false,
-        reported_count: 1
-      },
-      {
-        id: '3',
-        email: 'dmitry.sidorov@email.com',
-        full_name: 'Дмитрий Сидоров',
-        role: 'teacher',
-        created_at: '2024-01-05T11:45:00Z',
-        last_seen_at: '2024-01-18T12:30:00Z',
-        is_active: false,
-        profile_complete: true,
-        certificates_verified: true,
-        reported_count: 0
-      }
-    ];
-
-    const mockSchools: UserManagementData[] = [
-      {
-        id: '4',
-        email: 'school1@email.com',
-        full_name: 'Средняя школа №1',
-        role: 'school',
-        created_at: '2024-01-12T08:00:00Z',
-        last_seen_at: '2024-01-20T17:30:00Z',
-        is_active: true,
-        profile_complete: true,
-        certificates_verified: true,
-        reported_count: 0
-      },
-      {
-        id: '5',
-        email: 'school2@email.com',
-        full_name: 'Гимназия №2',
-        role: 'school',
-        created_at: '2024-01-08T13:20:00Z',
-        last_seen_at: '2024-01-19T15:45:00Z',
-        is_active: true,
-        profile_complete: false,
-        certificates_verified: false,
-        reported_count: 2
-      }
-    ];
-
-    setTeachers(mockTeachers);
-    setSchools(mockSchools);
-    setLoading(false);
-  }, []);
+  const [selectedUser, setSelectedUser] = useState<UserManagementData | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -148,6 +81,9 @@ const UserManagementTab: React.FC = () => {
     );
   };
 
+  const teachers = allUsers.filter(user => user.role === 'teacher');
+  const schools = allUsers.filter(user => user.role === 'school');
+
   const filteredTeachers = teachers.filter(teacher => {
     const matchesSearch = teacher.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          teacher.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -166,7 +102,7 @@ const UserManagementTab: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -288,18 +224,48 @@ const UserManagementTab: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedUser(teacher);
+                              setShowUserModal(true);
+                            }}
+                            title="View Details"
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedUser(teacher);
+                              setShowUserModal(true);
+                            }}
+                            title="Edit User"
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                           {teacher.is_active ? (
-                            <Button size="sm" variant="outline" className="text-red-600">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-red-600"
+                              onClick={() => suspendUser.mutate(teacher.id)}
+                              title="Suspend User"
+                              disabled={suspendUser.isPending}
+                            >
                               <Ban className="w-4 h-4" />
                             </Button>
                           ) : (
-                            <Button size="sm" variant="outline" className="text-green-600">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-green-600"
+                              onClick={() => activateUser.mutate(teacher.id)}
+                              title="Activate User"
+                              disabled={activateUser.isPending}
+                            >
                               <CheckCircle className="w-4 h-4" />
                             </Button>
                           )}
@@ -363,18 +329,48 @@ const UserManagementTab: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedUser(school);
+                              setShowUserModal(true);
+                            }}
+                            title="View Details"
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedUser(school);
+                              setShowUserModal(true);
+                            }}
+                            title="Edit User"
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                           {school.is_active ? (
-                            <Button size="sm" variant="outline" className="text-red-600">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-red-600"
+                              onClick={() => suspendUser.mutate(school.id)}
+                              title="Suspend User"
+                              disabled={suspendUser.isPending}
+                            >
                               <Ban className="w-4 h-4" />
                             </Button>
                           ) : (
-                            <Button size="sm" variant="outline" className="text-green-600">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-green-600"
+                              onClick={() => activateUser.mutate(school.id)}
+                              title="Activate User"
+                              disabled={activateUser.isPending}
+                            >
                               <CheckCircle className="w-4 h-4" />
                             </Button>
                           )}
