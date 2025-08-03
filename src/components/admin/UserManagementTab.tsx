@@ -28,9 +28,13 @@ import {
 } from 'lucide-react';
 import { UserManagementData } from '@/hooks/useUserManagement';
 import { useUserManagement, useUpdateUser, useSuspendUser, useActivateUser, useDeleteUser } from '@/hooks/useUserManagement';
+import { useUserActivity } from '@/hooks/useUserActivity';
+import { useCertificateStatus } from '@/hooks/useCertificateStatus';
 
 const UserManagementTab: React.FC = () => {
   const { data: allUsers = [], isLoading } = useUserManagement();
+  const { data: activityData } = useUserActivity();
+  const { data: certificateData } = useCertificateStatus();
   const updateUser = useUpdateUser();
   const suspendUser = useSuspendUser();
   const activateUser = useActivateUser();
@@ -53,6 +57,9 @@ const UserManagementTab: React.FC = () => {
   };
 
   const getStatusBadge = (user: UserManagementData) => {
+    const activity = activityData?.[user.id];
+    const isOnline = activity?.is_online;
+    
     if (!user.is_active) {
       return <Badge variant="destructive">Неактивен</Badge>;
     }
@@ -64,21 +71,57 @@ const UserManagementTab: React.FC = () => {
         Жалобы ({user.reported_count})
       </Badge>;
     }
-    return <Badge variant="default">Активен</Badge>;
+    
+    return (
+      <div className="flex items-center space-x-2">
+        <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+        <Badge variant="default">
+          {isOnline ? 'Активен' : 'Неактивен'}
+        </Badge>
+      </div>
+    );
   };
 
-  const getCertificateBadge = (verified: boolean) => {
-    return verified ? (
-      <Badge variant="default" className="bg-green-100 text-green-800">
-        <CheckCircle className="w-3 h-3 mr-1" />
-        Подтверждены
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-        <AlertTriangle className="w-3 h-3 mr-1" />
-        Ожидают
-      </Badge>
-    );
+  const getCertificateBadge = (userId: string) => {
+    const certificateStatus = certificateData?.[userId];
+    
+    if (!certificateStatus || certificateStatus.status === 'none') {
+      return (
+        <Badge variant="outline" className="text-gray-500 border-gray-500">
+          Нет сертификатов
+        </Badge>
+      );
+    }
+    
+    switch (certificateStatus.status) {
+      case 'pending':
+        return (
+          <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Ожидают
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Подтверждены
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge variant="destructive" className="bg-red-100 text-red-800">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Отклонены
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-gray-500 border-gray-500">
+            Нет сертификатов
+          </Badge>
+        );
+    }
   };
 
   const teachers = allUsers.filter(user => user.role === 'teacher');
@@ -220,7 +263,7 @@ const UserManagementTab: React.FC = () => {
                         {getStatusBadge(teacher)}
                       </TableCell>
                       <TableCell>
-                        {getCertificateBadge(teacher.certificates_verified)}
+                        {getCertificateBadge(teacher.id)}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
@@ -325,7 +368,7 @@ const UserManagementTab: React.FC = () => {
                         {getStatusBadge(school)}
                       </TableCell>
                       <TableCell>
-                        {getCertificateBadge(school.certificates_verified)}
+                        {getCertificateBadge(school.id)}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
