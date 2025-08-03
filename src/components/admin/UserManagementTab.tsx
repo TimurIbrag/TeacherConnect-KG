@@ -30,6 +30,10 @@ import { UserManagementData } from '@/hooks/useUserManagement';
 import { useUserManagement, useUpdateUser, useSuspendUser, useActivateUser, useDeleteUser } from '@/hooks/useUserManagement';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useCertificateStatus } from '@/hooks/useCertificateStatus';
+import UserProfileModal from './UserProfileModal';
+import UserEditModal from './UserEditModal';
+import UserBanModal from './UserBanModal';
+import UserWarningModal from './UserWarningModal';
 
 const UserManagementTab: React.FC = () => {
   const { data: allUsers = [], isLoading } = useUserManagement();
@@ -44,7 +48,10 @@ const UserManagementTab: React.FC = () => {
   const [filterRole, setFilterRole] = useState<'all' | 'teacher' | 'school'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [selectedUser, setSelectedUser] = useState<UserManagementData | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -272,9 +279,9 @@ const UserManagementTab: React.FC = () => {
                             variant="outline"
                             onClick={() => {
                               setSelectedUser(teacher);
-                              setShowUserModal(true);
+                              setShowProfileModal(true);
                             }}
-                            title="View Details"
+                            title="Просмотр профиля"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -283,9 +290,9 @@ const UserManagementTab: React.FC = () => {
                             variant="outline"
                             onClick={() => {
                               setSelectedUser(teacher);
-                              setShowUserModal(true);
+                              setShowEditModal(true);
                             }}
-                            title="Edit User"
+                            title="Редактировать профиль"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -377,9 +384,9 @@ const UserManagementTab: React.FC = () => {
                             variant="outline"
                             onClick={() => {
                               setSelectedUser(school);
-                              setShowUserModal(true);
+                              setShowProfileModal(true);
                             }}
-                            title="View Details"
+                            title="Просмотр профиля"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -388,9 +395,9 @@ const UserManagementTab: React.FC = () => {
                             variant="outline"
                             onClick={() => {
                               setSelectedUser(school);
-                              setShowUserModal(true);
+                              setShowEditModal(true);
                             }}
-                            title="Edit User"
+                            title="Редактировать профиль"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -427,6 +434,46 @@ const UserManagementTab: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <UserProfileModal
+        user={selectedUser}
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        onEdit={(user) => {
+          setSelectedUser(user);
+          setShowProfileModal(false);
+          setShowEditModal(true);
+        }}
+        onBan={(user) => {
+          setSelectedUser(user);
+          setShowProfileModal(false);
+          setShowBanModal(true);
+        }}
+        onWarn={(user) => {
+          setSelectedUser(user);
+          setShowProfileModal(false);
+          setShowWarningModal(true);
+        }}
+      />
+
+      <UserEditModal
+        user={selectedUser}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+      />
+
+      <UserBanModal
+        user={selectedUser}
+        isOpen={showBanModal}
+        onClose={() => setShowBanModal(false)}
+      />
+
+      <UserWarningModal
+        user={selectedUser}
+        isOpen={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+      />
     </div>
   );
 };
