@@ -12,6 +12,7 @@ import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { DebugData } from '@/components/DebugData';
 
 
 const HomePage = () => {
@@ -251,6 +252,14 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Debug Section - Temporary */}
+      <section className="py-8 bg-yellow-50 border-b-2 border-yellow-200">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-yellow-800 mb-4">🔍 Debug Information (Temporary)</h2>
+          <DebugData />
+        </div>
+      </section>
+
       {/* Featured Teachers */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -281,9 +290,9 @@ const HomePage = () => {
                 <Card key={teacher.id} className="text-center hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
-                      {teacher.profiles?.full_name?.charAt(0) || 'T'}
+                      {teacher.full_name?.charAt(0) || 'T'}
                     </div>
-                    <CardTitle>{teacher.profiles?.full_name || t('teacher.nameNotSpecified')}</CardTitle>
+                    <CardTitle>{teacher.full_name || t('teacher.nameNotSpecified')}</CardTitle>
                     <CardDescription>{teacher.specialization}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
