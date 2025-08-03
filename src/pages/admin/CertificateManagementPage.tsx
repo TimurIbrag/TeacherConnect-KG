@@ -26,73 +26,14 @@ import {
   Download,
   ExternalLink
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-interface CertificateData {
-  id: string;
-  user_id: string;
-  user_email: string;
-  user_name: string;
-  certificate_type: string;
-  certificate_url: string;
-  submitted_at: string;
-  verified_by?: string;
-  verified_at?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  notes?: string;
-  file_name: string;
-  file_size: string;
-}
+import { useCertificates, useUpdateCertificate, CertificateSubmission } from '@/hooks/useCertificates';
 
 const CertificateManagementPage: React.FC = () => {
+  const { data: certificates = [], isLoading, error } = useCertificates();
+  const updateCertificate = useUpdateCertificate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [filterType, setFilterType] = useState<'all' | 'diploma' | 'certification' | 'license' | 'other'>('all');
-
-  // Mock certificate data (in production, this would come from Supabase)
-  const [certificates, setCertificates] = useState<CertificateData[]>([
-    {
-      id: '1',
-      user_id: 'user1',
-      user_email: 'anna.ivanova@email.com',
-      user_name: 'Анна Иванова',
-      certificate_type: 'diploma',
-      certificate_url: 'https://example.com/cert1.pdf',
-      submitted_at: '2024-01-20T10:30:00Z',
-      status: 'pending',
-      file_name: 'diploma_anna_ivanova.pdf',
-      file_size: '2.3 MB'
-    },
-    {
-      id: '2',
-      user_id: 'user2',
-      user_email: 'maria.petrova@email.com',
-      user_name: 'Мария Петрова',
-      certificate_type: 'certification',
-      certificate_url: 'https://example.com/cert2.pdf',
-      submitted_at: '2024-01-19T14:20:00Z',
-      status: 'approved',
-      verified_by: 'admin@teacherconnect.kg',
-      verified_at: '2024-01-20T09:15:00Z',
-      file_name: 'teaching_certification_maria.pdf',
-      file_size: '1.8 MB'
-    },
-    {
-      id: '3',
-      user_id: 'user3',
-      user_email: 'dmitry.sidorov@email.com',
-      user_name: 'Дмитрий Сидоров',
-      certificate_type: 'license',
-      certificate_url: 'https://example.com/cert3.pdf',
-      submitted_at: '2024-01-18T16:45:00Z',
-      status: 'rejected',
-      verified_by: 'admin@teacherconnect.kg',
-      verified_at: '2024-01-19T11:30:00Z',
-      notes: 'Document appears to be expired',
-      file_name: 'teaching_license_dmitry.pdf',
-      file_size: '3.1 MB'
-    }
-  ]);
+  const [filterType, setFilterType] = useState<'all' | 'diploma' | 'license' | 'honor' | 'certification' | 'other'>('all');
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -134,35 +75,39 @@ const CertificateManagementPage: React.FC = () => {
         return <Badge variant="secondary">Сертификат</Badge>;
       case 'license':
         return <Badge variant="secondary">Лицензия</Badge>;
+      case 'honor':
+        return <Badge variant="secondary">Почетная грамота</Badge>;
       default:
         return <Badge variant="outline">Другое</Badge>;
     }
   };
 
-  const handleApprove = (certificateId: string) => {
-    setCertificates(prev => prev.map(cert => 
-      cert.id === certificateId 
-        ? { 
-            ...cert, 
-            status: 'approved' as const,
-            verified_by: 'admin@teacherconnect.kg',
-            verified_at: new Date().toISOString()
-          }
-        : cert
-    ));
+  const handleApprove = async (certificateId: string) => {
+    try {
+      await updateCertificate.mutateAsync({
+        certificateId,
+        updates: {
+          status: 'approved',
+          verified_by: 'admin@teacherconnect.kg'
+        }
+      });
+    } catch (error) {
+      console.error('Error approving certificate:', error);
+    }
   };
 
-  const handleReject = (certificateId: string) => {
-    setCertificates(prev => prev.map(cert => 
-      cert.id === certificateId 
-        ? { 
-            ...cert, 
-            status: 'rejected' as const,
-            verified_by: 'admin@teacherconnect.kg',
-            verified_at: new Date().toISOString()
-          }
-        : cert
-    ));
+  const handleReject = async (certificateId: string) => {
+    try {
+      await updateCertificate.mutateAsync({
+        certificateId,
+        updates: {
+          status: 'rejected',
+          verified_by: 'admin@teacherconnect.kg'
+        }
+      });
+    } catch (error) {
+      console.error('Error rejecting certificate:', error);
+    }
   };
 
   const filteredCertificates = certificates.filter(cert => {
@@ -177,6 +122,26 @@ const CertificateManagementPage: React.FC = () => {
   const pendingCount = certificates.filter(c => c.status === 'pending').length;
   const approvedCount = certificates.filter(c => c.status === 'approved').length;
   const rejectedCount = certificates.filter(c => c.status === 'rejected').length;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Error Loading Certificates</CardTitle>
+            <CardDescription>
+              Failed to load certificate data. Please try again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => window.location.reload()} className="w-full">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -299,100 +264,114 @@ const CertificateManagementPage: React.FC = () => {
             <CardTitle>Certificates ({filteredCertificates.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Certificate Type</TableHead>
-                  <TableHead>File</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCertificates.map((certificate) => (
-                  <TableRow key={certificate.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{certificate.user_name}</div>
-                        <div className="text-sm text-gray-500 flex items-center">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {certificate.user_email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getTypeBadge(certificate.certificate_type)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <FileText className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <div className="text-sm font-medium">{certificate.file_name}</div>
-                          <div className="text-xs text-gray-500">{certificate.file_size}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>{formatDate(certificate.submitted_at)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(certificate.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => window.open(certificate.certificate_url, '_blank')}
-                          title="View Certificate"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          title="Download"
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        {certificate.status === 'pending' && (
-                          <>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-green-600"
-                              onClick={() => handleApprove(certificate.id)}
-                              title="Approve Certificate"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="text-red-600"
-                              onClick={() => handleReject(certificate.id)}
-                              title="Reject Certificate"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading certificates...</p>
+                </div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Certificate Type</TableHead>
+                    <TableHead>File</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredCertificates.map((certificate) => (
+                    <TableRow key={certificate.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{certificate.user_name}</div>
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <Mail className="w-3 h-3 mr-1" />
+                            {certificate.user_email}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getTypeBadge(certificate.certificate_type)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <div className="text-sm font-medium">{certificate.file_name}</div>
+                            <div className="text-xs text-gray-500">{certificate.file_size}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span>{formatDate(certificate.submitted_at)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(certificate.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.open(certificate.certificate_url, '_blank')}
+                            title="View Certificate"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          {certificate.status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-green-600"
+                                onClick={() => handleApprove(certificate.id)}
+                                title="Approve Certificate"
+                                disabled={updateCertificate.isPending}
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-red-600"
+                                onClick={() => handleReject(certificate.id)}
+                                title="Reject Certificate"
+                                disabled={updateCertificate.isPending}
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
             
-            {filteredCertificates.length === 0 && (
+            {!isLoading && filteredCertificates.length === 0 && (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No certificates found</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Only users who have submitted certificates will appear here
+                </p>
               </div>
             )}
           </CardContent>

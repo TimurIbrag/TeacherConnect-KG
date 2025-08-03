@@ -117,9 +117,11 @@ export const useAdminStats = () => {
           req.status === 'open' || req.status === 'in_progress'
         );
 
-        // Mock certificate data (in production, this would be from a certificates table)
-        const pendingCertificates = 12; // Mock data
-        const verifiedCertificates = 45; // Mock data
+        // Get real certificate data from localStorage
+        const storedCertificates = localStorage.getItem('certificate_submissions');
+        const certificates = storedCertificates ? JSON.parse(storedCertificates) : [];
+        const pendingCertificates = certificates.filter((c: any) => c.status === 'pending').length;
+        const verifiedCertificates = certificates.filter((c: any) => c.status === 'approved').length;
 
         const stats: AdminStats = {
           total_teachers: teachers.length,
