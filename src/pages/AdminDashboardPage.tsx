@@ -70,7 +70,7 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   const handleNavigateToUsers = () => {
-    navigate('/admin/dashboard');
+    navigate('/admin/users');
   };
 
   const getRoleBadgeColor = (role: string) => {

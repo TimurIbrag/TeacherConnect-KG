@@ -38,6 +38,7 @@ import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import CertificateManagementPage from './pages/admin/CertificateManagementPage';
 import ContentModerationPage from './pages/admin/ContentModerationPage';
+import AllUsersPage from './pages/admin/AllUsersPage';
 import AdminRouteGuard from './components/admin/AdminRouteGuard';
 
 const queryClient = new QueryClient();
@@ -96,6 +97,11 @@ function App() {
             <Route path="/admin/moderation" element={
               <AdminRouteGuard>
                 <ContentModerationPage />
+              </AdminRouteGuard>
+            } />
+            <Route path="/admin/users" element={
+              <AdminRouteGuard>
+                <AllUsersPage />
               </AdminRouteGuard>
             } />
                     
