@@ -42,14 +42,18 @@ const SupportPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    console.log('📝 Submitting support request:', { name, email, subject, message });
+    
     try {
-      await createSupportRequest.mutateAsync({
+      const result = await createSupportRequest.mutateAsync({
         user_name: name,
         user_email: email,
         subject: subject,
         message: message,
         priority: 'medium'
       });
+      
+      console.log('✅ Support request created successfully:', result);
       
       toast({
         title: t('support.messageSent'),
@@ -63,6 +67,7 @@ const SupportPage: React.FC = () => {
       setSubject('');
       setMessage('');
     } catch (error) {
+      console.error('❌ Error creating support request:', error);
       toast({
         title: "Error",
         description: "Failed to send support request. Please try again.",

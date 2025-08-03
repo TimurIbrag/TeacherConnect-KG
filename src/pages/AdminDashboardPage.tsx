@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import UserManagementTab from '@/components/admin/UserManagementTab';
 import SupportManagementTab from '@/components/admin/SupportManagementTab';
+import SupportTestComponent from '@/components/admin/SupportTestComponent';
 import { useAdminStats } from '@/hooks/useAdminStats';
 import { useSupportRequestStats } from '@/hooks/useSupportRequests';
 
@@ -368,6 +369,7 @@ const AdminDashboardPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="support" className="space-y-4">
+            <SupportTestComponent />
             <SupportManagementTab />
           </TabsContent>
         </Tabs>
