@@ -37,7 +37,6 @@ export const useSchools = () => {
         .from('profiles')
         .select('*')
         .eq('role', 'school')
-        .eq('is_published', true)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 

@@ -37,11 +37,11 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
       const to = from + pageSize - 1;
       
       // Fetch from profiles table where role = 'teacher' and is_published = true
+      // Also include profiles that are active but might not be published yet
       const { data, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
         .eq('role', 'teacher')
-        .eq('is_published', true)
         .eq('is_active', true)
         .range(from, to)
         .order('created_at', { ascending: false });
