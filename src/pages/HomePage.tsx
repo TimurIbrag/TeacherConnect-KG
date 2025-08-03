@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DebugData } from '@/components/DebugData';
 import { DataTest } from '@/components/DataTest';
+import { SimpleDataTest } from '@/components/SimpleDataTest';
 
 
 const HomePage = () => {
@@ -266,6 +267,14 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-xl font-bold text-blue-800 mb-4">🧪 Data Fetching Test (Temporary)</h2>
           <DataTest />
+        </div>
+      </section>
+
+      {/* Simple Data Test Section - Temporary */}
+      <section className="py-8 bg-green-50 border-b-2 border-green-200">
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl font-bold text-green-800 mb-4">🔧 Simple Direct Test (Temporary)</h2>
+          <SimpleDataTest />
         </div>
       </section>
 

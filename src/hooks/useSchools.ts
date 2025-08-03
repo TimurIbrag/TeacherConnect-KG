@@ -35,11 +35,7 @@ export const useSchools = () => {
       console.log('Fetching schools from profiles table...');
       const { data, error } = await supabase
         .from('school_profiles')
-        .select(`
-          *,
-          profiles (*)
-        `)
-        .eq('is_published', true); // Only show published schools
+        .select(`*`); // Simplified - no filters
 
       if (error) {
         console.error('Error fetching schools:', error);
