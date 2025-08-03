@@ -127,33 +127,18 @@ export const useUpdateUser = () => {
       console.log('👥 Updating user:', userId, updates);
       
       try {
-        // Filter out fields that might not exist in the current schema
-        // Only update fields that are definitely available
+        // Only update fields that definitely exist in the current Supabase schema
+        // Based on the current schema, we only have: id, email, full_name, role, created_at, last_seen_at, avatar_url, phone
         const safeUpdates: any = {
           updated_at: new Date().toISOString()
         };
 
-        // Basic fields that should exist
+        // Only update fields that exist in the current schema
         if (updates.full_name !== undefined) safeUpdates.full_name = updates.full_name;
         if (updates.phone !== undefined) safeUpdates.phone = updates.phone;
         if (updates.role !== undefined) safeUpdates.role = updates.role;
-        if (updates.is_active !== undefined) safeUpdates.is_active = updates.is_active;
 
-        // Try to update additional fields if they exist (these might not be in schema yet)
-        // We'll add them one by one to avoid errors
-        const additionalFields = [
-          'bio', 'experience_years', 'education', 'availability', 'hourly_rate',
-          'school_name', 'school_type', 'school_address', 'school_website',
-          'school_description', 'school_size'
-        ];
-
-        additionalFields.forEach(field => {
-          if (updates[field as keyof UpdateUserData] !== undefined) {
-            safeUpdates[field] = updates[field as keyof UpdateUserData];
-          }
-        });
-
-        console.log('🔧 Safe updates to apply:', safeUpdates);
+        console.log('🔧 Safe updates to apply (current schema only):', safeUpdates);
 
         const { data, error } = await supabase
           .from('profiles')
@@ -163,11 +148,13 @@ export const useUpdateUser = () => {
           .single();
 
         if (error) {
-          console.error('Error updating user:', error);
+          console.error('❌ Error updating user:', error);
           throw error;
         }
 
         console.log('✅ User updated successfully:', data);
+        
+        // Return the updated data in the same format as useUserManagement
         return {
           id: data.id,
           email: data.email || '',
@@ -199,7 +186,7 @@ export const useUpdateUser = () => {
         };
 
       } catch (error) {
-        console.error('Error in useUpdateUser:', error);
+        console.error('❌ Error in useUpdateUser:', error);
         throw error;
       }
     },
