@@ -19,8 +19,7 @@ import {
   Activity,
   Eye,
   Edit,
-  Ban,
-  Warning
+  Ban
 } from 'lucide-react';
 import { UserManagementData } from '@/hooks/useUserManagement';
 import { useUserActivity } from '@/hooks/useUserActivity';
@@ -128,7 +127,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
               Редактировать
             </Button>
             <Button variant="outline" onClick={() => onWarn(user)}>
-              <Warning className="w-4 h-4 mr-2" />
+              <AlertTriangle className="w-4 h-4 mr-2" />
               Отправить предупреждение
             </Button>
             <Button variant="outline" className="text-red-600" onClick={() => onBan(user)}>
