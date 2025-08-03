@@ -39,9 +39,13 @@ export const useAdminStats = () => {
 
       try {
         // Fetch all profiles for comprehensive analysis
+        console.log('🔍 Fetching profiles for admin stats...');
         const { data: allProfiles, error: profilesError } = await supabase
           .from('profiles')
           .select('*');
+
+        console.log('📊 Raw profiles data for stats:', allProfiles);
+        console.log('❌ Profiles error:', profilesError);
 
         if (profilesError) {
           console.error('Error fetching profiles:', profilesError);

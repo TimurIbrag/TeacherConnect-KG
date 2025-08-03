@@ -60,10 +60,16 @@ export const useUserManagement = () => {
       console.log('👥 Fetching all users for management...');
       
       try {
+        // First, let's check if we can access the profiles table at all
+        console.log('🔍 Checking profiles table access...');
+        
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false });
+
+        console.log('📊 Raw profiles data:', profiles);
+        console.log('❌ Any errors:', error);
 
         if (error) {
           console.error('Error fetching profiles:', error);
