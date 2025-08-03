@@ -28,6 +28,16 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  useProfilesForModeration, 
+  useVacanciesForModeration, 
+  useReportedContent, 
+  useContentModerationStats,
+  useSuspendProfile,
+  useActivateProfile,
+  useSuspendVacancy,
+  useActivateVacancy
+} from '@/hooks/useContentModeration';
 
 interface ReportedContent {
   id: string;
@@ -70,80 +80,17 @@ const ContentModerationPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'flagged' | 'suspended'>('all');
 
-  // Mock data for content moderation
-  const [reportedContent, setReportedContent] = useState<ReportedContent[]>([
-    {
-      id: '1',
-      content_type: 'profile',
-      content_id: 'profile1',
-      reported_by: 'user@email.com',
-      reported_at: '2024-01-20T14:30:00Z',
-      reason: 'Inappropriate content in bio',
-      status: 'pending',
-      content_title: 'Teacher Profile - Anna Ivanova',
-      content_owner: 'anna.ivanova@email.com'
-    },
-    {
-      id: '2',
-      content_type: 'vacancy',
-      content_id: 'vacancy1',
-      reported_by: 'teacher@email.com',
-      reported_at: '2024-01-19T16:45:00Z',
-      reason: 'Misleading job description',
-      status: 'reviewed',
-      admin_notes: 'Reviewed and found to be accurate',
-      content_title: 'Math Teacher Position',
-      content_owner: 'school@email.com'
-    }
-  ]);
+  // Real data from Supabase
+  const { data: reportedContent = [], isLoading: reportsLoading } = useReportedContent();
+  const { data: profilesForModeration = [], isLoading: profilesLoading } = useProfilesForModeration();
+  const { data: vacanciesForModeration = [], isLoading: vacanciesLoading } = useVacanciesForModeration();
+  const { data: stats } = useContentModerationStats();
 
-  const [profilesForModeration, setProfilesForModeration] = useState<ProfileForModeration[]>([
-    {
-      id: '1',
-      user_name: 'Анна Иванова',
-      user_email: 'anna.ivanova@email.com',
-      role: 'teacher',
-      created_at: '2024-01-15T10:30:00Z',
-      last_updated: '2024-01-20T14:45:00Z',
-      status: 'flagged',
-      flag_count: 2,
-      bio: 'Experienced teacher with 5 years of experience...'
-    },
-    {
-      id: '2',
-      user_name: 'Мария Петрова',
-      user_email: 'maria.petrova@email.com',
-      role: 'teacher',
-      created_at: '2024-01-10T09:15:00Z',
-      last_updated: '2024-01-19T16:20:00Z',
-      status: 'active',
-      flag_count: 0,
-      bio: 'Dedicated educator passionate about student success...'
-    }
-  ]);
-
-  const [vacanciesForModeration, setVacanciesForModeration] = useState<VacancyForModeration[]>([
-    {
-      id: '1',
-      title: 'Math Teacher Position',
-      school_name: 'Средняя школа №1',
-      created_at: '2024-01-18T11:20:00Z',
-      status: 'flagged',
-      flag_count: 1,
-      description: 'We are looking for an experienced math teacher...',
-      contact_email: 'hr@school1.kg'
-    },
-    {
-      id: '2',
-      title: 'English Teacher Needed',
-      school_name: 'Гимназия №2',
-      created_at: '2024-01-17T13:45:00Z',
-      status: 'active',
-      flag_count: 0,
-      description: 'Join our team as an English teacher...',
-      contact_email: 'jobs@gymnasium2.kg'
-    }
-  ]);
+  // Mutation hooks for actions
+  const suspendProfile = useSuspendProfile();
+  const activateProfile = useActivateProfile();
+  const suspendVacancy = useSuspendVacancy();
+  const activateVacancy = useActivateVacancy();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -194,35 +141,19 @@ const ContentModerationPage: React.FC = () => {
   };
 
   const handleSuspendProfile = (profileId: string) => {
-    setProfilesForModeration(prev => prev.map(profile => 
-      profile.id === profileId 
-        ? { ...profile, status: 'suspended' as const }
-        : profile
-    ));
+    suspendProfile.mutate(profileId);
   };
 
   const handleActivateProfile = (profileId: string) => {
-    setProfilesForModeration(prev => prev.map(profile => 
-      profile.id === profileId 
-        ? { ...profile, status: 'active' as const }
-        : profile
-    ));
+    activateProfile.mutate(profileId);
   };
 
   const handleSuspendVacancy = (vacancyId: string) => {
-    setVacanciesForModeration(prev => prev.map(vacancy => 
-      vacancy.id === vacancyId 
-        ? { ...vacancy, status: 'suspended' as const }
-        : vacancy
-    ));
+    suspendVacancy.mutate(vacancyId);
   };
 
   const handleActivateVacancy = (vacancyId: string) => {
-    setVacanciesForModeration(prev => prev.map(vacancy => 
-      vacancy.id === vacancyId 
-        ? { ...vacancy, status: 'active' as const }
-        : vacancy
-    ));
+    activateVacancy.mutate(vacancyId);
   };
 
   const filteredProfiles = profilesForModeration.filter(profile => {
@@ -273,7 +204,7 @@ const ContentModerationPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {profilesForModeration.filter(p => p.status === 'flagged').length}
+                {stats?.flagged_profiles || 0}
               </div>
             </CardContent>
           </Card>
@@ -285,7 +216,7 @@ const ContentModerationPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {vacanciesForModeration.filter(v => v.status === 'flagged').length}
+                {stats?.flagged_vacancies || 0}
               </div>
             </CardContent>
           </Card>
@@ -297,7 +228,7 @@ const ContentModerationPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {reportedContent.filter(r => r.status === 'pending').length}
+                {stats?.pending_reports || 0}
               </div>
             </CardContent>
           </Card>
@@ -309,8 +240,7 @@ const ContentModerationPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
-                {profilesForModeration.filter(p => p.status === 'suspended').length + 
-                 vacanciesForModeration.filter(v => v.status === 'suspended').length}
+                {stats?.suspended_content || 0}
               </div>
             </CardContent>
           </Card>
@@ -390,7 +320,23 @@ const ContentModerationPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProfiles.map((profile) => (
+                    {profilesLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span>Loading profiles...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredProfiles.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          No profiles found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredProfiles.map((profile) => (
                       <TableRow key={profile.id}>
                         <TableCell>
                           <div>
