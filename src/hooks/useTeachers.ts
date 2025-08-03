@@ -36,10 +36,13 @@ export const useTeachers = (page: number = 1, pageSize: number = 12) => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       
-      // Fetch from teacher_profiles table (simplified - no filters)
+      // Fetch from teacher_profiles table with profiles data
       const { data, error, count } = await supabase
         .from('teacher_profiles')
-        .select(`*`, { count: 'exact' })
+        .select(`
+          *,
+          profiles:profiles(*)
+        `, { count: 'exact' })
         .range(from, to);
 
       if (error) {

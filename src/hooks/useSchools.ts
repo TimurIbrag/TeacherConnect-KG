@@ -35,7 +35,10 @@ export const useSchools = () => {
       console.log('Fetching schools from profiles table...');
       const { data, error } = await supabase
         .from('school_profiles')
-        .select(`*`); // Simplified - no filters
+        .select(`
+          *,
+          profiles:profiles(*)
+        `);
 
       if (error) {
         console.error('Error fetching schools:', error);
