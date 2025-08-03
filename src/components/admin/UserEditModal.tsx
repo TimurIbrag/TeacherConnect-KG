@@ -51,15 +51,22 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
     e.preventDefault();
     if (!user) return;
 
+    // Basic validation
+    if (!formData.full_name || formData.full_name.trim() === '') {
+      toast.error('Полное имя обязательно для заполнения');
+      return;
+    }
+
     try {
       await updateUser.mutateAsync({
         userId: user.id,
         updates: formData
       });
-      toast.success('Профиль пользователя обновлен');
+      toast.success('Профиль пользователя успешно обновлен');
       onClose();
     } catch (error) {
-      toast.error('Ошибка при обновлении профиля');
+      console.error('Error updating user:', error);
+      toast.error('Ошибка при обновлении профиля. Попробуйте еще раз.');
     }
   };
 
@@ -235,11 +242,18 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
           )}
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={updateUser.isPending}>
               Отмена
             </Button>
             <Button type="submit" disabled={updateUser.isPending}>
-              {updateUser.isPending ? 'Сохранение...' : 'Сохранить изменения'}
+              {updateUser.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Сохранение...
+                </>
+              ) : (
+                'Сохранить изменения'
+              )}
             </Button>
           </div>
         </form>

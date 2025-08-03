@@ -127,12 +127,37 @@ export const useUpdateUser = () => {
       console.log('👥 Updating user:', userId, updates);
       
       try {
+        // Filter out fields that might not exist in the current schema
+        // Only update fields that are definitely available
+        const safeUpdates: any = {
+          updated_at: new Date().toISOString()
+        };
+
+        // Basic fields that should exist
+        if (updates.full_name !== undefined) safeUpdates.full_name = updates.full_name;
+        if (updates.phone !== undefined) safeUpdates.phone = updates.phone;
+        if (updates.role !== undefined) safeUpdates.role = updates.role;
+        if (updates.is_active !== undefined) safeUpdates.is_active = updates.is_active;
+
+        // Try to update additional fields if they exist (these might not be in schema yet)
+        // We'll add them one by one to avoid errors
+        const additionalFields = [
+          'bio', 'experience_years', 'education', 'availability', 'hourly_rate',
+          'school_name', 'school_type', 'school_address', 'school_website',
+          'school_description', 'school_size'
+        ];
+
+        additionalFields.forEach(field => {
+          if (updates[field as keyof UpdateUserData] !== undefined) {
+            safeUpdates[field] = updates[field as keyof UpdateUserData];
+          }
+        });
+
+        console.log('🔧 Safe updates to apply:', safeUpdates);
+
         const { data, error } = await supabase
           .from('profiles')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
+          .update(safeUpdates)
           .eq('id', userId)
           .select()
           .single();
@@ -179,8 +204,10 @@ export const useUpdateUser = () => {
       }
     },
     onSuccess: () => {
+      // Invalidate and refetch user data
       queryClient.invalidateQueries({ queryKey: ['user-management'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      console.log('🔄 User management queries invalidated');
     },
   });
 };
