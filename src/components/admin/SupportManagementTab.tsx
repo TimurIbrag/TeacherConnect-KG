@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useSupportRequests, useUpdateSupportRequest, useSupportRequestStats } from '@/hooks/useSupportRequests';
 import { SupportRequest } from '@/hooks/useSupportRequests';
+import SupportRequestModal from './SupportRequestModal';
 
 const SupportManagementTab: React.FC = () => {
   const { data: supportRequests = [], isLoading } = useSupportRequests();
@@ -37,6 +38,8 @@ const SupportManagementTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'in_progress' | 'resolved' | 'closed'>('all');
   const [filterPriority, setFilterPriority] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [selectedRequest, setSelectedRequest] = useState<SupportRequest | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -262,10 +265,26 @@ const SupportManagementTab: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" title="Просмотреть">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        title="Просмотреть детали"
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setShowRequestModal(true);
+                        }}
+                      >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" title="Ответить">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        title="Ответить по email"
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setShowRequestModal(true);
+                        }}
+                      >
                         <MessageSquare className="w-4 h-4" />
                       </Button>
                       {request.status === 'open' && (
@@ -303,6 +322,13 @@ const SupportManagementTab: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Support Request Modal */}
+      <SupportRequestModal
+        request={selectedRequest}
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+      />
     </div>
   );
 };

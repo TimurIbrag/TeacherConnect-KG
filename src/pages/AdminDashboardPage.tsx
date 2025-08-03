@@ -221,7 +221,17 @@ const AdminDashboardPage: React.FC = () => {
               <Button 
                 className="w-full" 
                 variant="outline"
-                onClick={() => navigate('/admin/dashboard')}
+                onClick={() => {
+                  // Navigate to dashboard and set active tab to support
+                  navigate('/admin/dashboard');
+                  // Set the active tab to support
+                  setTimeout(() => {
+                    const supportTab = document.querySelector('[data-value="support"]') as HTMLElement;
+                    if (supportTab) {
+                      supportTab.click();
+                    }
+                  }, 100);
+                }}
               >
                 View Requests
               </Button>
@@ -290,7 +300,17 @@ const AdminDashboardPage: React.FC = () => {
                         size="sm" 
                         variant="outline" 
                         className="w-full justify-start"
-                        onClick={() => navigate('/admin/dashboard')}
+                        onClick={() => {
+                          // Navigate to dashboard and set active tab to support
+                          navigate('/admin/dashboard');
+                          // Set the active tab to support
+                          setTimeout(() => {
+                            const supportTab = document.querySelector('[data-value="support"]') as HTMLElement;
+                            if (supportTab) {
+                              supportTab.click();
+                            }
+                          }, 100);
+                        }}
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Support Requests
