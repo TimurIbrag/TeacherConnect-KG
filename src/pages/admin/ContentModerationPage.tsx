@@ -337,68 +337,69 @@ const ContentModerationPage: React.FC = () => {
                       </TableRow>
                     ) : (
                       filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{profile.user_name}</div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <Mail className="w-3 h-3 mr-1" />
-                              {profile.user_email}
+                        <TableRow key={profile.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{profile.user_name}</div>
+                              <div className="text-sm text-gray-500 flex items-center">
+                                <Mail className="w-3 h-3 mr-1" />
+                                {profile.user_email}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {profile.role === 'teacher' ? 'Учитель' : 'Школа'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(profile.status)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={profile.flag_count > 0 ? 'destructive' : 'secondary'}>
-                            {profile.flag_count}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{formatDate(profile.last_updated)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline" title="View Profile">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" title="Edit Profile">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            {profile.status === 'active' || profile.status === 'flagged' ? (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-red-600"
-                                onClick={() => handleSuspendProfile(profile.id)}
-                                title="Suspend Profile"
-                              >
-                                <Ban className="w-4 h-4" />
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {profile.role === 'teacher' ? 'Учитель' : 'Школа'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(profile.status)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={profile.flag_count > 0 ? 'destructive' : 'secondary'}>
+                              {profile.flag_count}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <span>{formatDate(profile.last_updated)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline" title="View Profile">
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            ) : (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-green-600"
-                                onClick={() => handleActivateProfile(profile.id)}
-                                title="Activate Profile"
-                              >
-                                <CheckCircle className="w-4 h-4" />
+                              <Button size="sm" variant="outline" title="Edit Profile">
+                                <Edit className="w-4 h-4" />
                               </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              {profile.status === 'active' || profile.status === 'flagged' ? (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-red-600"
+                                  onClick={() => handleSuspendProfile(profile.id)}
+                                  title="Suspend Profile"
+                                >
+                                  <Ban className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-green-600"
+                                  onClick={() => handleActivateProfile(profile.id)}
+                                  title="Activate Profile"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -427,67 +428,84 @@ const ContentModerationPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredVacancies.map((vacancy) => (
-                      <TableRow key={vacancy.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{vacancy.title}</div>
-                            <div className="text-sm text-gray-500">{vacancy.school_name}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500 flex items-center">
-                            <Mail className="w-3 h-3 mr-1" />
-                            {vacancy.contact_email}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(vacancy.status)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={vacancy.flag_count > 0 ? 'destructive' : 'secondary'}>
-                            {vacancy.flag_count}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span>{formatDate(vacancy.created_at)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline" title="View Vacancy">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" title="Edit Vacancy">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            {vacancy.status === 'active' || vacancy.status === 'flagged' ? (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-red-600"
-                                onClick={() => handleSuspendVacancy(vacancy.id)}
-                                title="Suspend Vacancy"
-                              >
-                                <Ban className="w-4 h-4" />
-                              </Button>
-                            ) : (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="text-green-600"
-                                onClick={() => handleActivateVacancy(vacancy.id)}
-                                title="Activate Vacancy"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                            )}
+                    {vacanciesLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span>Loading vacancies...</span>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : filteredVacancies.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          No vacancies found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredVacancies.map((vacancy) => (
+                        <TableRow key={vacancy.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{vacancy.title}</div>
+                              <div className="text-sm text-gray-500">{vacancy.school_name}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <Mail className="w-3 h-3 mr-1" />
+                              {vacancy.contact_email}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(vacancy.status)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={vacancy.flag_count > 0 ? 'destructive' : 'secondary'}>
+                              {vacancy.flag_count}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              <span>{formatDate(vacancy.created_at)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline" title="View Vacancy">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" title="Edit Vacancy">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              {vacancy.status === 'active' || vacancy.status === 'flagged' ? (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-red-600"
+                                  onClick={() => handleSuspendVacancy(vacancy.id)}
+                                  title="Suspend Vacancy"
+                                >
+                                  <Ban className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-green-600"
+                                  onClick={() => handleActivateVacancy(vacancy.id)}
+                                  title="Activate Vacancy"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -516,42 +534,59 @@ const ContentModerationPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredReports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{report.content_title}</div>
-                            <div className="text-sm text-gray-500">{report.content_owner}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {report.content_type === 'profile' ? 'Профиль' : 
-                             report.content_type === 'vacancy' ? 'Вакансия' : 
-                             report.content_type === 'comment' ? 'Комментарий' : 'Сообщение'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500">{report.reported_by}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{report.reason}</div>
-                        </TableCell>
-                        <TableCell>
-                          {getReportStatusBadge(report.status)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline" title="Review Content">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" title="Resolve Report">
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
+                    {reportsLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span>Loading reports...</span>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : filteredReports.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          No reported content found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredReports.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{report.content_title}</div>
+                              <div className="text-sm text-gray-500">{report.content_owner}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {report.content_type === 'profile' ? 'Профиль' : 
+                               report.content_type === 'vacancy' ? 'Вакансия' : 
+                               report.content_type === 'comment' ? 'Комментарий' : 'Сообщение'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">{report.reported_by}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{report.reason}</div>
+                          </TableCell>
+                          <TableCell>
+                            {getReportStatusBadge(report.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button size="sm" variant="outline" title="View Content">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" title="Mark as Resolved">
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
