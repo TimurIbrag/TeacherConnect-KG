@@ -137,11 +137,12 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
           </div>
 
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="profile">Профиль</TabsTrigger>
               <TabsTrigger value="activity">Активность</TabsTrigger>
               <TabsTrigger value="certificates">Сертификаты</TabsTrigger>
               <TabsTrigger value="resume">Резюме</TabsTrigger>
+              <TabsTrigger value="debug">Данные</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="space-y-4">
@@ -197,26 +198,41 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      {user.experience_years && (
+                      {user.experience_years ? (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Опыт работы:</span>
                           <span>{user.experience_years} лет</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Опыт работы:</span>
+                          <span className="text-gray-500">Не указан</span>
+                        </div>
                       )}
-                      {user.education && (
+                      {user.education ? (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Образование:</span>
                           <span>{user.education}</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Образование:</span>
+                          <span className="text-gray-500">Не указано</span>
+                        </div>
                       )}
-                      {user.hourly_rate && (
+                      {user.hourly_rate ? (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Почасовая ставка:</span>
                           <span>${user.hourly_rate}/час</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Почасовая ставка:</span>
+                          <span className="text-gray-500">Не указана</span>
+                        </div>
                       )}
                     </div>
-                    {user.skills && user.skills.length > 0 && (
+                    {user.skills && user.skills.length > 0 ? (
                       <div>
                         <span className="font-medium">Навыки:</span>
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -225,8 +241,13 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                           ))}
                         </div>
                       </div>
+                    ) : (
+                      <div>
+                        <span className="font-medium">Навыки:</span>
+                        <span className="text-gray-500 ml-2">Не указаны</span>
+                      </div>
                     )}
-                    {user.languages && user.languages.length > 0 && (
+                    {user.languages && user.languages.length > 0 ? (
                       <div>
                         <span className="font-medium">Языки:</span>
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -234,6 +255,11 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                             <Badge key={index} variant="outline">{language}</Badge>
                           ))}
                         </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <span className="font-medium">Языки:</span>
+                        <span className="text-gray-500 ml-2">Не указаны</span>
                       </div>
                     )}
                   </CardContent>
@@ -247,39 +273,66 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      {user.school_name && (
+                      {user.school_name ? (
                         <div className="flex items-center space-x-2">
                           <School className="w-4 h-4 text-gray-400" />
                           <span className="font-medium">Название школы:</span>
                           <span>{user.school_name}</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <School className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium">Название школы:</span>
+                          <span className="text-gray-500">Не указано</span>
+                        </div>
                       )}
-                      {user.school_type && (
+                      {user.school_type ? (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Тип школы:</span>
                           <span>{user.school_type}</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Тип школы:</span>
+                          <span className="text-gray-500">Не указан</span>
+                        </div>
                       )}
-                      {user.school_size && (
+                      {user.school_size ? (
                         <div className="flex items-center space-x-2">
                           <span className="font-medium">Размер школы:</span>
                           <span>{user.school_size} учеников</span>
                         </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Размер школы:</span>
+                          <span className="text-gray-500">Не указан</span>
+                        </div>
                       )}
                     </div>
-                    {user.school_address && (
+                    {user.school_address ? (
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-gray-400" />
                         <span className="font-medium">Адрес:</span>
                         <span>{user.school_address}</span>
                       </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium">Адрес:</span>
+                        <span className="text-gray-500">Не указан</span>
+                      </div>
                     )}
-                    {user.school_website && (
+                    {user.school_website ? (
                       <div className="flex items-center space-x-2">
                         <span className="font-medium">Веб-сайт:</span>
                         <a href={user.school_website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                           {user.school_website}
                         </a>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">Веб-сайт:</span>
+                        <span className="text-gray-500">Не указан</span>
                       </div>
                     )}
                   </CardContent>
@@ -381,19 +434,155 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         <span className="font-medium">Биография:</span>
                         <p className="mt-2 text-sm text-gray-600">{user.bio}</p>
                       </div>
-                      {user.availability && (
+                      {user.availability ? (
                         <div>
                           <span className="font-medium">Доступность:</span>
                           <p className="mt-2 text-sm text-gray-600">{user.availability}</p>
                         </div>
+                      ) : (
+                        <div>
+                          <span className="font-medium">Доступность:</span>
+                          <p className="mt-2 text-sm text-gray-500">Не указана</p>
+                        </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                      <p>Резюме не заполнено</p>
+                    <div className="space-y-4">
+                      <div>
+                        <span className="font-medium">Биография:</span>
+                        <p className="mt-2 text-sm text-gray-500">Не заполнена</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Доступность:</span>
+                        <p className="mt-2 text-sm text-gray-500">Не указана</p>
+                      </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="debug" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Данные пользователя (для разработчиков)</CardTitle>
+                  <CardDescription>
+                    Показывает все доступные данные пользователя из базы данных
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="font-medium">ID пользователя:</span>
+                      <span className="ml-2 font-mono text-sm">{user.id}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Email:</span>
+                      <span className="ml-2">{user.email}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Полное имя:</span>
+                      <span className="ml-2">{user.full_name || 'Не указано'}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Роль:</span>
+                      <span className="ml-2">{user.role}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Телефон:</span>
+                      <span className="ml-2">{user.phone || 'Не указан'}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Дата регистрации:</span>
+                      <span className="ml-2">{formatDate(user.created_at)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Последний вход:</span>
+                      <span className="ml-2">{formatDate(user.last_seen_at)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Активен:</span>
+                      <span className="ml-2">{user.is_active ? 'Да' : 'Нет'}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Профиль заполнен:</span>
+                      <span className="ml-2">{user.profile_complete ? 'Да' : 'Нет'}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Сертификаты проверены:</span>
+                      <span className="ml-2">{user.certificates_verified ? 'Да' : 'Нет'}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Количество жалоб:</span>
+                      <span className="ml-2">{user.reported_count}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Avatar URL:</span>
+                      <span className="ml-2">{user.avatar_url || 'Не указан'}</span>
+                    </div>
+                    
+                    {user.role === 'teacher' && (
+                      <>
+                        <div>
+                          <span className="font-medium">Опыт работы:</span>
+                          <span className="ml-2">{user.experience_years || 'Не указан'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Образование:</span>
+                          <span className="ml-2">{user.education || 'Не указано'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Почасовая ставка:</span>
+                          <span className="ml-2">{user.hourly_rate || 'Не указана'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Доступность:</span>
+                          <span className="ml-2">{user.availability || 'Не указана'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Биография:</span>
+                          <span className="ml-2">{user.bio || 'Не указана'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Навыки:</span>
+                          <span className="ml-2">{user.skills?.length ? user.skills.join(', ') : 'Не указаны'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Языки:</span>
+                          <span className="ml-2">{user.languages?.length ? user.languages.join(', ') : 'Не указаны'}</span>
+                        </div>
+                      </>
+                    )}
+                    
+                    {user.role === 'school' && (
+                      <>
+                        <div>
+                          <span className="font-medium">Название школы:</span>
+                          <span className="ml-2">{user.school_name || 'Не указано'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Тип школы:</span>
+                          <span className="ml-2">{user.school_type || 'Не указан'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Размер школы:</span>
+                          <span className="ml-2">{user.school_size || 'Не указан'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Адрес школы:</span>
+                          <span className="ml-2">{user.school_address || 'Не указан'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Веб-сайт школы:</span>
+                          <span className="ml-2">{user.school_website || 'Не указан'}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Описание школы:</span>
+                          <span className="ml-2">{user.school_description || 'Не указано'}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
