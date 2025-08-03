@@ -78,27 +78,27 @@ export const useUserManagement = () => {
           role: profile.role as 'teacher' | 'school',
           created_at: profile.created_at,
           last_seen_at: profile.last_seen_at || '',
-          is_active: true, // Default to true
-          profile_complete: !!(profile.full_name && profile.full_name.trim() !== '' && profile.role),
-          certificates_verified: false, // Would come from certificates table
+          is_active: profile.is_active ?? true, // Use actual value from database
+          profile_complete: profile.is_profile_complete ?? !!(profile.full_name && profile.full_name.trim() !== '' && profile.role),
+          certificates_verified: profile.verification_status === 'verified',
           reported_count: 0, // Would come from reports table
           avatar_url: profile.avatar_url,
           phone: profile.phone,
-          location: undefined,
-          bio: undefined,
-          experience_years: undefined,
-          education: undefined,
-          skills: [],
-          languages: [],
-          availability: undefined,
-          hourly_rate: undefined,
-          school_name: undefined,
-          school_type: undefined,
-          school_address: undefined,
-          school_website: undefined,
-          school_description: undefined,
-          school_size: undefined,
-          school_levels: [],
+          location: profile.location,
+          bio: profile.bio,
+          experience_years: profile.experience_years,
+          education: profile.education,
+          skills: profile.skills || [],
+          languages: profile.languages ? (Array.isArray(profile.languages) ? profile.languages.map(lang => typeof lang === 'string' ? lang : String(lang)) : []) : [],
+          availability: profile.availability,
+          hourly_rate: profile.hourly_rate,
+          school_name: profile.school_name,
+          school_type: profile.school_type,
+          school_address: profile.school_address,
+          school_website: profile.school_website,
+          school_description: profile.school_description,
+          school_size: profile.school_size,
+          school_levels: profile.school_levels || [],
         }));
 
         console.log(`👥 Fetched ${users.length} users for management`);
@@ -127,18 +127,36 @@ export const useUpdateUser = () => {
       console.log('👥 Updating user:', userId, updates);
       
       try {
-        // Only update fields that definitely exist in the current Supabase schema
-        // Based on the current schema, we only have: id, email, full_name, role, created_at, last_seen_at, avatar_url, phone
+        // Start with basic fields that definitely exist
         const safeUpdates: any = {
           updated_at: new Date().toISOString()
         };
 
-        // Only update fields that exist in the current schema
+        // Always safe to update these basic fields
         if (updates.full_name !== undefined) safeUpdates.full_name = updates.full_name;
         if (updates.phone !== undefined) safeUpdates.phone = updates.phone;
         if (updates.role !== undefined) safeUpdates.role = updates.role;
 
-        console.log('🔧 Safe updates to apply (current schema only):', safeUpdates);
+        // Try to update extended fields, but don't fail if they don't exist
+        const extendedFields = [
+          'is_active', 'bio', 'experience_years', 'education', 'skills', 'languages', 
+          'availability', 'hourly_rate', 'location', 'specialization', 'available', 
+          'date_of_birth', 'certificates', 'cv_url', 'resume_url', 'schedule_details', 
+          'is_profile_complete', 'is_published', 'verification_documents', 
+          'verification_status', 'view_count', 'school_name', 'school_type', 
+          'school_address', 'school_website', 'school_description', 'school_size', 
+          'school_levels', 'facilities', 'founded_year', 'housing_provided', 
+          'latitude', 'longitude', 'location_verified', 'photo_urls', 
+          'student_count', 'website_url'
+        ];
+
+        extendedFields.forEach(field => {
+          if (updates[field as keyof UpdateUserData] !== undefined) {
+            safeUpdates[field] = updates[field as keyof UpdateUserData];
+          }
+        });
+
+        console.log('🔧 Safe updates to apply:', safeUpdates);
 
         const { data, error } = await supabase
           .from('profiles')
@@ -149,6 +167,64 @@ export const useUpdateUser = () => {
 
         if (error) {
           console.error('❌ Error updating user:', error);
+          
+          // If the error is due to missing columns, try with only basic fields
+          if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+            console.log('🔄 Retrying with basic fields only...');
+            
+            const basicUpdates = {
+              full_name: updates.full_name,
+              phone: updates.phone,
+              role: updates.role,
+              updated_at: new Date().toISOString()
+            };
+
+            const { data: basicData, error: basicError } = await supabase
+              .from('profiles')
+              .update(basicUpdates)
+              .eq('id', userId)
+              .select()
+              .single();
+
+            if (basicError) {
+              console.error('❌ Error updating basic fields:', basicError);
+              throw basicError;
+            }
+
+            console.log('✅ Basic fields updated successfully:', basicData);
+            
+            // Return basic data structure
+            return {
+              id: basicData.id,
+              email: basicData.email || '',
+              full_name: basicData.full_name || '',
+              role: basicData.role as 'teacher' | 'school',
+              created_at: basicData.created_at,
+              last_seen_at: basicData.last_seen_at || '',
+              is_active: true,
+              profile_complete: !!(basicData.full_name && basicData.full_name.trim() !== '' && basicData.role),
+              certificates_verified: false,
+              reported_count: 0,
+              avatar_url: basicData.avatar_url,
+              phone: basicData.phone,
+              location: undefined,
+              bio: undefined,
+              experience_years: undefined,
+              education: undefined,
+              skills: [],
+              languages: [],
+              availability: undefined,
+              hourly_rate: undefined,
+              school_name: undefined,
+              school_type: undefined,
+              school_address: undefined,
+              school_website: undefined,
+              school_description: undefined,
+              school_size: undefined,
+              school_levels: [],
+            };
+          }
+          
           throw error;
         }
 
@@ -162,27 +238,27 @@ export const useUpdateUser = () => {
           role: data.role as 'teacher' | 'school',
           created_at: data.created_at,
           last_seen_at: data.last_seen_at || '',
-          is_active: true,
-          profile_complete: !!(data.full_name && data.full_name.trim() !== '' && data.role),
-          certificates_verified: false,
+          is_active: data.is_active ?? true,
+          profile_complete: data.is_profile_complete ?? !!(data.full_name && data.full_name.trim() !== '' && data.role),
+          certificates_verified: data.verification_status === 'verified',
           reported_count: 0,
           avatar_url: data.avatar_url,
           phone: data.phone,
-          location: undefined,
-          bio: undefined,
-          experience_years: undefined,
-          education: undefined,
-          skills: [],
-          languages: [],
-          availability: undefined,
-          hourly_rate: undefined,
-          school_name: undefined,
-          school_type: undefined,
-          school_address: undefined,
-          school_website: undefined,
-          school_description: undefined,
-          school_size: undefined,
-          school_levels: [],
+          location: data.location,
+          bio: data.bio,
+          experience_years: data.experience_years,
+          education: data.education,
+          skills: data.skills || [],
+          languages: data.languages ? (Array.isArray(data.languages) ? data.languages.map(lang => typeof lang === 'string' ? lang : String(lang)) : []) : [],
+          availability: data.availability,
+          hourly_rate: data.hourly_rate,
+          school_name: data.school_name,
+          school_type: data.school_type,
+          school_address: data.school_address,
+          school_website: data.school_website,
+          school_description: data.school_description,
+          school_size: data.school_size,
+          school_levels: data.school_levels || [],
         };
 
       } catch (error) {

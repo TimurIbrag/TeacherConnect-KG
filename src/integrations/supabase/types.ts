@@ -311,6 +311,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           email: string
           full_name: string | null
@@ -319,9 +320,46 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
+          experience_years: number | null
+          education: string | null
+          skills: string[] | null
+          languages: Json | null
+          availability: string | null
+          hourly_rate: number | null
+          location: string | null
+          specialization: string | null
+          available: boolean | null
+          date_of_birth: string | null
+          certificates: string[] | null
+          cv_url: string | null
+          resume_url: string | null
+          schedule_details: Json | null
+          is_profile_complete: boolean | null
+          is_published: boolean | null
+          verification_documents: string[] | null
+          verification_status: string | null
+          view_count: number | null
+          school_name: string | null
+          school_type: string | null
+          school_address: string | null
+          school_website: string | null
+          school_description: string | null
+          school_size: number | null
+          school_levels: string[] | null
+          facilities: string[] | null
+          founded_year: number | null
+          housing_provided: boolean | null
+          latitude: number | null
+          longitude: number | null
+          location_verified: boolean | null
+          photo_urls: string[] | null
+          student_count: number | null
+          website_url: string | null
+          is_active: boolean | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email: string
           full_name?: string | null
@@ -330,9 +368,46 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
+          experience_years?: number | null
+          education?: string | null
+          skills?: string[] | null
+          languages?: Json | null
+          availability?: string | null
+          hourly_rate?: number | null
+          location?: string | null
+          specialization?: string | null
+          available?: boolean | null
+          date_of_birth?: string | null
+          certificates?: string[] | null
+          cv_url?: string | null
+          resume_url?: string | null
+          schedule_details?: Json | null
+          is_profile_complete?: boolean | null
+          is_published?: boolean | null
+          verification_documents?: string[] | null
+          verification_status?: string | null
+          view_count?: number | null
+          school_name?: string | null
+          school_type?: string | null
+          school_address?: string | null
+          school_website?: string | null
+          school_description?: string | null
+          school_size?: number | null
+          school_levels?: string[] | null
+          facilities?: string[] | null
+          founded_year?: number | null
+          housing_provided?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          location_verified?: boolean | null
+          photo_urls?: string[] | null
+          student_count?: number | null
+          website_url?: string | null
+          is_active?: boolean | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string
           full_name?: string | null
@@ -341,6 +416,42 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
+          experience_years?: number | null
+          education?: string | null
+          skills?: string[] | null
+          languages?: Json | null
+          availability?: string | null
+          hourly_rate?: number | null
+          location?: string | null
+          specialization?: string | null
+          available?: boolean | null
+          date_of_birth?: string | null
+          certificates?: string[] | null
+          cv_url?: string | null
+          resume_url?: string | null
+          schedule_details?: Json | null
+          is_profile_complete?: boolean | null
+          is_published?: boolean | null
+          verification_documents?: string[] | null
+          verification_status?: string | null
+          view_count?: number | null
+          school_name?: string | null
+          school_type?: string | null
+          school_address?: string | null
+          school_website?: string | null
+          school_description?: string | null
+          school_size?: number | null
+          school_levels?: string[] | null
+          facilities?: string[] | null
+          founded_year?: number | null
+          housing_provided?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          location_verified?: boolean | null
+          photo_urls?: string[] | null
+          student_count?: number | null
+          website_url?: string | null
+          is_active?: boolean | null
         }
         Relationships: []
       }
