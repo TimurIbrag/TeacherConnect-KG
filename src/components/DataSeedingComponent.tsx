@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sprout, Trash2, AlertTriangle } from 'lucide-react';
 import { DataSeedingService } from '@/services/DataSeedingService';
 import { useToast } from '@/hooks/use-toast';
 
-export const DataSeedingComponent: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [dataStatus, setDataStatus] = useState<{ teachers: number; schools: number }>({ teachers: 0, schools: 0 });
+const DataSeedingComponent: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [counts, setCounts] = useState({ teachers: 0, schools: 0 });
   const { toast } = useToast();
 
-  const checkDataStatus = async () => {
-    const status = await DataSeedingService.checkExistingData();
-    setDataStatus({ teachers: status.teachers, schools: status.schools });
+  const fetchCounts = async () => {
+    const data = await DataSeedingService.checkExistingData();
+    setCounts(data);
   };
 
   useEffect(() => {
-    checkDataStatus();
+    fetchCounts();
   }, []);
 
-  const handleSeedData = async () => {
-    setLoading(true);
+  const handleCreateSampleData = async () => {
+    setIsLoading(true);
     try {
       const result = await DataSeedingService.seedSampleData();
       if (result.success) {
         toast({
-          title: "✅ Данные созданы",
-          description: "Образцы профилей учителей и школ успешно добавлены",
+          title: "✅ Успешно!",
+          description: "Образцовые данные созданы",
         });
-        await checkDataStatus();
+        await fetchCounts();
       } else {
         toast({
           title: "❌ Ошибка",
@@ -36,27 +39,26 @@ export const DataSeedingComponent: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Seeding error:', error);
       toast({
         title: "❌ Ошибка",
         description: "Произошла ошибка при создании данных",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleClearData = async () => {
-    setLoading(true);
+  const handleClearSampleData = async () => {
+    setIsClearing(true);
     try {
       const result = await DataSeedingService.clearSampleData();
       if (result.success) {
         toast({
-          title: "🗑️ Данные удалены",
-          description: "Образцы профилей успешно удалены",
+          title: "✅ Успешно!",
+          description: "Образцовые данные удалены",
         });
-        await checkDataStatus();
+        await fetchCounts();
       } else {
         toast({
           title: "❌ Ошибка",
@@ -65,75 +67,146 @@ export const DataSeedingComponent: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Clear error:', error);
       toast({
         title: "❌ Ошибка",
         description: "Произошла ошибка при удалении данных",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsClearing(false);
+    }
+  };
+
+  const handleClearAllProfiles = async () => {
+    if (!confirm('⚠️ ВНИМАНИЕ: Это удалит ВСЕ профили из базы данных! Это действие нельзя отменить. Продолжить?')) {
+      return;
+    }
+
+    setIsClearingAll(true);
+    try {
+      const result = await DataSeedingService.clearAllDefaultProfiles();
+      if (result.success) {
+        toast({
+          title: "✅ Успешно!",
+          description: "Все профили удалены из базы данных",
+        });
+        await fetchCounts();
+      } else {
+        toast({
+          title: "❌ Ошибка",
+          description: "Не удалось удалить профили",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Ошибка",
+        description: "Произошла ошибка при удалении профилей",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
   return (
-    <div className="p-6 bg-green-50 border-2 border-green-200 rounded-lg">
-      <h3 className="text-lg font-bold text-green-800 mb-4">🌱 Data Seeding Tool</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <Sprout className="inline w-6 h-6 text-green-600 mr-2" />
+          Инструмент управления данными (Временный)
+        </h2>
+        <p className="text-gray-600">
+          Управление профилями и данными в базе данных
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Current Status */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Current Status</CardTitle>
+            <CardTitle className="flex items-center">
+              📊 Текущий статус
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Teachers:</span>
-                <span className="font-bold text-blue-600">{dataStatus.teachers}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Schools:</span>
-                <span className="font-bold text-green-600">{dataStatus.schools}</span>
-              </div>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span>Учителя:</span>
+              <span className="font-semibold text-blue-600">{counts.teachers}</span>
             </div>
+            <div className="flex justify-between items-center">
+              <span>Школы:</span>
+              <span className="font-semibold text-green-600">{counts.schools}</span>
+            </div>
+            <Button 
+              onClick={fetchCounts} 
+              variant="outline" 
+              size="sm" 
+              className="w-full"
+            >
+              Обновить
+            </Button>
           </CardContent>
         </Card>
 
+        {/* Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Actions</CardTitle>
+            <CardTitle className="flex items-center">
+              ⚡ Действия
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button 
-              onClick={handleSeedData}
-              disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-600"
-              size="sm"
+          <CardContent className="space-y-3">
+            <Button
+              onClick={handleCreateSampleData}
+              disabled={isLoading}
+              className="w-full bg-green-600 hover:bg-green-700"
             >
-              {loading ? '🔄 Creating...' : '🌱 Create Sample Data'}
+              <Sprout className="w-4 h-4 mr-2" />
+              {isLoading ? 'Создание...' : 'Создать образцовые данные'}
             </Button>
             
-            <Button 
-              onClick={handleClearData}
-              disabled={loading}
-              className="w-full bg-red-500 hover:bg-red-600"
-              size="sm"
+            <Button
+              onClick={handleClearSampleData}
+              disabled={isClearing}
+              variant="outline"
+              className="w-full"
             >
-              {loading ? '🔄 Clearing...' : '🗑️ Clear Sample Data'}
+              <Trash2 className="w-4 h-4 mr-2" />
+              {isClearing ? 'Удаление...' : 'Удалить образцовые данные'}
+            </Button>
+
+            <Button
+              onClick={handleClearAllProfiles}
+              disabled={isClearingAll}
+              variant="destructive"
+              className="w-full"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              {isClearingAll ? 'Удаление...' : 'Удалить ВСЕ профили'}
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      <div className="text-sm text-gray-600">
-        <p><strong>What this does:</strong></p>
-        <ul className="list-disc list-inside space-y-1 mt-2">
-          <li>Creates 3 sample teacher profiles with realistic data</li>
-          <li>Creates 3 sample school profiles with realistic data</li>
-          <li>Sets all profiles as published and complete</li>
-          <li>Uses Kyrgyz names and locations</li>
-        </ul>
-      </div>
+      {/* What this does */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Что делает этот инструмент:</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            <li>Создает 5 образцовых профилей учителей с реалистичными данными</li>
+            <li>Создает 5 образцовых профилей школ с реалистичными данными</li>
+            <li>Устанавливает все профили как опубликованные и завершенные</li>
+            <li>Использует кыргызские имена и локации</li>
+            <li>Удаляет все существующие профили (включая дефолтные)</li>
+            <li>Позволяет очистить только образцовые данные</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
-}; 
+};
+
+export default DataSeedingComponent; 

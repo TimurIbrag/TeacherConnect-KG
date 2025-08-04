@@ -1,6 +1,55 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export class DataSeedingService {
+  static async clearAllDefaultProfiles() {
+    console.log('🗑️ Clearing all default profiles...');
+    
+    try {
+      // Clear all teacher profiles
+      const { error: teacherError } = await supabase
+        .from('teacher_profiles')
+        .delete()
+        .neq('id', ''); // Delete all
+
+      if (teacherError) {
+        console.error('❌ Error clearing teacher profiles:', teacherError);
+      } else {
+        console.log('✅ All teacher profiles cleared');
+      }
+
+      // Clear all school profiles
+      const { error: schoolError } = await supabase
+        .from('school_profiles')
+        .delete()
+        .neq('id', ''); // Delete all
+
+      if (schoolError) {
+        console.error('❌ Error clearing school profiles:', schoolError);
+      } else {
+        console.log('✅ All school profiles cleared');
+      }
+
+      // Clear all profiles (but keep auth users)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .neq('id', ''); // Delete all
+
+      if (profileError) {
+        console.error('❌ Error clearing profiles:', profileError);
+      } else {
+        console.log('✅ All profiles cleared');
+      }
+
+      console.log('🎉 All default profiles cleared!');
+      return { success: true, message: 'All default profiles cleared successfully' };
+
+    } catch (error) {
+      console.error('❌ Error clearing default profiles:', error);
+      return { success: false, error: error };
+    }
+  }
+
   static async seedSampleData() {
     console.log('🌱 Starting data seeding...');
     

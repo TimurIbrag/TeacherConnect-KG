@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '@/context/LanguageContext';
-import { schoolsData, vacanciesData } from '@/data/mockData';
+// Removed mock data import - using only Supabase data
 import { useToast } from '@/hooks/use-toast';
 import { useSchool } from '@/hooks/useSchools';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +41,13 @@ const SchoolProfilePage: React.FC = () => {
   // Try to get school from Supabase first, then fallback to mock data
   const { data: supabaseSchool, isLoading: isLoadingSupabase } = useSchool(id || '');
   
+  // Get published schools from localStorage
+  const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
+  const publishedSchool = publishedSchools.find((s: any) => s.id.toString() === id);
+  
+  // Use only Supabase school data
+  const school = supabaseSchool;
+  
   // Get vacancies for this school - fetch for both Supabase and mock schools
   const { data: vacancies = [], isLoading: isLoadingVacancies } = useQuery({
     queryKey: ['school-vacancies-public', id],
@@ -70,35 +77,12 @@ const SchoolProfilePage: React.FC = () => {
         return data || [];
       }
       
-      // For mock schools (numeric IDs), transform mock vacancies to match expected format
-      return vacanciesData
-        .filter(v => v.schoolId === id && v.status === 'active')
-        .map(v => ({
-          id: v.id,
-          title: v.subjectId, // Use subjectId as title for now
-          description: v.description,
-          employment_type: 'full-time',
-          salary_min: undefined,
-          salary_max: undefined,
-          location: undefined,
-          application_deadline: undefined,
-          requirements: v.requirements,
-          benefits: v.benefits,
-        }));
+      // No mock vacancies - return empty array
+      return [];
     },
     enabled: !!id,
   });
 
-  // Get published schools from localStorage
-  const publishedSchools = JSON.parse(localStorage.getItem('publishedSchools') || '[]');
-  const publishedSchool = publishedSchools.find((s: any) => s.id.toString() === id);
-  
-  const schoolId = Number(id);
-  const mockSchool = schoolsData.find(s => s.id === schoolId);
-  
-  // Use Supabase school if available, otherwise use published or mock data
-  const school = supabaseSchool || publishedSchool || mockSchool;
-  
   const handleApplyToVacancy = (vacancyId: string) => {
     toast({
       title: "Заявка отправлена!",
@@ -106,7 +90,7 @@ const SchoolProfilePage: React.FC = () => {
     });
   };
   
-  if (isLoadingSupabase && !mockSchool) {
+  if (isLoadingSupabase && !supabaseSchool) {
     return (
       <div className="container py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Загрузка...</h1>
@@ -158,19 +142,19 @@ const SchoolProfilePage: React.FC = () => {
     city: publishedSchool.address?.split(',')[0] || 'Бишкек',
     photos: publishedSchool.photos || publishedSchool.photo_urls || []
   } : {
-    id: mockSchool!.id,
-    name: mockSchool!.name,
-    photo: mockSchool!.photo,
-    address: mockSchool!.address,
-    type: mockSchool!.type,
-    specialization: mockSchool!.specialization,
-    ratings: mockSchool!.ratings,
-    views: mockSchool!.views,
-    housing: mockSchool!.housing,
-    about: mockSchool!.about,
-    facilities: mockSchool!.facilities,
-    applications: mockSchool!.applications,
-    city: mockSchool!.address?.split(',')[0] || 'Бишкек',
+    id: 'mock', // Placeholder for mock data
+    name: 'Школа',
+    photo: null,
+    address: 'Адрес не указан',
+    type: 'Государственная',
+    specialization: 'Общее образование',
+    ratings: 4.5,
+    views: 150,
+    housing: false,
+    about: 'Описание школы',
+    facilities: [],
+    applications: 0,
+    city: 'Бишкек',
     photos: []
   };
   
