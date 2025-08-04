@@ -26,15 +26,11 @@ export const useSchools = () => {
   return useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
-      console.log('🔍 Fetching schools from profiles table...');
+      console.log('🔍 Fetching schools from school_profiles table...');
       
       const { data, error } = await supabase
-        .from('profiles')
-        .select(`*`)
-        .eq('role', 'school')
-        .eq('is_published', true)
-        .eq('is_profile_complete', true)
-        .eq('is_active', true);
+        .from('school_profiles')
+        .select(`*`);
 
       if (error) {
         console.error('❌ Error fetching schools:', error);
@@ -48,8 +44,8 @@ export const useSchools = () => {
         id: school.id,
         school_name: school.school_name || 'School ' + school.id,
         school_type: school.school_type || 'General',
-        description: school.school_description || '',
-        address: school.school_address || '',
+        description: school.description || '',
+        address: school.address || '',
         facilities: school.facilities || [],
         founded_year: school.founded_year || 2020,
         housing_provided: school.housing_provided || false,
@@ -60,8 +56,8 @@ export const useSchools = () => {
         student_count: school.student_count || 0,
         website_url: school.website_url || '',
         is_published: school.is_published || true,
-        is_profile_complete: school.is_profile_complete || true,
-        is_active: school.is_active || true,
+        is_profile_complete: true, // Assume all school_profiles are complete
+        is_active: true, // Assume all school_profiles are active
       })) || [];
 
       console.log('✅ Transformed school data:', transformedData);
@@ -77,11 +73,9 @@ export const useSchool = (id: string) => {
     queryKey: ['school', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('school_profiles')
         .select('*')
         .eq('id', id)
-        .eq('role', 'school')
-        .eq('is_published', true)
         .single();
 
       if (error) throw error;
@@ -91,8 +85,8 @@ export const useSchool = (id: string) => {
         id: data.id,
         school_name: data.school_name || 'School ' + data.id,
         school_type: data.school_type || 'General',
-        description: data.school_description || '',
-        address: data.school_address || '',
+        description: data.description || '',
+        address: data.address || '',
         facilities: data.facilities || [],
         founded_year: data.founded_year || 2020,
         housing_provided: data.housing_provided || false,
@@ -103,8 +97,8 @@ export const useSchool = (id: string) => {
         student_count: data.student_count || 0,
         website_url: data.website_url || '',
         is_published: data.is_published || true,
-        is_profile_complete: data.is_profile_complete || true,
-        is_active: data.is_active || true,
+        is_profile_complete: true,
+        is_active: true,
       } as School;
     },
     enabled: !!id,

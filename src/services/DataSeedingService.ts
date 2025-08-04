@@ -5,13 +5,10 @@ export class DataSeedingService {
     console.log('🌱 Starting data seeding...');
     
     try {
-      // Create sample teacher profiles
+      // Create sample teacher profiles in teacher_profiles table
       const teacherProfiles = [
         {
           id: 'teacher-1',
-          email: 'teacher1@example.com',
-          full_name: 'Анна Петрова',
-          role: 'teacher' as const,
           specialization: 'Математика',
           experience_years: 5,
           education: 'Кыргызский государственный университет',
@@ -19,17 +16,12 @@ export class DataSeedingService {
           skills: ['Преподавание', 'Разработка учебных программ'],
           location: 'Бишкек',
           bio: 'Опытный преподаватель математики с 5-летним стажем работы',
-          is_published: true,
           is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true,
+          available: true
         },
         {
           id: 'teacher-2',
-          email: 'teacher2@example.com',
-          full_name: 'Марат Алиев',
-          role: 'teacher' as const,
           specialization: 'Английский язык',
           experience_years: 8,
           education: 'Американский университет в Центральной Азии',
@@ -37,17 +29,12 @@ export class DataSeedingService {
           skills: ['Преподавание', 'Подготовка к экзаменам'],
           location: 'Бишкек',
           bio: 'Сертифицированный преподаватель английского языка',
-          is_published: true,
           is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true,
+          available: true
         },
         {
           id: 'teacher-3',
-          email: 'teacher3@example.com',
-          full_name: 'Гульмира Садыкова',
-          role: 'teacher' as const,
           specialization: 'Физика',
           experience_years: 12,
           education: 'Кыргызский технический университет',
@@ -55,91 +42,68 @@ export class DataSeedingService {
           skills: ['Преподавание', 'Научная работа'],
           location: 'Ош',
           bio: 'Доктор физико-математических наук, опытный педагог',
-          is_published: true,
           is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true,
+          available: true
         }
       ];
 
-      // Create sample school profiles
+      // Create sample school profiles in school_profiles table
       const schoolProfiles = [
         {
           id: 'school-1',
-          email: 'school1@example.com',
-          full_name: 'Школа №1',
-          role: 'school' as const,
           school_name: 'Школа №1 имени А.С. Пушкина',
           school_type: 'Средняя школа',
-          school_description: 'Одна из старейших школ Бишкека с богатой историей',
-          school_address: 'ул. Советская, 123, Бишкек',
+          description: 'Одна из старейших школ Бишкека с богатой историей',
+          address: 'ул. Советская, 123, Бишкек',
           facilities: ['Спортивный зал', 'Библиотека', 'Компьютерный класс'],
           founded_year: 1935,
           student_count: 450,
-          is_published: true,
-          is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true
         },
         {
           id: 'school-2',
-          email: 'school2@example.com',
-          full_name: 'Гимназия №2',
-          role: 'school' as const,
           school_name: 'Гимназия №2 с углубленным изучением английского языка',
           school_type: 'Гимназия',
-          school_description: 'Современная гимназия с углубленным изучением иностранных языков',
-          school_address: 'ул. Московская, 45, Бишкек',
+          description: 'Современная гимназия с углубленным изучением иностранных языков',
+          address: 'ул. Московская, 45, Бишкек',
           facilities: ['Лингвистическая лаборатория', 'Спортивная площадка', 'Столовая'],
           founded_year: 1995,
           student_count: 320,
-          is_published: true,
-          is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true
         },
         {
           id: 'school-3',
-          email: 'school3@example.com',
-          full_name: 'Лицей №3',
-          role: 'school' as const,
           school_name: 'Лицей №3 с физико-математическим уклоном',
           school_type: 'Лицей',
-          school_description: 'Специализированный лицей для одаренных детей',
-          school_address: 'ул. Ленина, 78, Бишкек',
+          description: 'Специализированный лицей для одаренных детей',
+          address: 'ул. Ленина, 78, Бишкек',
           facilities: ['Физическая лаборатория', 'Математический кабинет', 'Актовый зал'],
           founded_year: 2005,
           student_count: 280,
-          is_published: true,
-          is_profile_complete: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_published: true
         }
       ];
 
-      // Insert teacher profiles
+      // Insert teacher profiles into teacher_profiles table
       console.log('📝 Inserting teacher profiles...');
       for (const teacher of teacherProfiles) {
         const { error } = await supabase
-          .from('profiles')
+          .from('teacher_profiles')
           .upsert(teacher, { onConflict: 'id' });
         
         if (error) {
           console.error('❌ Error inserting teacher:', teacher.id, error);
         } else {
-          console.log('✅ Inserted teacher:', teacher.full_name);
+          console.log('✅ Inserted teacher:', teacher.specialization);
         }
       }
 
-      // Insert school profiles
+      // Insert school profiles into school_profiles table
       console.log('📝 Inserting school profiles...');
       for (const school of schoolProfiles) {
         const { error } = await supabase
-          .from('profiles')
+          .from('school_profiles')
           .upsert(school, { onConflict: 'id' });
         
         if (error) {
@@ -163,16 +127,12 @@ export class DataSeedingService {
     
     try {
       const { data: teachers, error: teacherError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'teacher')
-        .eq('is_published', true);
+        .from('teacher_profiles')
+        .select('*');
 
       const { data: schools, error: schoolError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'school')
-        .eq('is_published', true);
+        .from('school_profiles')
+        .select('*');
 
       return {
         teachers: teachers?.length || 0,
@@ -190,17 +150,24 @@ export class DataSeedingService {
     console.log('🗑️ Clearing sample data...');
     
     try {
-      const { error } = await supabase
-        .from('profiles')
+      // Clear teacher profiles
+      const { error: teacherError } = await supabase
+        .from('teacher_profiles')
         .delete()
-        .in('id', [
-          'teacher-1', 'teacher-2', 'teacher-3',
-          'school-1', 'school-2', 'school-3'
-        ]);
+        .in('id', ['teacher-1', 'teacher-2', 'teacher-3']);
 
-      if (error) {
-        console.error('❌ Error clearing data:', error);
-        return { success: false, error };
+      if (teacherError) {
+        console.error('❌ Error clearing teacher data:', teacherError);
+      }
+
+      // Clear school profiles
+      const { error: schoolError } = await supabase
+        .from('school_profiles')
+        .delete()
+        .in('id', ['school-1', 'school-2', 'school-3']);
+
+      if (schoolError) {
+        console.error('❌ Error clearing school data:', schoolError);
       }
 
       console.log('✅ Sample data cleared!');
