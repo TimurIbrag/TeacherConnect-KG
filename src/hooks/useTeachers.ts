@@ -1,61 +1,66 @@
 
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect } from 'react';
-import { Teacher } from './types';
 
-export const useTeachers = (page: number = 1, pageSize: number = 12) => {
-  const queryClient = useQueryClient();
+export interface Teacher {
+  id: string;
+  full_name: string;
+  specialization: string;
+  experience_years: number;
+  education: string;
+  languages: string[];
+  skills: string[];
+  location: string;
+  hourly_rate: number;
+  bio: string;
+  avatar_url: string;
+  is_published: boolean;
+  is_profile_complete: boolean;
+  is_active: boolean;
+}
 
-  // Set up real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('teacher-profiles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'teacher_profiles'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['teachers', page, pageSize] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient, page, pageSize]);
-
+export const useTeachers = (page = 1, pageSize = 10) => {
   return useQuery({
     queryKey: ['teachers', page, pageSize],
     queryFn: async () => {
-      console.log('Fetching teachers from profiles table...');
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       
-      // Fetch from teacher_profiles table with profiles data
+      // Fetch from teacher_profiles table directly (no join to avoid recursion)
       const { data, error, count } = await supabase
         .from('teacher_profiles')
-        .select(`
-          *,
-          profiles:profiles(*)
-        `, { count: 'exact' })
+        .select(`*`, { count: 'exact' })
         .range(from, to);
 
       if (error) {
         console.error('Error fetching teachers:', error);
         throw error;
       }
-      
-      console.log('Teachers fetched from profiles:', data?.length || 0);
-      console.log('Raw teachers data:', data);
-      
-      return { data: data as Teacher[], count };
+
+      // Transform the data to match the expected Teacher type structure
+      const transformedData = data?.map(teacher => ({
+        id: teacher.id,
+        full_name: teacher.full_name || 'Teacher ' + teacher.id,
+        specialization: teacher.specialization || 'General',
+        experience_years: teacher.experience_years || 0,
+        education: teacher.education || '',
+        languages: teacher.languages || [],
+        skills: teacher.skills || [],
+        location: teacher.location || '',
+        hourly_rate: teacher.hourly_rate || 0,
+        bio: teacher.bio || '',
+        avatar_url: teacher.avatar_url || '',
+        is_published: teacher.is_published || true,
+        is_profile_complete: teacher.is_profile_complete || true,
+        is_active: teacher.is_active || true,
+      })) || [];
+
+      return {
+        data: transformedData,
+        count: count || 0,
+      };
     },
-    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
