@@ -45,6 +45,32 @@ export class DataSeedingService {
           is_profile_complete: true,
           is_published: true,
           available: true
+        },
+        {
+          id: 'teacher-4',
+          specialization: 'История',
+          experience_years: 7,
+          education: 'Кыргызский национальный университет',
+          languages: ['Кыргызский', 'Русский'],
+          skills: ['Преподавание', 'Исследовательская работа'],
+          location: 'Бишкек',
+          bio: 'Преподаватель истории с глубокими знаниями',
+          is_profile_complete: true,
+          is_published: true,
+          available: true
+        },
+        {
+          id: 'teacher-5',
+          specialization: 'Химия',
+          experience_years: 6,
+          education: 'Кыргызский государственный университет',
+          languages: ['Русский', 'Кыргызский'],
+          skills: ['Преподавание', 'Лабораторные работы'],
+          location: 'Бишкек',
+          bio: 'Опытный преподаватель химии',
+          is_profile_complete: true,
+          is_published: true,
+          available: true
         }
       ];
 
@@ -81,6 +107,28 @@ export class DataSeedingService {
           facilities: ['Физическая лаборатория', 'Математический кабинет', 'Актовый зал'],
           founded_year: 2005,
           student_count: 280,
+          is_published: true
+        },
+        {
+          id: 'school-4',
+          school_name: 'Школа-гимназия №4',
+          school_type: 'Школа-гимназия',
+          description: 'Современная школа с углубленным изучением естественных наук',
+          address: 'ул. Киевская, 56, Бишкек',
+          facilities: ['Химическая лаборатория', 'Биологический кабинет', 'Спортивный комплекс'],
+          founded_year: 1985,
+          student_count: 380,
+          is_published: true
+        },
+        {
+          id: 'school-5',
+          school_name: 'Средняя школа №5',
+          school_type: 'Средняя школа',
+          description: 'Общеобразовательная школа с качественным обучением',
+          address: 'ул. Токтогула, 89, Бишкек',
+          facilities: ['Спортивный зал', 'Библиотека', 'Компьютерный класс'],
+          founded_year: 1975,
+          student_count: 520,
           is_published: true
         }
       ];
@@ -154,7 +202,7 @@ export class DataSeedingService {
       const { error: teacherError } = await supabase
         .from('teacher_profiles')
         .delete()
-        .in('id', ['teacher-1', 'teacher-2', 'teacher-3']);
+        .in('id', ['teacher-1', 'teacher-2', 'teacher-3', 'teacher-4', 'teacher-5']);
 
       if (teacherError) {
         console.error('❌ Error clearing teacher data:', teacherError);
@@ -164,7 +212,7 @@ export class DataSeedingService {
       const { error: schoolError } = await supabase
         .from('school_profiles')
         .delete()
-        .in('id', ['school-1', 'school-2', 'school-3']);
+        .in('id', ['school-1', 'school-2', 'school-3', 'school-4', 'school-5']);
 
       if (schoolError) {
         console.error('❌ Error clearing school data:', schoolError);

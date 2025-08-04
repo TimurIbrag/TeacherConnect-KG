@@ -22,6 +22,16 @@ export interface School {
   is_active: boolean;
 }
 
+// Helper function to generate a readable school name from ID
+const generateSchoolName = (id: string, schoolName?: string): string => {
+  if (schoolName) {
+    return schoolName;
+  }
+  // Extract a short identifier from the UUID
+  const shortId = id.substring(0, 8);
+  return `Школа ${shortId}`;
+};
+
 export const useSchools = () => {
   return useQuery({
     queryKey: ['schools'],
@@ -42,18 +52,18 @@ export const useSchools = () => {
       // Transform the data to match the expected School type structure
       const transformedData = data?.map(school => ({
         id: school.id,
-        school_name: school.school_name || 'School ' + school.id,
-        school_type: school.school_type || 'General',
-        description: school.description || '',
-        address: school.address || '',
-        facilities: school.facilities || [],
+        school_name: generateSchoolName(school.id, school.school_name),
+        school_type: school.school_type || 'Общеобразовательная школа',
+        description: school.description || 'Качественное образование для всех',
+        address: school.address || 'Бишкек',
+        facilities: school.facilities || ['Классы', 'Библиотека'],
         founded_year: school.founded_year || 2020,
         housing_provided: school.housing_provided || false,
         latitude: school.latitude || 0,
         longitude: school.longitude || 0,
         location_verified: school.location_verified || false,
         photo_urls: school.photo_urls || [],
-        student_count: school.student_count || 0,
+        student_count: school.student_count || 100,
         website_url: school.website_url || '',
         is_published: school.is_published || true,
         is_profile_complete: true, // Assume all school_profiles are complete
@@ -83,18 +93,18 @@ export const useSchool = (id: string) => {
       // Transform the data
       return {
         id: data.id,
-        school_name: data.school_name || 'School ' + data.id,
-        school_type: data.school_type || 'General',
-        description: data.description || '',
-        address: data.address || '',
-        facilities: data.facilities || [],
+        school_name: generateSchoolName(data.id, data.school_name),
+        school_type: data.school_type || 'Общеобразовательная школа',
+        description: data.description || 'Качественное образование для всех',
+        address: data.address || 'Бишкек',
+        facilities: data.facilities || ['Классы', 'Библиотека'],
         founded_year: data.founded_year || 2020,
         housing_provided: data.housing_provided || false,
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         location_verified: data.location_verified || false,
         photo_urls: data.photo_urls || [],
-        student_count: data.student_count || 0,
+        student_count: data.student_count || 100,
         website_url: data.website_url || '',
         is_published: data.is_published || true,
         is_profile_complete: true,

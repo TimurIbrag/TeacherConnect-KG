@@ -34,6 +34,16 @@ const parseJsonbArray = (value: any): string[] => {
   return [];
 };
 
+// Helper function to generate a readable name from ID
+const generateTeacherName = (id: string, specialization?: string): string => {
+  if (specialization) {
+    return `Учитель ${specialization}`;
+  }
+  // Extract a short identifier from the UUID
+  const shortId = id.substring(0, 8);
+  return `Учитель ${shortId}`;
+};
+
 export const useTeachers = (page = 1, pageSize = 10) => {
   return useQuery({
     queryKey: ['teachers', page, pageSize],
@@ -59,15 +69,15 @@ export const useTeachers = (page = 1, pageSize = 10) => {
       // Transform the data to match the expected Teacher type structure
       const transformedData = data?.map(teacher => ({
         id: teacher.id,
-        full_name: teacher.id || 'Teacher ' + teacher.id, // Use id as fallback since full_name might not exist
-        specialization: teacher.specialization || 'General',
+        full_name: generateTeacherName(teacher.id, teacher.specialization),
+        specialization: teacher.specialization || 'Общие предметы',
         experience_years: teacher.experience_years || 0,
-        education: teacher.education || '',
+        education: teacher.education || 'Высшее образование',
         languages: parseJsonbArray(teacher.languages),
-        skills: teacher.skills || [],
-        location: teacher.location || '',
+        skills: teacher.skills || ['Преподавание'],
+        location: teacher.location || 'Бишкек',
         hourly_rate: 0, // teacher_profiles doesn't have hourly_rate
-        bio: teacher.bio || '',
+        bio: teacher.bio || 'Опытный преподаватель',
         avatar_url: '', // teacher_profiles doesn't have avatar_url
         is_published: true, // Assume all teacher_profiles are published
         is_profile_complete: teacher.is_profile_complete || true,
@@ -102,15 +112,15 @@ export const useTeacher = (id: string) => {
       // Transform the data
       return {
         id: data.id,
-        full_name: data.id || 'Teacher ' + data.id,
-        specialization: data.specialization || 'General',
+        full_name: generateTeacherName(data.id, data.specialization),
+        specialization: data.specialization || 'Общие предметы',
         experience_years: data.experience_years || 0,
-        education: data.education || '',
+        education: data.education || 'Высшее образование',
         languages: parseJsonbArray(data.languages),
-        skills: data.skills || [],
-        location: data.location || '',
+        skills: data.skills || ['Преподавание'],
+        location: data.location || 'Бишкек',
         hourly_rate: 0,
-        bio: data.bio || '',
+        bio: data.bio || 'Опытный преподаватель',
         avatar_url: '',
         is_published: true,
         is_profile_complete: data.is_profile_complete || true,
