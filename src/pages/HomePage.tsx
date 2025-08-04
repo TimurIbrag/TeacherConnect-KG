@@ -308,9 +308,9 @@ const HomePage = () => {
                 <Card key={teacher.id} className="text-center hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
-                      {teacher.profiles?.full_name?.charAt(0) || 'T'}
+                      {teacher.full_name?.charAt(0) || 'T'}
                     </div>
-                    <CardTitle>{teacher.profiles?.full_name || t('teacher.nameNotSpecified')}</CardTitle>
+                    <CardTitle>{teacher.full_name || t('teacher.nameNotSpecified')}</CardTitle>
                     <CardDescription>{teacher.specialization}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
