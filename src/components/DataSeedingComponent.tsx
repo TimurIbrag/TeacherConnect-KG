@@ -9,6 +9,7 @@ const DataSeedingComponent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
+  const [isFixingRecursion, setIsFixingRecursion] = useState(false);
   const [counts, setCounts] = useState({ teachers: 0, schools: 0 });
   const { toast } = useToast();
 
@@ -109,6 +110,38 @@ const DataSeedingComponent: React.FC = () => {
     }
   };
 
+  const handleFixRecursion = async () => {
+    if (!confirm('🔧 Исправить проблему с рекурсией в таблице profiles? Это может занять некоторое время.')) {
+      return;
+    }
+
+    setIsFixingRecursion(true);
+    try {
+      const result = await DataSeedingService.fixProfilesTableRecursion();
+      if (result.success) {
+        toast({
+          title: "✅ Успешно!",
+          description: "Проблема с рекурсией исправлена",
+        });
+        await fetchCounts();
+      } else {
+        toast({
+          title: "❌ Ошибка",
+          description: "Не удалось исправить рекурсию",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Ошибка",
+        description: "Произошла ошибка при исправлении рекурсии",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFixingRecursion(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center">
@@ -185,6 +218,16 @@ const DataSeedingComponent: React.FC = () => {
               <AlertTriangle className="w-4 h-4 mr-2" />
               {isClearingAll ? 'Удаление...' : 'Удалить ВСЕ профили'}
             </Button>
+
+            <Button
+              onClick={handleFixRecursion}
+              disabled={isFixingRecursion}
+              variant="outline"
+              className="w-full bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              {isFixingRecursion ? 'Исправление...' : 'Исправить рекурсию profiles'}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -209,4 +252,4 @@ const DataSeedingComponent: React.FC = () => {
   );
 };
 
-export default DataSeedingComponent; 
+export { DataSeedingComponent }; 

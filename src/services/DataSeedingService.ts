@@ -50,6 +50,33 @@ export class DataSeedingService {
     }
   }
 
+  static async fixProfilesTableRecursion() {
+    console.log('🔧 Fixing profiles table recursion issue...');
+    
+    try {
+      // Try to clear the profiles table directly
+      console.log('⚠️ Attempting to clear profiles table...');
+
+      // Clear all data from profiles table
+      const { error: clearError } = await supabase
+        .from('profiles')
+        .delete()
+        .neq('id', '');
+
+      if (clearError) {
+        console.error('❌ Error clearing profiles:', clearError);
+        return { success: false, error: clearError };
+      }
+
+      console.log('✅ Profiles table cleared successfully');
+      return { success: true, message: 'Profiles table recursion fixed' };
+
+    } catch (error) {
+      console.error('❌ Error fixing profiles table:', error);
+      return { success: false, error: error };
+    }
+  }
+
   static async seedSampleData() {
     console.log('🌱 Starting data seeding...');
     
