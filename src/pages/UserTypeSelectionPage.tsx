@@ -33,77 +33,47 @@ const UserTypeSelectionPage: React.FC = () => {
         .maybeSingle();
 
       if (existingProfile) {
-        // Update existing profile role
+        // Update existing profile with role and set as published/complete
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ role })
+          .update({ 
+            role,
+            is_published: true,
+            is_profile_complete: true,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', user.id);
 
         if (profileError) throw profileError;
         console.log('✅ Updated existing profile role to:', role);
       } else {
-        // Create new profile
+        // Create new profile with role and set as published/complete
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
             id: user.id,
             email: user.email || '',
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-            role: role
+            role: role,
+            is_published: true,
+            is_profile_complete: true,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
 
         if (profileError) throw profileError;
         console.log('✅ Created new profile with role:', role);
       }
 
-      // Create role-specific profile only if it doesn't exist
+      // Store the confirmed user type and navigate
+      localStorage.setItem('confirmed_user_type', role);
+      sessionStorage.setItem('confirmed_user_type', role);
+      
       if (role === 'school') {
-        const { data: existingSchool } = await supabase
-          .from('school_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!existingSchool) {
-          const { error: schoolError } = await supabase
-            .from('school_profiles')
-            .insert({
-              id: user.id,
-              school_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Новая школа',
-              photo_urls: null, // No default photos
-              is_published: false // Unpublished by default
-            });
-          
-          if (schoolError) throw schoolError;
-          console.log('✅ Created school profile');
-        }
-        
-        // Store the confirmed user type and navigate
-        localStorage.setItem('confirmed_user_type', 'school');
-        sessionStorage.setItem('confirmed_user_type', 'school');
         navigate('/school-dashboard');
       } else {
-        const { data: existingTeacher } = await supabase
-          .from('teacher_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!existingTeacher) {
-          const { error: teacherError } = await supabase
-            .from('teacher_profiles')
-            .insert({
-              id: user.id,
-              available: true
-            });
-          
-          if (teacherError) throw teacherError;
-          console.log('✅ Created teacher profile');
-        }
-        
-        // Store the confirmed user type and navigate
-        localStorage.setItem('confirmed_user_type', 'teacher');
-        sessionStorage.setItem('confirmed_user_type', 'teacher');
         navigate('/teacher-dashboard');
       }
 

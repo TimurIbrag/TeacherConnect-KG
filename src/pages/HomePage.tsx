@@ -12,10 +12,6 @@ import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { DebugData } from '@/components/DebugData';
-import { DataTest } from '@/components/DataTest';
-import { SimpleDataTest } from '@/components/SimpleDataTest';
-
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -254,30 +250,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Debug Section - Temporary */}
-      <section className="py-8 bg-yellow-50 border-b-2 border-yellow-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-yellow-800 mb-4">🔍 Debug Information (Temporary)</h2>
-          <DebugData />
-        </div>
-      </section>
-
-      {/* Data Test Section - Temporary */}
-      <section className="py-8 bg-blue-50 border-b-2 border-blue-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-blue-800 mb-4">🧪 Data Fetching Test (Temporary)</h2>
-          <DataTest />
-        </div>
-      </section>
-
-      {/* Simple Data Test Section - Temporary */}
-      <section className="py-8 bg-green-50 border-b-2 border-green-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-green-800 mb-4">🔧 Simple Direct Test (Temporary)</h2>
-          <SimpleDataTest />
-        </div>
-      </section>
-
       {/* Featured Teachers */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -362,48 +334,48 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[1, 2, 3].map(i => (
                 <Card key={i} className="animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-t-lg"></div>
                   <CardHeader>
                     <div className="h-6 bg-gray-200 rounded mb-2"></div>
                     <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                   </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               {limitedSchools.map(school => (
-                <Card key={school.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                    {school.photo_urls && school.photo_urls[0] ? (
-                      <img 
-                        src={school.photo_urls[0]} 
-                        alt={school.school_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-white text-4xl font-bold">
-                        {school.school_name?.charAt(0) || 'S'}
-                      </div>
-                    )}
-                  </div>
+                <Card key={school.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle className="text-lg">{school.school_name}</CardTitle>
+                    <CardTitle>{school.school_name}</CardTitle>
                     <CardDescription>{school.school_type}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-3">
                     {school.address && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <MapPin className="h-4 w-4" />
                         <span>{school.address}</span>
                       </div>
                     )}
+                    
                     {school.student_count && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="h-4 w-4" />
                         <span>{school.student_count} {t('school.students')}</span>
                       </div>
                     )}
+
+                    {school.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {school.description}
+                      </p>
+                    )}
+
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/schools/${school.id}`}>{t('common.more')}</Link>
                     </Button>
@@ -425,26 +397,28 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-primary-foreground">
-        <div className="container px-4 mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            {t('cta.title')}
+      <section className="py-16 bg-blue-600">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            {t('home.cta.title')}
           </h2>
-          <p className="text-xl mb-8 opacity-90">
-            {t('cta.subtitle')}
+          <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
+            {t('home.cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" onClick={handleAddVacancy}>
-              {t('cta.addVacancy')}
+            <Button size="lg" variant="secondary" asChild>
+              <Link to="/register">
+                {t('home.cta.joinAsTeacher')}
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/vacancies')} className="text-slate-500">
-              {t('cta.findJob')}
+            <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-blue-600" asChild>
+              <Link to="/register">
+                {t('home.cta.joinAsSchool')}
+              </Link>
             </Button>
           </div>
         </div>
       </section>
-      
-
     </div>
   );
 };

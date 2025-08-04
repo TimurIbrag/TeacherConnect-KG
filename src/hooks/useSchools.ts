@@ -26,22 +26,30 @@ export const useSchools = () => {
   return useQuery({
     queryKey: ['schools'],
     queryFn: async () => {
+      console.log('🔍 Fetching schools from profiles table...');
+      
       const { data, error } = await supabase
-        .from('school_profiles')
-        .select(`*`); // Fetch directly without join to avoid recursion
+        .from('profiles')
+        .select(`*`)
+        .eq('role', 'school')
+        .eq('is_published', true)
+        .eq('is_profile_complete', true)
+        .eq('is_active', true);
 
       if (error) {
-        console.error('Error fetching schools:', error);
+        console.error('❌ Error fetching schools:', error);
         throw error;
       }
+
+      console.log('📊 Raw school data:', data);
 
       // Transform the data to match the expected School type structure
       const transformedData = data?.map(school => ({
         id: school.id,
         school_name: school.school_name || 'School ' + school.id,
         school_type: school.school_type || 'General',
-        description: school.description || '',
-        address: school.address || '',
+        description: school.school_description || '',
+        address: school.school_address || '',
         facilities: school.facilities || [],
         founded_year: school.founded_year || 2020,
         housing_provided: school.housing_provided || false,
@@ -55,6 +63,8 @@ export const useSchools = () => {
         is_profile_complete: school.is_profile_complete || true,
         is_active: school.is_active || true,
       })) || [];
+
+      console.log('✅ Transformed school data:', transformedData);
 
       return transformedData;
     },
@@ -71,10 +81,31 @@ export const useSchool = (id: string) => {
         .select('*')
         .eq('id', id)
         .eq('role', 'school')
+        .eq('is_published', true)
         .single();
 
       if (error) throw error;
-      return data as School;
+      
+      // Transform the data
+      return {
+        id: data.id,
+        school_name: data.school_name || 'School ' + data.id,
+        school_type: data.school_type || 'General',
+        description: data.school_description || '',
+        address: data.school_address || '',
+        facilities: data.facilities || [],
+        founded_year: data.founded_year || 2020,
+        housing_provided: data.housing_provided || false,
+        latitude: data.latitude || 0,
+        longitude: data.longitude || 0,
+        location_verified: data.location_verified || false,
+        photo_urls: data.photo_urls || [],
+        student_count: data.student_count || 0,
+        website_url: data.website_url || '',
+        is_published: data.is_published || true,
+        is_profile_complete: data.is_profile_complete || true,
+        is_active: data.is_active || true,
+      } as School;
     },
     enabled: !!id,
   });
