@@ -12,8 +12,6 @@ import { GraduationCap, School, MapPin, DollarSign, Calendar, Users, BookOpen, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { DatabaseDiagnostic } from '@/components/DatabaseDiagnostic';
-import { DataSeedingComponent } from '@/components/DataSeedingComponent';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -122,22 +120,6 @@ const HomePage = () => {
   
   return (
     <div className="min-h-screen">
-      {/* Database Diagnostic - Temporary */}
-      <section className="py-8 bg-red-50 border-b-2 border-red-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-red-800 mb-4">🔍 Database Diagnostic (Temporary)</h2>
-          <DatabaseDiagnostic />
-        </div>
-      </section>
-
-      {/* Data Seeding - Temporary */}
-      <section className="py-8 bg-green-50 border-b-2 border-green-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-xl font-bold text-green-800 mb-4">🌱 Data Seeding Tool (Temporary)</h2>
-          <DataSeedingComponent />
-        </div>
-      </section>
-
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div className="container mx-auto px-4 text-center">
