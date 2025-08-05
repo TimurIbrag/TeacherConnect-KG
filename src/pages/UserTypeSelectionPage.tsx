@@ -25,46 +25,96 @@ const UserTypeSelectionPage: React.FC = () => {
     try {
       console.log('🎯 UserTypeSelectionPage - Starting role selection:', role);
       
-      // First, check if profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (existingProfile) {
-        // Update existing profile with role and set as published/complete
-        const { error: profileError } = await supabase
+      // Try to create/update profile in profiles table first
+      let profileCreated = false;
+      try {
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .update({ 
-            role,
-            is_published: true,
-            is_profile_complete: true,
-            is_active: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        if (profileError) throw profileError;
-        console.log('✅ Updated existing profile role to:', role);
-      } else {
-        // Create new profile with role and set as published/complete
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
-            role: role,
-            is_published: true,
-            is_profile_complete: true,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+        if (existingProfile) {
+          // Update existing profile with role and set as published/complete
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ 
+              role,
+              is_published: true,
+              is_profile_complete: true,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
 
-        if (profileError) throw profileError;
-        console.log('✅ Created new profile with role:', role);
+          if (!profileError) {
+            profileCreated = true;
+            console.log('✅ Updated existing profile role to:', role);
+          }
+        } else {
+          // Create new profile with role and set as published/complete
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email || '',
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+              role: role,
+              is_published: true,
+              is_profile_complete: true,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (!profileError) {
+            profileCreated = true;
+            console.log('✅ Created new profile with role:', role);
+          }
+        }
+      } catch (profileError) {
+        console.warn('⚠️ Profiles table error, trying role-specific tables:', profileError);
+      }
+
+      // If profiles table failed, create in role-specific table
+      if (!profileCreated) {
+        if (role === 'teacher') {
+          const { error: teacherError } = await supabase
+            .from('teacher_profiles')
+            .upsert({
+              id: user.id,
+              specialization: 'Общие предметы',
+              experience_years: 0,
+              education: 'Высшее образование',
+              languages: ['Кыргызский', 'Русский'],
+              skills: ['Преподавание'],
+              location: 'Бишкек',
+              bio: 'Новый преподаватель',
+              is_profile_complete: true,
+              is_published: true,
+              available: true
+            });
+
+          if (teacherError) throw teacherError;
+          console.log('✅ Created teacher profile in teacher_profiles table');
+        } else {
+          const { error: schoolError } = await supabase
+            .from('school_profiles')
+            .upsert({
+              id: user.id,
+              school_name: user.user_metadata?.full_name || 'Новая школа',
+              school_type: 'Общеобразовательная школа',
+              description: 'Качественное образование для всех',
+              address: 'Бишкек',
+              facilities: ['Классы', 'Библиотека'],
+              founded_year: 2024,
+              student_count: 100,
+              is_published: true
+            });
+
+          if (schoolError) throw schoolError;
+          console.log('✅ Created school profile in school_profiles table');
+        }
       }
 
       // Store the confirmed user type and navigate

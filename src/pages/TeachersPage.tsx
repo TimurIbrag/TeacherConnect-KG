@@ -191,30 +191,22 @@ const TeachersPage = () => {
         ) : teachers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {teachers.map((teacher) => {
-              const profile = teacher.profiles;
-              if (!profile) {
-                // Skip rendering if no profile is present
-                return null;
-              }
-              // Parse schedule_details properly
-              const scheduleDetails = teacher.schedule_details as Record<string, any> | null;
-              // Parse languages properly
-              const languagesData = teacher.languages as Array<{ language: string; level: string }> | null;
+              // Use the transformed data directly from useTeachers hook
               return (
                 <TeacherCard
                   key={teacher.id}
                   id={teacher.id}
-                  name={profile?.full_name || 'Anonymous Teacher'}
-                  photo={profile?.avatar_url || null}
+                  name={teacher.full_name || 'Anonymous Teacher'}
+                  photo={teacher.avatar_url || null}
                   specialization={teacher.specialization || 'General'}
                   experience={teacher.experience_years ? `${teacher.experience_years} years` : 'Not specified'}
                   location={teacher.location || 'Location not specified'}
                   ratings={4.5}
-                  views={teacher.view_count || 0}
-                  date_of_birth={teacher.date_of_birth}
-                  languages={languagesData}
-                  schedule_details={scheduleDetails}
-                  last_seen_at={profile?.last_seen_at}
+                  views={0}
+                  date_of_birth={null}
+                  languages={teacher.languages?.map(lang => ({ language: lang, level: 'Native' })) || []}
+                  schedule_details={null}
+                  last_seen_at={null}
                 />
               );
             })}

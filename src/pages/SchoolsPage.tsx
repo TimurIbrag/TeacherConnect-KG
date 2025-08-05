@@ -71,7 +71,7 @@ const SchoolsPage: React.FC = () => {
     
     return {
       id: school.id,
-      name: school.school_name || school.profiles?.full_name || 'School',
+      name: school.school_name || 'School', // Remove profiles reference
       photo: school.photo_urls?.[0] || null, // No default photos
       photos: school.photo_urls || [],
       address: school.address || 'Address not provided',
